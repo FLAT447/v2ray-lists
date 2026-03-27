@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2Ray Lists Hub</title>
+    <title>V2Ray Configs Hub</title>
+    <!-- QR Code библиотека -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -301,7 +303,7 @@
             margin-top: 0.5rem;
         }
 
-        .copy-btn, .details-btn {
+        .copy-btn, .qr-btn, .details-btn {
             flex: 1;
             background: #1e1f2a;
             border: 1px solid #2d2f3a;
@@ -329,6 +331,17 @@
             transform: scale(0.98);
         }
 
+        .qr-btn {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            color: white;
+        }
+
+        .qr-btn:hover {
+            background: #6d28d9;
+            transform: scale(0.98);
+        }
+
         .details-btn:hover {
             background: #2d2f3a;
             border-color: #3b82f6;
@@ -346,30 +359,50 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
 
         .modal-content {
             background: #13151c;
             border-radius: 1.5rem;
-            padding: 1.5rem;
-            max-width: 500px;
+            padding: 1.8rem;
+            max-width: 450px;
             width: 90%;
             border: 1px solid #3b82f6;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
         }
 
         .modal-content h3 {
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             color: #60a5fa;
+            font-size: 1.2rem;
         }
 
-        .modal-content .full-url {
+        .qr-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            display: inline-block;
+            margin: 1rem 0;
+        }
+
+        #qrCode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qrCode img, #qrCode canvas {
+            border-radius: 0.5rem;
+        }
+
+        .modal-url {
             background: #0a0c10;
             padding: 0.8rem;
             border-radius: 0.75rem;
@@ -378,17 +411,38 @@
             word-break: break-all;
             margin: 1rem 0;
             border: 1px solid #252830;
+            text-align: left;
         }
 
-        .modal-close {
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-btn {
+            flex: 1;
             background: #2563eb;
             border: none;
-            padding: 0.6rem 1rem;
+            padding: 0.6rem;
             border-radius: 0.75rem;
             color: white;
             cursor: pointer;
-            width: 100%;
             font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .modal-btn.copy-modal {
+            background: #2563eb;
+        }
+
+        .modal-btn.close-modal {
+            background: #2d2f3a;
+        }
+
+        .modal-btn:hover {
+            transform: scale(0.98);
+            opacity: 0.9;
         }
 
         /* No Results */
@@ -463,6 +517,13 @@
             .steps {
                 flex-direction: column;
             }
+            .btn-group {
+                flex-wrap: wrap;
+            }
+            .copy-btn, .qr-btn, .details-btn {
+                flex: auto;
+                min-width: calc(33% - 0.5rem);
+            }
         }
     </style>
 </head>
@@ -476,19 +537,19 @@
         <div class="sub">Автоматические конфигурации из репозитория FLAT447 | VLESS / Reality / Trojan</div>
     </div>
 
-    <!-- Гайды (как на примере) -->
+    <!-- Гайды -->
     <div class="steps-section">
         <div class="steps-title">📚 Как использовать</div>
         <div class="steps">
             <div class="step">
                 <div class="number">1</div>
-                <h3>Скопируйте</h3>
-                <p>Выберите файл из списка ниже и скопируйте ссылку</p>
+                <h3>Скопируйте или отсканируйте QR</h3>
+                <p>Скопируйте ссылку или используйте QR-код для быстрого импорта</p>
             </div>
             <div class="step">
                 <div class="number">2</div>
                 <h3>Импортируйте</h3>
-                <p>Вставьте ссылку в ваш VPN-клиент (v2rayNG, NekoBox, Hiddify, Throne)</p>
+                <p>Вставьте ссылку или отсканируйте QR в VPN-клиенте (v2rayNG, NekoBox, Hiddify)</p>
             </div>
             <div class="step">
                 <div class="number">3</div>
@@ -518,7 +579,7 @@
 
     <div class="footer">
         <p>📡 Конфигурации обновляются автоматически из <a href="https://github.com/FLAT447/v2ray-lists" target="_blank">FLAT447/v2ray-lists</a> (githubmirror)</p>
-        <p>Файлы содержат готовые ссылки для импорта: vless://, trojan://, vmess://</p>
+        <p>📱 Нажмите на QR-код, чтобы отсканировать телефоном и быстро импортировать конфигурацию</p>
         <p>⭐ Обход SNI/CIDR | Регулярные обновления</p>
     </div>
 </div>
@@ -568,23 +629,75 @@
         }
     }
     
-    // Модальное окно с полной ссылкой
-    function showModal(file) {
+    // Показать QR-код в модальном окне
+    function showQRModal(file) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>📱 QR-код для ${file.name}</h3>
+                <p style="font-size:0.75rem; color:#8b8f98; margin-bottom:0.5rem;">Отсканируйте телефоном для быстрого импорта</p>
+                <div class="qr-container" id="qrContainer">
+                    <div id="qrCode"></div>
+                </div>
+                <div class="modal-url">${escapeHtml(file.url)}</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn copy-modal">📋 Скопировать ссылку</button>
+                    <button class="modal-btn close-modal">✖️ Закрыть</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Генерация QR-кода
+        const qrDiv = modal.querySelector('#qrCode');
+        try {
+            // Используем простой QR через внешний API (работает всегда)
+            const qrImg = document.createElement('img');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(file.url)}`;
+            qrImg.style.width = '180px';
+            qrImg.style.height = '180px';
+            qrImg.style.borderRadius = '0.5rem';
+            qrDiv.appendChild(qrImg);
+        } catch (e) {
+            qrDiv.innerHTML = '<p style="color:#ef4444;">Ошибка генерации QR</p>';
+        }
+        
+        const copyBtn = modal.querySelector('.copy-modal');
+        const closeBtn = modal.querySelector('.close-modal');
+        
+        copyBtn.addEventListener('click', async () => {
+            const copied = await copyToClipboard(file.url, file.name);
+            if (copied) {
+                modal.remove();
+            }
+        });
+        
+        closeBtn.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    }
+    
+    // Модальное окно с полной ссылкой (подробнее)
+    function showDetailsModal(file) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>📄 ${file.name}</h3>
                 <p style="font-size:0.8rem; color:#8b8f98;">Полная ссылка для импорта:</p>
-                <div class="full-url">${escapeHtml(file.url)}</div>
-                <button class="modal-close" id="modalCopyBtn">📋 Скопировать ссылку</button>
-                <button class="modal-close" id="modalCloseBtn" style="margin-top:0.5rem; background:#2d2f3a;">Закрыть</button>
+                <div class="modal-url">${escapeHtml(file.url)}</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn copy-modal">📋 Скопировать ссылку</button>
+                    <button class="modal-btn close-modal">✖️ Закрыть</button>
+                </div>
             </div>
         `;
         document.body.appendChild(modal);
         
-        const copyBtn = modal.querySelector('#modalCopyBtn');
-        const closeBtn = modal.querySelector('#modalCloseBtn');
+        const copyBtn = modal.querySelector('.copy-modal');
+        const closeBtn = modal.querySelector('.close-modal');
         
         copyBtn.addEventListener('click', async () => {
             const copied = await copyToClipboard(file.url, file.name);
@@ -641,7 +754,10 @@
                 </div>
                 <div class="btn-group">
                     <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">
-                        📋 Скопировать
+                        📋 Копировать
+                    </button>
+                    <button class="qr-btn" data-id="${file.id}">
+                        📱 QR-код
                     </button>
                     <button class="details-btn" data-id="${file.id}">
                         🔍 Подробнее
@@ -670,13 +786,23 @@
             });
         });
         
+        // Обработчики для кнопок QR
+        document.querySelectorAll('.qr-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const fileId = parseInt(btn.getAttribute('data-id'));
+                const file = files.find(f => f.id === fileId);
+                if (file) showQRModal(file);
+            });
+        });
+        
         // Обработчики для кнопок "Подробнее"
         document.querySelectorAll('.details-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const fileId = parseInt(btn.getAttribute('data-id'));
                 const file = files.find(f => f.id === fileId);
-                if (file) showModal(file);
+                if (file) showDetailsModal(file);
             });
         });
     }
