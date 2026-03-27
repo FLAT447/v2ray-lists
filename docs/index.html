@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2Ray Lists Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0c10 0%, #0f1117 100%);
+            color: #e4e6eb;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .repo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1e1f2a;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+            color: #e4e6eb;
+            transition: 0.2s;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2d2f3a;
+        }
+
+        .repo-badge:hover {
+            background: #2d2f3a;
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a855f7, #ec489a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header .sub {
+            color: #8b8f98;
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Steps Section */
+        .steps-section {
+            background: linear-gradient(135deg, #13151c 0%, #0f1117 100%);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid #252830;
+        }
+
+        .steps-title {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #60a5fa;
+        }
+
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .step {
+            background: #0a0c10;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid #252830;
+            transition: 0.2s;
+        }
+
+        .step:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+        }
+
+        .step .number {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .step h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .step p {
+            font-size: 0.8rem;
+            color: #8b8f98;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            background: #13151c;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid #252830;
+        }
+
+        .info-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .info-stats span {
+            background: #1e1f2a;
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            padding: 0.6rem 1rem;
+            background: #0a0c10;
+            border: 1px solid #2d2f3a;
+            border-radius: 2rem;
+            color: #e4e6eb;
+            font-size: 0.85rem;
+            outline: none;
+            width: 220px;
+            transition: 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #3b82f6;
+        }
+
+        .search-box button {
+            background: #2d2f3a;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 2rem;
+            color: #e4e6eb;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .search-box button:hover {
+            background: #3b82f6;
+        }
+
+        .refresh-btn {
+            background: #2563eb;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #1d4ed8;
+            transform: scale(0.98);
+        }
+
+        /* Config Grid */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .config-card {
+            background: #13151c;
+            border: 1px solid #252830;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .config-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #2563eb, #7c3aed, #ec489a);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .config-card:hover::before {
+            opacity: 1;
+        }
+
+        .config-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .file-name {
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb20, #7c3aed20);
+            padding: 0.3rem 0.9rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-family: monospace;
+            border: 1px solid #2563eb40;
+        }
+
+        .protocol-badge {
+            background: #1e1f2a;
+            color: #8b8f98;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .url-preview {
+            background: #0a0c10;
+            padding: 0.8rem;
+            border-radius: 0.75rem;
+            font-size: 0.7rem;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 0.9rem 0;
+            color: #9ca3af;
+            border: 1px solid #252830;
+            line-height: 1.4;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .copy-btn, .details-btn {
+            flex: 1;
+            background: #1e1f2a;
+            border: 1px solid #2d2f3a;
+            padding: 0.6rem;
+            border-radius: 0.75rem;
+            color: #e4e6eb;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .copy-btn {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
+        }
+
+        .copy-btn:hover {
+            background: #1d4ed8;
+            transform: scale(0.98);
+        }
+
+        .details-btn:hover {
+            background: #2d2f3a;
+            border-color: #3b82f6;
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: #13151c;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #3b82f6;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 0.75rem;
+            color: #60a5fa;
+        }
+
+        .modal-content .full-url {
+            background: #0a0c10;
+            padding: 0.8rem;
+            border-radius: 0.75rem;
+            font-family: monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            margin: 1rem 0;
+            border: 1px solid #252830;
+        }
+
+        .modal-close {
+            background: #2563eb;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 0.75rem;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background: #13151c;
+            border-radius: 1rem;
+            color: #8b8f98;
+            border: 1px solid #252830;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #252830;
+            font-size: 0.75rem;
+            color: #5a5e6b;
+        }
+
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 1001;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 680px) {
+            .container {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                width: 100%;
+            }
+            .search-box input {
+                flex: 1;
+                width: auto;
+            }
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            .steps {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <a href="https://github.com/FLAT447/v2ray-lists" target="_blank" class="repo-badge">
+            <span>📁</span> github.com/FLAT447/v2ray-lists
+        </a>
+        <h1>⚡ V2Ray Configs Hub</h1>
+        <div class="sub">Автоматические конфигурации из репозитория FLAT447 | VLESS / Reality / Trojan</div>
+    </div>
+
+    <!-- Гайды (как на примере) -->
+    <div class="steps-section">
+        <div class="steps-title">📚 Как использовать</div>
+        <div class="steps">
+            <div class="step">
+                <div class="number">1</div>
+                <h3>Скопируйте</h3>
+                <p>Выберите файл из списка ниже и скопируйте ссылку</p>
+            </div>
+            <div class="step">
+                <div class="number">2</div>
+                <h3>Импортируйте</h3>
+                <p>Вставьте ссылку в ваш VPN-клиент (v2rayNG, NekoBox, Hiddify, Throne)</p>
+            </div>
+            <div class="step">
+                <div class="number">3</div>
+                <h3>Подключитесь</h3>
+                <p>Выберите сервер с минимальным пингом и наслаждайтесь</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Панель управления -->
+    <div class="controls-bar">
+        <div class="info-stats">
+            <span>📁 Всего: 26 файлов</span>
+            <span id="visibleCount">🔍 Показано: 26</span>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Поиск по номеру файла...">
+            <button id="clearSearchBtn">Сброс</button>
+        </div>
+        <button class="refresh-btn" id="refreshBtn">
+            <span>🔄</span> Обновить
+        </button>
+    </div>
+
+    <!-- Сетка конфигов -->
+    <div id="configGrid" class="config-grid"></div>
+
+    <div class="footer">
+        <p>📡 Конфигурации обновляются автоматически из <a href="https://github.com/FLAT447/v2ray-lists" target="_blank">FLAT447/v2ray-lists</a> (githubmirror)</p>
+        <p>Файлы содержат готовые ссылки для импорта: vless://, trojan://, vmess://</p>
+        <p>⭐ Обход SNI/CIDR | Регулярные обновления</p>
+    </div>
+</div>
+
+<div id="toast" class="toast">✅ Ссылка скопирована!</div>
+
+<script>
+    // Конфигурация
+    const BASE_URL = 'https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/';
+    const TOTAL_FILES = 26;
+    
+    // Генерация списка файлов
+    const files = [];
+    for (let i = 1; i <= TOTAL_FILES; i++) {
+        files.push({
+            id: i,
+            name: `${i}.txt`,
+            url: `${BASE_URL}${i}.txt`,
+            description: `Конфигурации V2Ray / VLESS / Reality из файла ${i}.txt`,
+            shortDesc: `Файл ${i}.txt содержит готовые ссылки для импорта в VPN-клиент`
+        });
+    }
+    
+    let currentFilter = '';
+    
+    // Показ уведомления
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#ef4444' : '#10b981';
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.style.background = '#10b981';
+        }, 2000);
+    }
+    
+    // Копирование в буфер
+    async function copyToClipboard(text, fileName) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showToast(`✅ Скопировано: ${fileName}`);
+            return true;
+        } catch (err) {
+            showToast('❌ Ошибка копирования', true);
+            return false;
+        }
+    }
+    
+    // Модальное окно с полной ссылкой
+    function showModal(file) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>📄 ${file.name}</h3>
+                <p style="font-size:0.8rem; color:#8b8f98;">Полная ссылка для импорта:</p>
+                <div class="full-url">${escapeHtml(file.url)}</div>
+                <button class="modal-close" id="modalCopyBtn">📋 Скопировать ссылку</button>
+                <button class="modal-close" id="modalCloseBtn" style="margin-top:0.5rem; background:#2d2f3a;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const copyBtn = modal.querySelector('#modalCopyBtn');
+        const closeBtn = modal.querySelector('#modalCloseBtn');
+        
+        copyBtn.addEventListener('click', async () => {
+            const copied = await copyToClipboard(file.url, file.name);
+            if (copied) {
+                modal.remove();
+            }
+        });
+        
+        closeBtn.addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Рендеринг карточек
+    function render() {
+        const filtered = files.filter(file => {
+            if (!currentFilter) return true;
+            return file.name.toLowerCase().includes(currentFilter.toLowerCase()) ||
+                   file.id.toString().includes(currentFilter);
+        });
+        
+        const grid = document.getElementById('configGrid');
+        const visibleSpan = document.getElementById('visibleCount');
+        visibleSpan.innerHTML = `🔍 Показано: ${filtered.length}`;
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div class="no-results">
+                    🔍 Ничего не найдено<br>
+                    <small style="color:#5a5e6b;">Попробуйте другой номер файла (1-26)</small>
+                </div>
+            `;
+            return;
+        }
+        
+        grid.innerHTML = filtered.map(file => `
+            <div class="config-card" data-id="${file.id}">
+                <div class="card-header">
+                    <span class="file-name">📄 ${file.name}</span>
+                    <span class="protocol-badge">githubmirror</span>
+                </div>
+                <div class="url-preview" title="${escapeHtml(file.url)}">
+                    ${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}
+                </div>
+                <div class="btn-group">
+                    <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">
+                        📋 Скопировать
+                    </button>
+                    <button class="details-btn" data-id="${file.id}">
+                        🔍 Подробнее
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Обработчики для кнопок копирования
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const url = btn.getAttribute('data-url');
+                const fileName = btn.getAttribute('data-name');
+                
+                const success = await copyToClipboard(url, fileName);
+                if (success) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✅ Скопировано!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('copied');
+                    }, 1500);
+                }
+            });
+        });
+        
+        // Обработчики для кнопок "Подробнее"
+        document.querySelectorAll('.details-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const fileId = parseInt(btn.getAttribute('data-id'));
+                const file = files.find(f => f.id === fileId);
+                if (file) showModal(file);
+            });
+        });
+    }
+    
+    // Поиск
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    
+    searchInput.addEventListener('input', (e) => {
+        currentFilter = e.target.value.trim();
+        render();
+    });
+    
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        currentFilter = '';
+        render();
+        showToast('Фильтр сброшен');
+    });
+    
+    refreshBtn.addEventListener('click', () => {
+        render();
+        showToast('🔄 Список обновлён');
+    });
+    
+    // Инициализация
+    render();
+</script>
+</body>
+</html>
