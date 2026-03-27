@@ -275,6 +275,31 @@
             border: 1px solid #2563eb40;
         }
 
+        /* Специальные бейджи */
+        .badge-recommended {
+            background: linear-gradient(135deg, #f59e0b20, #d9770620);
+            color: #fbbf24;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+            letter-spacing: 0.3px;
+        }
+
+        .badge-sni {
+            background: linear-gradient(135deg, #8b5cf620, #7c3aed20);
+            color: #c084fc;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid #a855f7;
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+            letter-spacing: 0.3px;
+        }
+
         .protocol-badge {
             background: #1e1f2a;
             color: #8b8f98;
@@ -579,8 +604,8 @@
 
     <div class="footer">
         <p>📡 Конфигурации обновляются автоматически из <a href="https://github.com/FLAT447/v2ray-lists" target="_blank">FLAT447/v2ray-lists</a> (githubmirror)</p>
+        <p>⭐ <span style="color:#fbbf24;">Рекомендованные</span> — стабильные конфигурации | <span style="color:#c084fc;">БС SNI/CIDR</span> — для обхода белых списков</p>
         <p>📱 Нажмите на QR-код, чтобы отсканировать телефоном и быстро импортировать конфигурацию</p>
-        <p>⭐ Обход SNI/CIDR | Регулярные обновления</p>
     </div>
 </div>
 
@@ -591,6 +616,21 @@
     const BASE_URL = 'https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/';
     const TOTAL_FILES = 26;
     
+    // Список файлов с Рекомендованной меткой (жёлтая окантовка)
+    const RECOMMENDED_FILES = [1, 6, 22, 23, 24, 25];
+    // Файл с меткой БС SNI/CIDR (фиолетовая)
+    const SNI_FILE = 26;
+    
+    // Функция для получения метки файла
+    function getFileBadge(fileId) {
+        if (RECOMMENDED_FILES.includes(fileId)) {
+            return '<span class="badge-recommended">⭐ Рекомендованный</span>';
+        } else if (fileId === SNI_FILE) {
+            return '<span class="badge-sni">🛡️ БС SNI/CIDR</span>';
+        }
+        return '<span class="protocol-badge">githubmirror</span>';
+    }
+    
     // Генерация списка файлов
     const files = [];
     for (let i = 1; i <= TOTAL_FILES; i++) {
@@ -599,7 +639,8 @@
             name: `${i}.txt`,
             url: `${BASE_URL}${i}.txt`,
             description: `Конфигурации V2Ray / VLESS / Reality из файла ${i}.txt`,
-            shortDesc: `Файл ${i}.txt содержит готовые ссылки для импорта в VPN-клиент`
+            shortDesc: `Файл ${i}.txt содержит готовые ссылки для импорта в VPN-клиент`,
+            badge: getFileBadge(i)
         });
     }
     
@@ -652,7 +693,6 @@
         // Генерация QR-кода
         const qrDiv = modal.querySelector('#qrCode');
         try {
-            // Используем простой QR через внешний API (работает всегда)
             const qrImg = document.createElement('img');
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(file.url)}`;
             qrImg.style.width = '180px';
@@ -747,7 +787,7 @@
             <div class="config-card" data-id="${file.id}">
                 <div class="card-header">
                     <span class="file-name">📄 ${file.name}</span>
-                    <span class="protocol-badge">githubmirror</span>
+                    ${file.badge}
                 </div>
                 <div class="url-preview" title="${escapeHtml(file.url)}">
                     ${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}
