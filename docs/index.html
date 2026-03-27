@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>V2Ray Configs Hub</title>
-    <!-- QR Code библиотека -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,12 +20,11 @@
         }
 
         .container {
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 3rem;
@@ -72,68 +69,56 @@
             margin: 0 auto;
         }
 
-        /* Steps Section */
-        .steps-section {
-            background: linear-gradient(135deg, #13151c 0%, #0f1117 100%);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            margin-bottom: 3rem;
-            border: 1px solid #252830;
+        .tabs-container {
+            margin-bottom: 2rem;
         }
 
-        .steps-title {
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #60a5fa;
-        }
-
-        .steps {
+        .tabs {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
+            gap: 0.5rem;
+            border-bottom: 1px solid #252830;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .step {
-            background: #0a0c10;
-            padding: 1.25rem 1.5rem;
-            border-radius: 1rem;
-            text-align: center;
-            flex: 1;
-            min-width: 180px;
-            border: 1px solid #252830;
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 2rem;
+            color: #8b8f98;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
             transition: 0.2s;
-        }
-
-        .step:hover {
-            border-color: #3b82f6;
-            transform: translateY(-3px);
-        }
-
-        .step .number {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            border-radius: 50%;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
+            gap: 0.5rem;
         }
 
-        .step h3 {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
+        .tab-btn:hover {
+            background: #1e1f2a;
+            color: #e4e6eb;
         }
 
-        .step p {
-            font-size: 0.8rem;
-            color: #8b8f98;
+        .tab-btn.active {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Controls Bar */
@@ -275,7 +260,6 @@
             border: 1px solid #2563eb40;
         }
 
-        /* Специальные бейджи */
         .badge-recommended {
             background: linear-gradient(135deg, #f59e0b20, #d9770620);
             color: #fbbf24;
@@ -284,8 +268,6 @@
             font-size: 0.7rem;
             font-weight: 600;
             border: 1px solid #f59e0b;
-            box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
-            letter-spacing: 0.3px;
         }
 
         .badge-sni {
@@ -296,8 +278,6 @@
             font-size: 0.7rem;
             font-weight: 600;
             border: 1px solid #a855f7;
-            box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
-            letter-spacing: 0.3px;
         }
 
         .protocol-badge {
@@ -319,7 +299,6 @@
             margin: 0.9rem 0;
             color: #9ca3af;
             border: 1px solid #252830;
-            line-height: 1.4;
         }
 
         .btn-group {
@@ -377,6 +356,158 @@
             border-color: #10b981;
         }
 
+        /* Guides Grid */
+        .guides-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .guide-card {
+            background: #13151c;
+            border: 1px solid #252830;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: 0.2s;
+        }
+
+        .guide-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #252830;
+        }
+
+        .guide-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2563eb20, #7c3aed20);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .guide-title {
+            flex: 1;
+        }
+
+        .guide-title h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .guide-title p {
+            font-size: 0.7rem;
+            color: #8b8f98;
+        }
+
+        .download-section {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #0a0c10;
+            border-radius: 0.75rem;
+        }
+
+        .download-label {
+            font-size: 0.7rem;
+            color: #8b8f98;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .download-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .download-link {
+            background: #2563eb;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .download-link:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .guide-steps {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .guide-steps li {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        /* Update section inside guide */
+        .guide-update {
+            background: linear-gradient(135deg, #0f1117, #0a0c10);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            border: 1px solid #2d2f3a;
+            border-left: 3px solid #10b981;
+        }
+
+        .guide-update-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .guide-update-steps {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .guide-update-steps strong {
+            color: #e4e6eb;
+        }
+
         /* Modal */
         .modal {
             position: fixed;
@@ -417,16 +548,6 @@
             margin: 1rem 0;
         }
 
-        #qrCode {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #qrCode img, #qrCode canvas {
-            border-radius: 0.5rem;
-        }
-
         .modal-url {
             background: #0a0c10;
             padding: 0.8rem;
@@ -457,45 +578,10 @@
             transition: 0.2s;
         }
 
-        .modal-btn.copy-modal {
-            background: #2563eb;
-        }
-
         .modal-btn.close-modal {
             background: #2d2f3a;
         }
 
-        .modal-btn:hover {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 3rem;
-            background: #13151c;
-            border-radius: 1rem;
-            color: #8b8f98;
-            border: 1px solid #252830;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #252830;
-            font-size: 0.75rem;
-            color: #5a5e6b;
-        }
-
-        .footer a {
-            color: #60a5fa;
-            text-decoration: none;
-        }
-
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -510,12 +596,18 @@
             transition: opacity 0.2s;
             pointer-events: none;
             z-index: 1001;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .toast.show {
             opacity: 1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background: #13151c;
+            border-radius: 1rem;
+            color: #8b8f98;
         }
 
         @media (max-width: 680px) {
@@ -539,15 +631,8 @@
             .config-grid {
                 grid-template-columns: 1fr;
             }
-            .steps {
-                flex-direction: column;
-            }
-            .btn-group {
-                flex-wrap: wrap;
-            }
-            .copy-btn, .qr-btn, .details-btn {
-                flex: auto;
-                min-width: calc(33% - 0.5rem);
+            .guides-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -559,69 +644,50 @@
             <span>📁</span> FLAT447/v2ray-lists
         </a>
         <h1>⚡ V2Ray Configs Hub</h1>
-        <div class="sub">Автоматические конфигурации из репозитория FLAT447 | VLESS / Reality / Trojan</div>
+        <div class="sub">Автоматические конфигурации из репозитория FLAT447 | VLESS / Reality / Trojan / VMess / ShadowSocks / Hysteria2</div>
     </div>
 
-    <!-- Гайды -->
-    <div class="steps-section">
-        <div class="steps-title">📚 Как использовать</div>
-        <div class="steps">
-            <div class="step">
-                <div class="number">1</div>
-                <h3>Скопируйте или отсканируйте QR</h3>
-                <p>Скопируйте ссылку или используйте QR-код для быстрого импорта</p>
-            </div>
-            <div class="step">
-                <div class="number">2</div>
-                <h3>Импортируйте</h3>
-                <p>Вставьте ссылку или отсканируйте QR в VPN-клиенте (v2rayNG, NekoBox, Hiddify)</p>
-            </div>
-            <div class="step">
-                <div class="number">3</div>
-                <h3>Подключитесь</h3>
-                <p>Выберите сервер с минимальным пингом и наслаждайтесь</p>
-            </div>
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="configs">📡 Конфигурации</button>
+            <button class="tab-btn" data-tab="guides">📚 Гайды по клиентам</button>
         </div>
-    </div>
 
-    <!-- Панель управления -->
-    <div class="controls-bar">
-        <div class="info-stats">
-            <span>📁 Всего: 26 файлов</span>
-            <span id="visibleCount">🔍 Показано: 26</span>
+        <!-- Вкладка с конфигами -->
+        <div id="configs-tab" class="tab-content active">
+            <div class="controls-bar">
+                <div class="info-stats">
+                    <span>📁 Всего: 26 файлов</span>
+                    <span id="visibleCount">🔍 Показано: 26</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Поиск по номеру файла...">
+                    <button id="clearSearchBtn">Сброс</button>
+                </div>
+                <button class="refresh-btn" id="refreshBtn">
+                    <span>🔄</span> Обновить
+                </button>
+            </div>
+            <div id="configGrid" class="config-grid"></div>
         </div>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Поиск по номеру файла...">
-            <button id="clearSearchBtn">Сброс</button>
+
+        <!-- Вкладка с гайдами - для каждого клиента добавлен блок "Как обновить подписку" -->
+        <div id="guides-tab" class="tab-content">
+            <div class="guides-grid" id="guidesGrid"></div>
         </div>
-        <button class="refresh-btn" id="refreshBtn">
-            <span>🔄</span> Обновить
-        </button>
-    </div>
-
-    <!-- Сетка конфигов -->
-    <div id="configGrid" class="config-grid"></div>
-
-    <div class="footer">
-        <p>📡 Конфигурации обновляются автоматически из <a href="https://github.com/FLAT447/v2ray-lists" target="_blank">FLAT447/v2ray-lists</a> (githubmirror)</p>
-        <p>⭐ <span style="color:#fbbf24;">Рекомендованные</span> — стабильные конфигурации | <span style="color:#c084fc;">БС SNI/CIDR</span> — для обхода белых списков</p>
-        <p>📱 Нажмите на QR-код, чтобы отсканировать телефоном и быстро импортировать конфигурацию</p>
     </div>
 </div>
 
 <div id="toast" class="toast">✅ Ссылка скопирована!</div>
 
 <script>
-    // Конфигурация
+    // ========== КОНФИГУРАЦИИ ==========
     const BASE_URL = 'https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/';
     const TOTAL_FILES = 26;
-    
-    // Список файлов с Рекомендованной меткой (жёлтая окантовка)
     const RECOMMENDED_FILES = [1, 6, 22, 23, 24, 25];
-    // Файл с меткой БС SNI/CIDR (фиолетовая)
     const SNI_FILE = 26;
-    
-    // Функция для получения метки файла
+
     function getFileBadge(fileId) {
         if (RECOMMENDED_FILES.includes(fileId)) {
             return '<span class="badge-recommended">⭐ Рекомендованный</span>';
@@ -630,56 +696,47 @@
         }
         return '<span class="protocol-badge">githubmirror</span>';
     }
-    
-    // Генерация списка файлов
+
     const files = [];
     for (let i = 1; i <= TOTAL_FILES; i++) {
         files.push({
             id: i,
             name: `${i}.txt`,
             url: `${BASE_URL}${i}.txt`,
-            description: `Конфигурации V2Ray / VLESS / Reality из файла ${i}.txt`,
-            shortDesc: `Файл ${i}.txt содержит готовые ссылки для импорта в VPN-клиент`,
             badge: getFileBadge(i)
         });
     }
-    
+
     let currentFilter = '';
-    
-    // Показ уведомления
+
     function showToast(message, isError = false) {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.style.background = isError ? '#ef4444' : '#10b981';
         toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-            toast.style.background = '#10b981';
-        }, 2000);
+        setTimeout(() => toast.classList.remove('show'), 2000);
     }
-    
-    // Копирование в буфер
+
     async function copyToClipboard(text, fileName) {
         try {
             await navigator.clipboard.writeText(text);
-            showToast(`✅ Скопировано: ${fileName}`);
+            showToast(`✅ Скопировано: ${fileName || 'ссылка'}`);
             return true;
         } catch (err) {
             showToast('❌ Ошибка копирования', true);
             return false;
         }
     }
-    
-    // Показать QR-код в модальном окне
+
     function showQRModal(file) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>📱 QR-код для ${file.name}</h3>
-                <p style="font-size:0.75rem; color:#8b8f98; margin-bottom:0.5rem;">Отсканируйте телефоном для быстрого импорта</p>
-                <div class="qr-container" id="qrContainer">
-                    <div id="qrCode"></div>
+                <p style="font-size:0.75rem; color:#8b8f98;">Отсканируйте телефоном для быстрого импорта</p>
+                <div class="qr-container">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(file.url)}" style="width:180px; height:180px; border-radius:0.5rem;">
                 </div>
                 <div class="modal-url">${escapeHtml(file.url)}</div>
                 <div class="modal-buttons">
@@ -690,43 +747,20 @@
         `;
         document.body.appendChild(modal);
         
-        // Генерация QR-кода
-        const qrDiv = modal.querySelector('#qrCode');
-        try {
-            const qrImg = document.createElement('img');
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(file.url)}`;
-            qrImg.style.width = '180px';
-            qrImg.style.height = '180px';
-            qrImg.style.borderRadius = '0.5rem';
-            qrDiv.appendChild(qrImg);
-        } catch (e) {
-            qrDiv.innerHTML = '<p style="color:#ef4444;">Ошибка генерации QR</p>';
-        }
-        
-        const copyBtn = modal.querySelector('.copy-modal');
-        const closeBtn = modal.querySelector('.close-modal');
-        
-        copyBtn.addEventListener('click', async () => {
-            const copied = await copyToClipboard(file.url, file.name);
-            if (copied) {
-                modal.remove();
-            }
+        modal.querySelector('.copy-modal').addEventListener('click', async () => {
+            await copyToClipboard(file.url, file.name);
+            modal.remove();
         });
-        
-        closeBtn.addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
+        modal.querySelector('.close-modal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     }
-    
-    // Модальное окно с полной ссылкой (подробнее)
+
     function showDetailsModal(file) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>📄 ${file.name}</h3>
-                <p style="font-size:0.8rem; color:#8b8f98;">Полная ссылка для импорта:</p>
                 <div class="modal-url">${escapeHtml(file.url)}</div>
                 <div class="modal-buttons">
                     <button class="modal-btn copy-modal">📋 Скопировать ссылку</button>
@@ -736,22 +770,14 @@
         `;
         document.body.appendChild(modal);
         
-        const copyBtn = modal.querySelector('.copy-modal');
-        const closeBtn = modal.querySelector('.close-modal');
-        
-        copyBtn.addEventListener('click', async () => {
-            const copied = await copyToClipboard(file.url, file.name);
-            if (copied) {
-                modal.remove();
-            }
+        modal.querySelector('.copy-modal').addEventListener('click', async () => {
+            await copyToClipboard(file.url, file.name);
+            modal.remove();
         });
-        
-        closeBtn.addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
+        modal.querySelector('.close-modal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     }
-    
+
     function escapeHtml(str) {
         return str.replace(/[&<>]/g, function(m) {
             if (m === '&') return '&amp;';
@@ -760,9 +786,8 @@
             return m;
         });
     }
-    
-    // Рендеринг карточек
-    function render() {
+
+    function renderConfigs() {
         const filtered = files.filter(file => {
             if (!currentFilter) return true;
             return file.name.toLowerCase().includes(currentFilter.toLowerCase()) ||
@@ -770,107 +795,321 @@
         });
         
         const grid = document.getElementById('configGrid');
-        const visibleSpan = document.getElementById('visibleCount');
-        visibleSpan.innerHTML = `🔍 Показано: ${filtered.length}`;
+        document.getElementById('visibleCount').innerHTML = `🔍 Показано: ${filtered.length}`;
         
         if (filtered.length === 0) {
-            grid.innerHTML = `
-                <div class="no-results">
-                    🔍 Ничего не найдено<br>
-                    <small style="color:#5a5e6b;">Попробуйте другой номер файла (1-26)</small>
-                </div>
-            `;
+            grid.innerHTML = `<div class="no-results">🔍 Ничего не найдено<br><small>Попробуйте другой номер файла (1-26)</small></div>`;
             return;
         }
         
         grid.innerHTML = filtered.map(file => `
-            <div class="config-card" data-id="${file.id}">
+            <div class="config-card">
                 <div class="card-header">
                     <span class="file-name">📄 ${file.name}</span>
                     ${file.badge}
                 </div>
-                <div class="url-preview" title="${escapeHtml(file.url)}">
-                    ${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}
-                </div>
+                <div class="url-preview">${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}</div>
                 <div class="btn-group">
-                    <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">
-                        📋 Копировать
-                    </button>
-                    <button class="qr-btn" data-id="${file.id}">
-                        📱 QR-код
-                    </button>
-                    <button class="details-btn" data-id="${file.id}">
-                        🔍 Подробнее
-                    </button>
+                    <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">📋 Копировать</button>
+                    <button class="qr-btn" data-id="${file.id}">📱 QR-код</button>
+                    <button class="details-btn" data-id="${file.id}">🔍 Подробнее</button>
                 </div>
             </div>
         `).join('');
         
-        // Обработчики для кнопок копирования
         document.querySelectorAll('.copy-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
                 const url = btn.getAttribute('data-url');
-                const fileName = btn.getAttribute('data-name');
-                
-                const success = await copyToClipboard(url, fileName);
+                const name = btn.getAttribute('data-name');
+                const success = await copyToClipboard(url, name);
                 if (success) {
-                    const originalText = btn.innerHTML;
+                    const original = btn.innerHTML;
                     btn.innerHTML = '✅ Скопировано!';
                     btn.classList.add('copied');
                     setTimeout(() => {
-                        btn.innerHTML = originalText;
+                        btn.innerHTML = original;
                         btn.classList.remove('copied');
                     }, 1500);
                 }
             });
         });
         
-        // Обработчики для кнопок QR
         document.querySelectorAll('.qr-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const fileId = parseInt(btn.getAttribute('data-id'));
-                const file = files.find(f => f.id === fileId);
+            btn.addEventListener('click', () => {
+                const file = files.find(f => f.id === parseInt(btn.getAttribute('data-id')));
                 if (file) showQRModal(file);
             });
         });
         
-        // Обработчики для кнопок "Подробнее"
         document.querySelectorAll('.details-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const fileId = parseInt(btn.getAttribute('data-id'));
-                const file = files.find(f => f.id === fileId);
+            btn.addEventListener('click', () => {
+                const file = files.find(f => f.id === parseInt(btn.getAttribute('data-id')));
                 if (file) showDetailsModal(file);
             });
         });
     }
+
+    // ========== ГАЙДЫ ПО КЛИЕНТАМ ==========
+    // Для каждого клиента добавлен отдельный блок "Как обновить подписку?"
+    const guides = [
+        {
+            name: "v2rayNG",
+            icon: "📱",
+            platform: "Android TV / Android",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/2dust/v2rayNG/releases" }
+            ],
+            steps: [
+                "Нажмите на три полоски (меню) в левом верхнем углу",
+                "Выберите «Группы»",
+                "Нажмите на плюсик (+) в правом нижнем углу",
+                "В поле URL вставьте скопированную ссылку",
+                "Нажмите «ОК» для сохранения",
+                "Вернитесь на главный экран",
+                "Три точки → Проверка профилей группы",
+                "После проверки там же выберите Сортировка по результатам теста",
+                "Выберите сервер (зеленый пинг) и нажмите кнопку ▶️ (Подключить) в правом нижнем углу"
+            ],
+            updateSteps: "1. Нажмите на три полоски (меню) в левом верхнем углу<br>2. Выберите вкладку <strong>«Группы»</strong><br>3. Нажмите на иконку обновления в правом верхнем углу"
+        },
+        {
+            name: "v2rayN",
+            icon: "💻",
+            platform: "Windows / Linux / MacOS",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/2dust/v2rayN/releases" }
+            ],
+            steps: [
+                "Откройте v2rayN",
+                "Перейдите в меню «Серверы»",
+                "Выберите «Импорт массива URL»",
+                "Вставьте скопированную ссылку в поле",
+                "Укажите название группы подписки",
+                "Нажмите «Обновить подписку без прокси»",
+                "Правой кнопкой по серверу → «Установить активный»",
+                "Системный прокси → Установить системный прокси и включаем Режим VPN"
+            ],
+            updateSteps: "1. Перейдите в меню <strong>«Серверы»</strong><br>2. Выберите <strong>«Обновить подписку»</strong><br>3. Или нажмите на иконку обновления (⟳) в панели инструментов"
+        },
+        {
+            name: "NekoBox",
+            icon: "🐱",
+            platform: "Windows / Linux",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/MatsuriDayo/NekoBox/releases" }
+            ],
+            steps: [
+                "Перейдите в раздел «Profiles»",
+                "Нажмите «Add new Group»",
+                "Введите любое название группы",
+                "Выберите тип «Subscription»",
+                "В поле Subscription вставьте скопированную ссылку",
+                "Нажмите «Ok» для сохранения",
+                "Перейдите в созданную группу",
+                "Нажмите «Profiles» → «Current Group» → «Update subscription»",
+                "После этого жмём Test → Url Test Group",
+                "После завершения теста сортируем по задержке и жмём Enter(Return) по профилю с самой низкой задержкой"
+            ],
+            updateSteps: "1. Нажмите <strong>«Profiles»</strong><br>2. Выберите вашу группу<br>3. Нажмите <strong>«Current Group»</strong> → <strong>«Update subscription»</strong>"
+        },
+        {
+            name: "NekoBoxForAndroid",
+            icon: "🐱",
+            platform: "Android",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/MatsuriDayo/NekoBoxForAndroid/releases" }
+            ],
+            steps: [
+                "Откройте вкладку «Группы»",
+                "Нажмите на плюсик (+) внизу",
+                "Введите любое имя группы",
+                "Выберите тип «Подписка»",
+                "В поле «Ссылка для подписки» вставьте скопированную ссылку",
+                "Установите «Автообновление» (рекомендуется 30 минут)",
+                "Нажмите «Сохранить»",
+                "Три точки → URL Test",
+                "Три точки → Сортировать → По задержке",
+                "Выбираем сервер и жмём на кнопку со стрелкой(внизу)"
+            ],
+            updateSteps: "1. Перейдите во вкладку <strong>«Группы»</strong><br>2. Нажмите на три точки (⋮) рядом с группой<br>3. Выберите <strong>«Обновить»</strong>"
+        },
+        {
+            name: "Hiddify",
+            icon: "🔮",
+            platform: "Windows / Android / iOS / MacOS / Linux",
+            downloadLinks: [
+                { name: "Официальный сайт", url: "https://hiddify.com/" },
+                { name: "GitHub", url: "https://github.com/hiddify/hiddify-app/releases" }
+            ],
+            steps: [
+                "Нажмите «Add» → «Import from Clipboard»",
+                "Вставьте скопированную ссылку из буфера обмена",
+                "Добавьте примечание (любое название)",
+                "Включите переключатель подключения"
+            ],
+            updateSteps: "1. Нажмите на иконку обновления (⟳) рядом с названием профиля<br>2. Или в настройках профиля выберите <strong>«Update»</strong>"
+        },
+        {
+            name: "Throne",
+            icon: "👑",
+            platform: "Windows / Linux / MacOS",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/throneproj/Throne/releases" }
+            ],
+            steps: [
+                "Откройте приложение Throne",
+                "Нажмите «Добавить профиль из буфера обмена»",
+                "Создайте новую группу подписки",
+                "Перейдите в «Настройки» → «Основные настройки»",
+                "Найдите раздел «Подписка» и включите интервал обновления",
+                "Вернитесь к группе и обновите подписку",
+                "ПКМ по выбранной группе → Тест задержки всей группы",
+                "Сортируем по задержке и жмём Enter(Return) по профилю с самой низкой задержкой"
+            ],
+            updateSteps: "1. Нажмите правой кнопкой мыши по группе<br>2. Выберите <strong>«Обновить подписку»</strong>"
+        },
+        {
+            name: "Karing",
+            icon: "🐨",
+            platform: "Windows / MacOS / iOS / Android / Linux",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/KaringX/karing/releases" },
+                { name: "App Store", url: "https://apps.apple.com/app/karing/id6472431552" }
+            ],
+            steps: [
+                "Откройте приложение Karing",
+                "Нажмите «Добавить профиль»",
+                "Выберите «Импорт из буфера обмена»",
+                "Вставьте скопированную ссылку",
+                "Добавьте примечание (любое название)",
+                "Выберите сервер для подключения"
+            ],
+            updateSteps: "1. Нажмите на профиль<br>2. Выберите <strong>«Обновить»</strong><br>3. Или используйте кнопку обновления в меню"
+        },
+        {
+            name: "Streisand",
+            icon: "🌸",
+            platform: "iOS",
+            downloadLinks: [
+                { name: "App Store", url: "https://apps.apple.com/app/streisand/id6450534064" }
+            ],
+            steps: [
+                "Откройте приложение Streisand",
+                "Нажмите на плюсик (+) в правом нижнем углу",
+                "Выберите «Добавить вручную»",
+                "В поле «Тип» выберите «Subscription»",
+                "В поле URL вставьте скопированную ссылку",
+                "Нажмите «Сохранить»",
+                "Задержите палец на подписке → URL Тест",
+                "По окончанию выбираем конфиг с самой низкой задержкой"
+            ],
+            updateSteps: "1. Задержите палец на подписке<br>2. Выберите <strong>«Обновить»</strong>"
+        },
+        {
+            name: "sing-box",
+            icon: "📦",
+            platform: "Windows / MacOS / Linux",
+            downloadLinks: [
+                { name: "GitHub", url: "https://github.com/SagerNet/sing-box/releases" },
+                { name: "sing-box-launcher", url: "https://github.com/Leadaxe/singbox-launcher/releases" }
+            ],
+            steps: [
+                "Скачайте sing-box для вашей платформы",
+                "Для Windows дополнительно скачайте wintun.dll",
+                "Создайте конфигурационный файл или используйте лаунчер",
+                "Вставьте скопированную ссылку в поле Subscription URL",
+                "Сохраните и запустите sing-box"
+            ],
+            updateSteps: "1. Перейдите в настройки профиля<br>2. Нажмите <strong>«Update Subscription»</strong><br>3. Или используйте команду обновления в CLI: `sing-box merge`"
+        }
+    ];
+
+    function renderGuides() {
+        const grid = document.getElementById('guidesGrid');
+        grid.innerHTML = guides.map(guide => `
+            <div class="guide-card">
+                <div class="guide-header">
+                    <div class="guide-icon">${guide.icon}</div>
+                    <div class="guide-title">
+                        <h3>${guide.name}</h3>
+                        <p>${guide.platform}</p>
+                    </div>
+                </div>
+                ${guide.downloadLinks ? `
+                    <div class="download-section">
+                        <div class="download-label">
+                            <span>📥</span> Скачать:
+                        </div>
+                        <div class="download-links">
+                            ${guide.downloadLinks.map(link => `
+                                <a href="${link.url}" target="_blank" class="download-link">
+                                    ${link.name === "GitHub" ? "🐙" : link.name === "App Store" ? "🍎" : "📦"} ${link.name}
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                <ul class="guide-steps">
+                    ${guide.steps.map((step, idx) => `
+                        <li>
+                            <span class="step-number">${idx + 1}</span>
+                            <span>${step}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                <div class="guide-update">
+                    <div class="guide-update-title">
+                        <span>🔄</span> Как обновить подписку?
+                    </div>
+                    <div class="guide-update-steps">
+                        ${guide.updateSteps}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ========== ВКЛАДКИ ==========
+    function initTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                document.getElementById('configs-tab').classList.remove('active');
+                document.getElementById('guides-tab').classList.remove('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+    }
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    function init() {
+        renderConfigs();
+        renderGuides();
+        initTabs();
+        
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            currentFilter = e.target.value.trim();
+            renderConfigs();
+        });
+        
+        document.getElementById('clearSearchBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            currentFilter = '';
+            renderConfigs();
+            showToast('Фильтр сброшен');
+        });
+        
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            renderConfigs();
+            showToast('🔄 Список обновлён');
+        });
+    }
     
-    // Поиск
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    
-    searchInput.addEventListener('input', (e) => {
-        currentFilter = e.target.value.trim();
-        render();
-    });
-    
-    clearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        currentFilter = '';
-        render();
-        showToast('Фильтр сброшен');
-    });
-    
-    refreshBtn.addEventListener('click', () => {
-        render();
-        showToast('🔄 Список обновлён');
-    });
-    
-    // Инициализация
-    render();
+    init();
 </script>
 </body>
 </html>
