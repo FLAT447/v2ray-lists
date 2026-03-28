@@ -650,23 +650,23 @@
     <!-- Tabs -->
     <div class="tabs-container">
         <div class="tabs">
-            <button class="tab-btn active" data-tab="configs">📡 Конфигурации</button>
-            <button class="tab-btn" data-tab="guides">📚 Гайды по клиентам</button>
+            <button class="tab-btn active" data-tab="configs">Конфигурации</button>
+            <button class="tab-btn" data-tab="guides">Гайды по клиентам</button>
         </div>
 
         <!-- Вкладка с конфигами -->
         <div id="configs-tab" class="tab-content active">
             <div class="controls-bar">
                 <div class="info-stats">
-                    <span>📁 Всего: 26 файлов</span>
-                    <span id="visibleCount">🔍 Показано: 26</span>
+                    <span>Всего: 26 файлов</span>
+                    <span id="visibleCount">Показано: 26</span>
                 </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Поиск по номеру файла...">
                     <button id="clearSearchBtn">Сброс</button>
                 </div>
                 <button class="refresh-btn" id="refreshBtn">
-                    <span>🔄</span> Обновить
+                    Обновить
                 </button>
             </div>
             <div id="configGrid" class="config-grid"></div>
@@ -679,7 +679,7 @@
     </div>
 </div>
 
-<div id="toast" class="toast">✅ Ссылка скопирована!</div>
+<div id="toast" class="toast">Ссылка скопирована!</div>
 
 <script>
     // ========== КОНФИГУРАЦИИ ==========
@@ -720,10 +720,10 @@
     async function copyToClipboard(text, fileName) {
         try {
             await navigator.clipboard.writeText(text);
-            showToast(`✅ Скопировано: ${fileName || 'ссылка'}`);
+            showToast(`Скопировано: ${fileName || 'ссылка'}`);
             return true;
         } catch (err) {
-            showToast('❌ Ошибка копирования', true);
+            showToast('Ошибка копирования', true);
             return false;
         }
     }
@@ -733,15 +733,15 @@
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3>📱 QR-код для ${file.name}</h3>
+                <h3>QR-код для ${file.name}</h3>
                 <p style="font-size:0.75rem; color:#8b8f98;">Отсканируйте телефоном для быстрого импорта</p>
                 <div class="qr-container">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(file.url)}" style="width:180px; height:180px; border-radius:0.5rem;">
                 </div>
                 <div class="modal-url">${escapeHtml(file.url)}</div>
                 <div class="modal-buttons">
-                    <button class="modal-btn copy-modal">📋 Скопировать ссылку</button>
-                    <button class="modal-btn close-modal">✖️ Закрыть</button>
+                    <button class="modal-btn copy-modal">Скопировать ссылку</button>
+                    <button class="modal-btn close-modal">Закрыть</button>
                 </div>
             </div>
         `;
@@ -760,11 +760,11 @@
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3>📄 ${file.name}</h3>
+                <h3>${file.name}</h3>
                 <div class="modal-url">${escapeHtml(file.url)}</div>
                 <div class="modal-buttons">
-                    <button class="modal-btn copy-modal">📋 Скопировать ссылку</button>
-                    <button class="modal-btn close-modal">✖️ Закрыть</button>
+                    <button class="modal-btn copy-modal">Скопировать ссылку</button>
+                    <button class="modal-btn close-modal">Закрыть</button>
                 </div>
             </div>
         `;
@@ -798,21 +798,21 @@
         document.getElementById('visibleCount').innerHTML = `🔍 Показано: ${filtered.length}`;
         
         if (filtered.length === 0) {
-            grid.innerHTML = `<div class="no-results">🔍 Ничего не найдено<br><small>Попробуйте другой номер файла (1-26)</small></div>`;
+            grid.innerHTML = `<div class="no-results">Ничего не найдено<br><small>Попробуйте другой номер файла (1-26)</small></div>`;
             return;
         }
         
         grid.innerHTML = filtered.map(file => `
             <div class="config-card">
                 <div class="card-header">
-                    <span class="file-name">📄 ${file.name}</span>
+                    <span class="file-name">${file.name}</span>
                     ${file.badge}
                 </div>
                 <div class="url-preview">${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}</div>
                 <div class="btn-group">
-                    <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">📋 Копировать</button>
-                    <button class="qr-btn" data-id="${file.id}">📱 QR-код</button>
-                    <button class="details-btn" data-id="${file.id}">🔍 Подробнее</button>
+                    <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">Копировать</button>
+                    <button class="qr-btn" data-id="${file.id}">QR-код</button>
+                    <button class="details-btn" data-id="${file.id}">Подробнее</button>
                 </div>
             </div>
         `).join('');
@@ -824,7 +824,7 @@
                 const success = await copyToClipboard(url, name);
                 if (success) {
                     const original = btn.innerHTML;
-                    btn.innerHTML = '✅ Скопировано!';
+                    btn.innerHTML = 'Скопировано!';
                     btn.classList.add('copied');
                     setTimeout(() => {
                         btn.innerHTML = original;
@@ -889,7 +889,7 @@
                 "Правой кнопкой по серверу → «Установить активный»",
                 "Системный прокси → Установить системный прокси и включаем Режим VPN"
             ],
-            updateSteps: "1. Перейдите в меню <strong>«Серверы»</strong><br>2. Выберите <strong>«Обновить подписку»</strong><br>3. Или нажмите на иконку обновления (⟳) в панели инструментов"
+            updateSteps: "1. Перейдите в меню <strong>«Группа подписки»</strong><br>2. Выберите <strong>«Обновить подписку без прокси»</strong><br>"
         },
         {
             name: "NekoBox",
@@ -910,7 +910,7 @@
                 "После этого жмём Test → Url Test Group",
                 "После завершения теста сортируем по задержке и жмём Enter(Return) по профилю с самой низкой задержкой"
             ],
-            updateSteps: "1. Нажмите <strong>«Profiles»</strong><br>2. Выберите вашу группу<br>3. Нажмите <strong>«Current Group»</strong> → <strong>«Update subscription»</strong>"
+            updateSteps: "1. Выберите вашу группу<br>2. Нажмите <strong>«Profiles»</strong><br>3. Нажмите <strong>«Current Group»</strong> → <strong>«Update subscription»</strong>"
         },
         {
             name: "NekoBoxForAndroid",
@@ -931,7 +931,7 @@
                 "Три точки → Сортировать → По задержке",
                 "Выбираем сервер и жмём на кнопку со стрелкой(внизу)"
             ],
-            updateSteps: "1. Перейдите во вкладку <strong>«Группы»</strong><br>2. Нажмите на три точки (⋮) рядом с группой<br>3. Выберите <strong>«Обновить»</strong>"
+            updateSteps: "1. Нажмите на три полоски → <strong>«Группы»</strong><br>2. Нажмите на иконку со стрелочками в правом верхнем углу"
         },
         {
             name: "Hiddify",
@@ -984,7 +984,7 @@
                 "Добавьте примечание (любое название)",
                 "Выберите сервер для подключения"
             ],
-            updateSteps: "1. Нажмите на профиль<br>2. Выберите <strong>«Обновить»</strong><br>3. Или используйте кнопку обновления в меню"
+            updateSteps: "1. Нажмите на бампер внизу<br>2. Нажмите на иконку с облочком около выбранной подписки"
         },
         {
             name: "Streisand",
@@ -1019,7 +1019,7 @@
                 "Вставьте скопированную ссылку в поле Subscription URL",
                 "Сохраните и запустите sing-box"
             ],
-            updateSteps: "1. Перейдите в настройки профиля<br>2. Нажмите <strong>«Update Subscription»</strong><br>3. Или используйте команду обновления в CLI: `sing-box merge`"
+            updateSteps: "1. Переходим на вкладку Core(Ядро)<br>2. Жмём Update(Обновить) и ждём пока парсер обновит подписки"
         }
     ];
 
@@ -1058,7 +1058,7 @@
                 </ul>
                 <div class="guide-update">
                     <div class="guide-update-title">
-                        <span>🔄</span> Как обновить подписку?
+                        Как обновить подписку?
                     </div>
                     <div class="guide-update-steps">
                         ${guide.updateSteps}
@@ -1104,7 +1104,7 @@
         
         document.getElementById('refreshBtn').addEventListener('click', () => {
             renderConfigs();
-            showToast('🔄 Список обновлён');
+            showToast('Список обновлён');
         });
     }
     
