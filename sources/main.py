@@ -94,7 +94,7 @@ URLS = [
     "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/hk/vless.txt", #6
     "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt", #7
     "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt", #8
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/ru", #9
+    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", #9
     "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", #10
     "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt", #11
     "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt", #12
@@ -108,7 +108,7 @@ URLS = [
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/available", #23
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/ru", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
