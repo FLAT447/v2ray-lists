@@ -71,5 +71,5 @@ Yandex mirrors:
 25. [ссылка](https://translate.yandex.ru/translate&url=https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/25.txt&lang=de_DE)
 26. [ссылка](https://translate.yandex.ru/translate&url=https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/26.txt&lang=de_DE)
 
-Как воспользоваться зеркалами Яндекса? Переходим по ссылкам выше в браузер и нас перекидывает на сайт `https://translated.turbopages.org`. Копируем эту ссылку и вставляем в клиент
+Как воспользоваться зеркалами Яндекса? Переходим по ссылкам выше в браузер и нас перекидывает на сайт `https://translated.turbopages.org`. Копируем эту ссылку и вставляем в клиент\n
 _P.S. Это единоразовое решение если вдруг включены БС. Если нужно решение на постоянку то используйте `GitHub mirrors`_
