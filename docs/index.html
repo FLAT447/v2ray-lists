@@ -299,37 +299,6 @@
             border: 1px solid #252830;
         }
 
-        .update-info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.8rem;
-            font-size: 0.7rem;
-            background: #0a0c10;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            border: 1px solid #252830;
-        }
-
-        .update-time {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: #8b8f98;
-        }
-
-        .update-time.latest {
-            color: #10b981;
-        }
-
-        .update-time.old {
-            color: #f59e0b;
-        }
-
-        .update-time .time-icon {
-            font-size: 0.75rem;
-        }
-
         .btn-group {
             display: flex;
             gap: 0.75rem;
@@ -836,7 +805,6 @@
                 <div class="info-stats">
                     <span>Всего: 26 файлов</span>
                     <span id="visibleCount">Показано: 26</span>
-                    <span id="lastGlobalUpdate" style="background: #2563eb;">⏳ Загрузка...</span>
                 </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Поиск по номеру файла...">
@@ -846,9 +814,7 @@
                     🔄 Обновить
                 </button>
             </div>
-            <div id="configGrid" class="config-grid">
-                <div class="loading">⏳ Загрузка информации об обновлениях...</div>
-            </div>
+            <div id="configGrid" class="config-grid"></div>
         </div>
 
         <div id="guides-tab" class="tab-content">
@@ -1007,91 +973,7 @@
     const RECOMMENDED_FILES = [1, 6, 22, 23, 24, 25];
     const SNI_FILE = 26;
 
-    let updateTimes = {};
     let files = [];
-
-    function formatDate(dateString) {
-        try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-                return "Неизвестно";
-            }
-            
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMinutes = Math.floor(diffMs / (1000 * 60));
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            
-            if (diffMinutes < 1) {
-                return "Только что";
-            } else if (diffMinutes < 60) {
-                return `${diffMinutes} мин. назад`;
-            } else if (diffHours < 24) {
-                return `${diffHours} ч. ${diffMinutes % 60} мин. назад`;
-            } else if (diffDays < 7) {
-                return `${diffDays} дн. назад`;
-            } else {
-                return date.toLocaleDateString('ru-RU', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-        } catch (e) {
-            console.error('Error formatting date:', e);
-            return "Неизвестно";
-        }
-    }
-
-    async function fetchFileUpdateTime(fileId) {
-        const path = `githubmirror/${fileId}.txt`;
-        try {
-            const response = await fetch(`https://api.github.com/repos/FLAT447/v2ray-lists/commits?path=${path}&per_page=1`);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            const commits = await response.json();
-            if (commits && commits.length > 0) {
-                const commit = commits[0];
-                return {
-                    date: commit.commit.committer.date,
-                    author: commit.commit.author.name || commit.author?.login || 'FLAT447'
-                };
-            }
-        } catch (error) {
-            console.error(`Error fetching update time for file ${fileId}:`, error);
-        }
-        return null;
-    }
-
-    async function fetchAllUpdateTimes() {
-        const promises = [];
-        for (let i = 1; i <= TOTAL_FILES; i++) {
-            promises.push(fetchFileUpdateTime(i));
-            // Небольшая задержка между запросами для избежания rate limiting
-            if (i % 5 === 0) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-        
-        const results = await Promise.all(promises);
-        const updateData = {};
-        let latestUpdate = null;
-        
-        for (let i = 1; i <= TOTAL_FILES; i++) {
-            if (results[i-1]) {
-                updateData[i] = results[i-1];
-                if (!latestUpdate || new Date(results[i-1].date) > new Date(latestUpdate)) {
-                    latestUpdate = results[i-1].date;
-                }
-            }
-        }
-        
-        return { updateData, latestUpdate };
-    }
 
     function getFileBadge(fileId) {
         if (RECOMMENDED_FILES.includes(fileId)) {
@@ -1100,29 +982,6 @@
             return '<span class="badge-sni">🛡️ БС SNI/CIDR</span>';
         }
         return '<span class="protocol-badge">githubmirror</span>';
-    }
-
-    function formatUpdateTimeDisplay(fileId) {
-        const info = updateTimes[fileId];
-        if (!info) {
-            return '<div class="update-info"><div class="update-time">⏳ Нет данных об обновлении</div></div>';
-        }
-        
-        const formatted = formatDate(info.date);
-        const isRecent = (new Date() - new Date(info.date)) < (24 * 60 * 60 * 1000);
-        const timeClass = isRecent ? 'latest' : 'old';
-        
-        return `
-            <div class="update-info">
-                <div class="update-time ${timeClass}">
-                    <span class="time-icon">🕐</span>
-                    <span>Обновлено: ${formatted}</span>
-                </div>
-                <!-- <div class="update-time" style="font-size: 0.65rem;"> -->
-                <!--     👤 ${escapeHtml(info.author)} -->
-                <!-- </div> -->
-            </div>
-        `;
     }
 
     function escapeHtml(str) {
@@ -1157,7 +1016,6 @@
                     <span class="file-name">${file.name}</span>
                     ${file.badge}
                 </div>
-                ${formatUpdateTimeDisplay(file.id)}
                 <div class="url-preview">${escapeHtml(file.url.length > 80 ? file.url.substring(0, 77) + '...' : file.url)}</div>
                 <div class="btn-group">
                     <button class="copy-btn" data-url="${escapeHtml(file.url)}" data-name="${file.name}">📋 Копировать</button>
@@ -1250,33 +1108,15 @@
     }
 
     function showDetailsModal(file) {
-        const updateInfo = updateTimes[file.id];
-        let updateHtml = '<div class="modal-url">Нет данных об обновлении</div>';
-        
-        if (updateInfo) {
-            const formattedDate = new Date(updateInfo.date).toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            updateHtml = `
-                <div class="modal-url" style="text-align: center;">
-                    <strong>🕐 Последнее обновление:</strong><br>
-                    ${formattedDate}<br>
-                    <strong>👤 Автор:</strong> ${escapeHtml(updateInfo.author)}
-                </div>
-            `;
-        }
-        
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>${file.name}</h3>
-                ${updateHtml}
+                <div class="modal-url" style="text-align: center;">
+                    <strong>📁 Файл конфигурации</strong><br>
+                    Ссылка для импорта в клиент
+                </div>
                 <div class="modal-url">${escapeHtml(file.url)}</div>
                 <div class="modal-buttons">
                     <button class="modal-btn copy-modal">Скопировать ссылку</button>
@@ -1527,22 +1367,7 @@
         });
     }
 
-    let currentFilter = '';
-
-    async function init() {
-        const grid = document.getElementById('configGrid');
-        const lastUpdateSpan = document.getElementById('lastGlobalUpdate');
-        grid.innerHTML = '<div class="loading">⏳ Загрузка информации об обновлениях...</div>';
-        
-        const { updateData, latestUpdate } = await fetchAllUpdateTimes();
-        updateTimes = updateData;
-        
-        if (latestUpdate) {
-            lastUpdateSpan.innerHTML = `🕐 Общее обновление: ${formatDate(latestUpdate)}`;
-        } else {
-            lastUpdateSpan.innerHTML = `🕐 Общее обновление: неизвестно`;
-        }
-        
+    function init() {
         for (let i = 1; i <= TOTAL_FILES; i++) {
             files.push({
                 id: i,
@@ -1556,7 +1381,7 @@
         renderGuides();
         initTabs();
         
-        document.getElementById('searchInput').addEventListener('input', (e) => {
+        document.getElementById('searchInput').addEventListener('input', () => {
             renderConfigs();
         });
         
@@ -1566,13 +1391,7 @@
             showToast('Фильтр сброшен');
         });
         
-        document.getElementById('refreshBtn').addEventListener('click', async () => {
-            grid.innerHTML = '<div class="loading">⏳ Обновление информации...</div>';
-            const { updateData: newUpdateData, latestUpdate: newLatestUpdate } = await fetchAllUpdateTimes();
-            updateTimes = newUpdateData;
-            if (newLatestUpdate) {
-                lastUpdateSpan.innerHTML = `🕐 Общее обновление: ${formatDate(newLatestUpdate)}`;
-            }
+        document.getElementById('refreshBtn').addEventListener('click', () => {
             renderConfigs();
             showToast('Список обновлён');
         });
