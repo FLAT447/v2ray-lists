@@ -19,7 +19,7 @@ import os
 import time
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
-# GitHub настройки (только токен из переменных окружения)
+# GitHub настройки
 GITHUB_TOKEN = os.environ.get("MY_TOKEN")
 REPO_NAME = "FLAT447/v2ray-lists"
 
@@ -34,7 +34,7 @@ EXTRA_URL_TIMEOUT = 6
 EXTRA_URL_MAX_ATTEMPTS = 2
 
 # Номера подписок, которые должны содержать только пингуемые сервера
-PING_FILTERED_FILES = {1, 6, 20, 21, 22, 23, 24, 25}
+PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25}
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
 LOGS_BY_FILE: dict[int, list[str]] = defaultdict(list)
@@ -42,7 +42,6 @@ _LOG_LOCK = threading.Lock()
 _UPDATED_FILES_LOCK = threading.Lock()
 _GITHUBMIRROR_INDEX_RE = re.compile(r"githubmirror/(\d+)\.txt")
 updated_files = set()
-update_times = {}  # Храним время обновления для каждого файла
 
 def _extract_index(msg: str) -> int:
     m = _GITHUBMIRROR_INDEX_RE.search(msg)
@@ -63,8 +62,6 @@ def log(message: str):
 zone = zoneinfo.ZoneInfo("Europe/Moscow")
 thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
-current_timestamp = thistime.isoformat()
-current_author = os.environ.get("GITHUB_ACTOR", "FLAT447")  # Имя пользователя GitHub Actions
 
 # -------------------- GITHUB ИНИЦИАЛИЗАЦИЯ --------------------
 if not GITHUB_TOKEN:
@@ -300,7 +297,6 @@ def download_and_save(idx):
     url = URLS[idx]
     local_path = LOCAL_PATHS[idx]
     file_number = idx + 1
-    was_updated = False
     
     try:
         data = fetch_data(url)
@@ -331,7 +327,6 @@ def download_and_save(idx):
             data = "\n".join(working_configs)
             log(f"📊 Файл {file_number}.txt: {len(working_configs)}/{len(lines)} рабочих серверов")
         
-        # Проверяем, изменился ли файл
         if os.path.exists(local_path):
             try:
                 with open(local_path, "r", encoding="utf-8") as f_old:
@@ -343,23 +338,21 @@ def download_and_save(idx):
                 pass
         
         save_to_local_file(local_path, data)
-        was_updated = True
-        return local_path, REMOTE_PATHS[idx], was_updated, file_number
+        return local_path, REMOTE_PATHS[idx]
         
     except Exception as e:
         log(f"⚠️ Ошибка при скачивании {url}: {str(e)[:200]}")
         return None
 
-def upload_to_github(local_path, remote_path, file_number):
+def upload_to_github(local_path, remote_path):
     if not os.path.exists(local_path):
         log(f"❌ Файл {local_path} не найден.")
-        return False
+        return
 
     with open(local_path, "r", encoding="utf-8") as file:
         content = file.read()
 
     max_retries = 5
-    was_updated = False
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -378,17 +371,16 @@ def upload_to_github(local_path, remote_path, file_number):
                     file_index = int(remote_path.split('/')[1].split('.')[0])
                     with _UPDATED_FILES_LOCK:
                         updated_files.add(file_index)
-                    was_updated = True
-                    return was_updated
+                    return
                 else:
                     log(f"⚠️ Ошибка при получении {remote_path}: {e_get.data.get('message', str(e_get))}")
-                    return False
+                    return
 
             try:
                 remote_content = file_in_repo.decoded_content.decode("utf-8", errors="replace")
                 if remote_content == content:
                     log(f"🔄 Изменений для {remote_path} нет.")
-                    return False
+                    return
             except Exception:
                 pass
 
@@ -403,8 +395,7 @@ def upload_to_github(local_path, remote_path, file_number):
             file_index = int(remote_path.split('/')[1].split('.')[0])
             with _UPDATED_FILES_LOCK:
                 updated_files.add(file_index)
-            was_updated = True
-            return was_updated
+            return
             
         except GithubException as e_upd:
             if getattr(e_upd, "status", None) == 409 and attempt < max_retries:
@@ -414,84 +405,9 @@ def upload_to_github(local_path, remote_path, file_number):
                 continue
             else:
                 log(f"❌ Не удалось обновить {remote_path}: {e_upd.data.get('message', str(e_upd))}")
-                return False
+                return
 
     log(f"❌ Не удалось обновить {remote_path} после {max_retries} попыток")
-    return False
-
-def save_update_times():
-    """Сохраняет информацию о времени обновления в JSON файл"""
-    update_info = {
-        "last_update": current_timestamp,
-        "files": {}
-    }
-    
-    # Добавляем информацию о каждом обновленном файле
-    for file_num in updated_files:
-        update_info["files"][str(file_num)] = {
-            "timestamp": current_timestamp,
-            "date": offset,
-            "author": current_author
-        }
-    
-    # Также добавляем информацию для всех файлов, которые существуют
-    for i in range(1, 27):
-        if str(i) not in update_info["files"]:
-            # Проверяем, существует ли файл
-            local_path = f"githubmirror/{i}.txt"
-            if os.path.exists(local_path):
-                # Если файл существует, но не был обновлен, используем время его последней модификации
-                mtime = os.path.getmtime(local_path)
-                update_info["files"][str(i)] = {
-                    "timestamp": datetime.fromtimestamp(mtime).isoformat(),
-                    "date": datetime.fromtimestamp(mtime).strftime("%H:%M | %d.%m.%Y"),
-                    "author": "system"
-                }
-    
-    # Сохраняем JSON файл локально
-    local_json_path = "githubmirror/update_times.json"
-    with open(local_json_path, "w", encoding="utf-8") as f:
-        json.dump(update_info, f, ensure_ascii=False, indent=2)
-    
-    log(f"📁 Сохранена информация об обновлениях в {local_json_path}")
-    return local_json_path
-
-def upload_update_times():
-    """Загружает JSON с информацией об обновлениях в GitHub"""
-    local_json_path = "githubmirror/update_times.json"
-    remote_json_path = "githubmirror/update_times.json"
-    
-    if not os.path.exists(local_json_path):
-        log("❌ Файл с информацией об обновлениях не найден")
-        return
-    
-    with open(local_json_path, "r", encoding="utf-8") as file:
-        content = file.read()
-    
-    try:
-        try:
-            file_in_repo = REPO.get_contents(remote_json_path)
-            current_sha = file_in_repo.sha
-            
-            REPO.update_file(
-                path=remote_json_path,
-                message=f"📊 Обновление информации о времени обновления файлов: {offset}",
-                content=content,
-                sha=current_sha,
-            )
-            log(f"🚀 Файл {remote_json_path} обновлён в репозитории")
-        except GithubException as e_get:
-            if getattr(e_get, "status", None) == 404:
-                REPO.create_file(
-                    path=remote_json_path,
-                    message=f"📊 Создание файла с информацией об обновлениях: {offset}",
-                    content=content,
-                )
-                log(f"🆕 Файл {remote_json_path} создан в репозитории")
-            else:
-                log(f"⚠️ Ошибка при загрузке {remote_json_path}: {e_get}")
-    except Exception as e:
-        log(f"⚠️ Ошибка при загрузке информации об обновлениях: {e}")
 
 def create_filtered_configs():
     """Создает 26-й файл с конфигами для SNI/CIDR белых списков"""
@@ -499,7 +415,7 @@ def create_filtered_configs():
         "00.img.avito.st", "01.img.avito.st", "02.img.avito.st", "03.img.avito.st",
         "04.img.avito.st", "05.img.avito.st", "06.img.avito.st", "07.img.avito.st",
         "08.img.avito.st", "09.img.avito.st", "10.img.avito.st"
-    ]
+    ]  # Сократил для примера, полный список будет длинным
     
     # Оптимизация списка доменов
     sorted_domains = sorted(sni_domains, key=len)
@@ -595,15 +511,10 @@ def create_filtered_configs():
         with open(local_path_26, "w", encoding="utf-8") as file:
             file.write("\n".join(unique_configs))
         log(f"📁 Создан файл {local_path_26} с {len(unique_configs)} конфигами")
-        
-        # Отмечаем, что 26-й файл обновлен
-        with _UPDATED_FILES_LOCK:
-            updated_files.add(26)
-        
-        return local_path_26
     except Exception as e:
         log(f"⚠️ Ошибка при сохранении {local_path_26}: {e}")
-        return None
+
+    return local_path_26
 
 def update_readme_table():
     """Обновляет таблицы в README.md"""
@@ -673,47 +584,39 @@ def update_readme_table():
 def main(dry_run: bool = False):
     log("🚀 Начало обновления конфигураций")
     log(f"📅 Время запуска: {offset}")
-    log(f"👤 Автор: {current_author}")
     log(f"🔍 Проверка пинга: {'включена' if ENABLE_PING_CHECK else 'выключена'}")
     log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
     
     max_workers_download = min(DEFAULT_MAX_WORKERS, max(1, len(URLS)))
     max_workers_upload = max(2, min(6, len(URLS)))
 
-    download_results = []
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_download) as download_pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_download) as download_pool, \
+         concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_upload) as upload_pool:
+
         download_futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS))]
-        
+        upload_futures: list[concurrent.futures.Future] = []
+
         for future in concurrent.futures.as_completed(download_futures):
             result = future.result()
             if result:
-                download_results.append(result)
-    
-    # Загружаем обновленные файлы
-    upload_futures = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_upload) as upload_pool:
-        for result in download_results:
-            local_path, remote_path, was_updated, file_number = result
-            if dry_run:
-                log(f"ℹ️ Dry-run: пропускаем загрузку {remote_path}")
-            elif was_updated:
-                upload_futures.append(upload_pool.submit(upload_to_github, local_path, remote_path, file_number))
-        
+                local_path, remote_path = result
+                if dry_run:
+                    log(f"ℹ️ Dry-run: пропускаем загрузку {remote_path}")
+                else:
+                    upload_futures.append(upload_pool.submit(upload_to_github, local_path, remote_path))
+
         for uf in concurrent.futures.as_completed(upload_futures):
             _ = uf.result()
-    
+
     # Создаем 26-й файл
     local_path_26 = create_filtered_configs()
     
-    # Загружаем 26-й файл если он был обновлен
-    if not dry_run and local_path_26 and 26 in updated_files:
-        upload_to_github(local_path_26, "githubmirror/26.txt", 26)
-    
-    # Сохраняем и загружаем информацию об обновлениях
+    # Загружаем 26-й файл
+    if not dry_run and local_path_26:
+        upload_to_github(local_path_26, "githubmirror/26.txt")
+
+    # Обновляем README
     if not dry_run:
-        save_update_times()
-        upload_update_times()
         update_readme_table()
 
     # Вывод логов
@@ -732,7 +635,6 @@ def main(dry_run: bool = False):
     print("\n".join(output_lines))
     print("="*50)
     log("✅ Обновление завершено")
-    log(f"📊 Обновлено файлов: {len(updated_files)}")
 
 if __name__ == "__main__":
     import argparse
