@@ -10,6 +10,7 @@
 
 ## Зеркала
 GitHub mirrors:
+
 0. [ссылка](https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/0.txt)
 1. [ссылка](https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/1.txt)
 2. [ссылка](https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/2.txt)
@@ -39,6 +40,7 @@ GitHub mirrors:
 26. [ссылка](https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/26.txt)
 
 Yandex mirrors:
+
 0. [ссылка](https://translate.yandex.ru/translate&url=https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/0.txt&lang=de_DE)
 1. [ссылка](https://translate.yandex.ru/translate&url=https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/1.txt&lang=de_DE)
 2. [ссылка](https://translate.yandex.ru/translate&url=https://raw.githubusercontent.com/FLAT447/v2ray-lists/refs/heads/main/githubmirror/2.txt&lang=de_DE)
