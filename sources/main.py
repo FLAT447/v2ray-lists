@@ -33,7 +33,6 @@ EXTRA_URL_TIMEOUT = 6
 EXTRA_URL_MAX_ATTEMPTS = 2
 
 # Номера подписок, которые должны содержать только пингуемые сервера
-# 20 и 21 НЕ пингуются
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
@@ -108,7 +107,7 @@ URLS = [
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/ru", #23
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/available", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
