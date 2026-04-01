@@ -42,40 +42,29 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
 # -------------------- MTProto НАСТРОЙКИ --------------------
+# Рабочие источники MTProto
 MTProto_SOURCES = [
-    "https://raw.githubusercontent.com/Blackymas/NIGGA_2/refs/heads/main/MTProto",
-    "https://raw.githubusercontent.com/arsalandu/mtproto/main/mtproto",
-    "https://raw.githubusercontent.com/Amirhosein-Jafari/MTProto-Collector/refs/heads/main/mtproto.txt",
-    "https://raw.githubusercontent.com/sajjaddd/Mtproto/main/mtproto.txt",
-    "https://raw.githubusercontent.com/maleki021/MTProto-Collector/refs/heads/main/mtproto.txt",
-    "https://raw.githubusercontent.com/vfarid/v2ray-config/main/mtproto.txt",
-    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/mtproto.txt",
-    # Новые источники MTProto
-    "https://raw.githubusercontent.com/maxxsite/maxxsite.github.io/refs/heads/main/mtproto.txt",
-    "https://raw.githubusercontent.com/maximilionus/mtprotoproxy/master/mtproto.txt",
-    "https://raw.githubusercontent.com/proxyserver/proxy-list/main/mtproto.txt",
-    "https://raw.githubusercontent.com/mtgrosser/mtproto-proxy/master/proxies.txt",
-    "https://raw.githubusercontent.com/MTProto/MTProtoConfig/master/mtproto.txt",
-    "https://raw.githubusercontent.com/maxlover/mtproto/main/mtproto.txt",
-    "https://raw.githubusercontent.com/ilyaigpetrov/mtproto-proxy-list/refs/heads/main/proxies.txt",
-    "https://raw.githubusercontent.com/opengs/mtproto-proxy-list/main/mtproto.txt",
-    "https://raw.githubusercontent.com/mtprotoproxy/mtprotoproxy-list/main/list.txt",
-    "https://raw.githubusercontent.com/MeePwn/mtproto-proxy-list/main/mtproto.txt",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto",
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto"
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto",
+    "https://raw.githubusercontent.com/Gozargah/Marzban-node/master/README.md",
+    "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/MT_PROTO",
+    "https://raw.githubusercontent.com/proxyserver/proxy-list/main/proxy-list.txt",
+    "https://raw.githubusercontent.com/maleki021/MTProto-Collector/main/mtproto.txt",
+    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/mtproto.txt",
+    "https://raw.githubusercontent.com/vfarid/v2ray-config/main/mtproto.txt",
+    "https://raw.githubusercontent.com/maxxsite/maxxsite.github.io/main/mtproto.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/mtproto.txt",
+    "https://raw.githubusercontent.com/peytonz0/Free-Configuration/main/mtproto.txt",
+    "https://raw.githubusercontent.com/mtprotoproxy/mtprotoproxy-list/main/list.txt",
 ]
 
 # Источники для получения актуальных IP-диапазонов РФ
 RU_CIDR_SOURCES = [
-    "https://raw.githubusercontent.com/ipverse/rir-ip/refs/heads/master/data/ru/ipv4.txt",
-    "https://raw.githubusercontent.com/herrbischoff/country-ip-blocks/master/ipv4/ru.cidr",
-    # Новые источники CIDR
-    "https://raw.githubusercontent.com/17mon/china_ip_list/master/ipv4.txt",  # Замена на RU?
-    "https://raw.githubusercontent.com/misakaio/chnroutes2/master/chnroutes.txt",
-    "https://raw.githubusercontent.com/pexcn/daily/gh-pages/ipv4/ru.txt",
-    "https://raw.githubusercontent.com/zapret-info/z-i/master/dump.csv",
     "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt",
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist"
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist",
+    "https://raw.githubusercontent.com/herrbischoff/country-ip-blocks/master/ipv4/ru.cidr",
+    "https://raw.githubusercontent.com/ipverse/rir-ip/master/data/ru/ipv4.txt",
+    "https://raw.githubusercontent.com/misakaio/chnroutes2/master/chnroutes.txt",
 ]
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
@@ -85,7 +74,8 @@ _UPDATED_FILES_LOCK = threading.Lock()
 _GITHUBMIRROR_INDEX_RE = re.compile(r"githubmirror/(\d+)\.txt")
 updated_files = set()
 mtproto_updated = False
-_notification_sent = False  # Флаг для предотвращения дублирования сообщений
+_notification_sent = False
+_notification_message = ""
 
 def _extract_index(msg: str) -> int:
     m = _GITHUBMIRROR_INDEX_RE.search(msg)
@@ -132,60 +122,30 @@ def send_telegram_message(message: str) -> bool:
         log(f"⚠️ Ошибка отправки в Telegram: {e}")
         return False
 
+def add_to_notification(message: str):
+    """Добавляет сообщение к уведомлению"""
+    global _notification_message
+    _notification_message += message + "\n"
+
 def send_update_notification():
-    """Отправляет уведомление об обновлении подписок (только один раз)"""
-    global _notification_sent
+    """Отправляет единое уведомление об обновлении подписок"""
+    global _notification_sent, _notification_message
     
     if _notification_sent:
         return
     
-    if not updated_files and not mtproto_updated:
+    if not _notification_message.strip():
         return
     
-    message_parts = []
-    
-    # Заголовок
-    message_parts.append(f"🔄 <b>Подписки обновлены!</b>")
-    message_parts.append(f"📅 Время: {offset}")
-    message_parts.append("")
-    
-    # V2Ray подписки
-    if updated_files:
-        updated_list = sorted(updated_files)
-        message_parts.append(f"📁 <b>V2Ray подписки:</b>")
-        message_parts.append(f"Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
-        message_parts.append("")
-        message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
-        for file_num in updated_list:
-            raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
-            message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
-            message_parts.append(f"  <code>{raw_url}</code>")
-        message_parts.append("")
-    
-    # MTProto подписки
-    if mtproto_updated:
-        message_parts.append(f"🔷 <b>MTProto прокси:</b>")
-        white_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_white.txt"
-        black_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_black.txt"
-        message_parts.append(f"• <a href='{white_url}'>mtproto_white.txt</a> (БС)")
-        message_parts.append(f"  <code>{white_url}</code>")
-        message_parts.append(f"• <a href='{black_url}'>mtproto_black.txt</a> ")
-        message_parts.append(f"  <code>{black_url}</code>")
-        message_parts.append("")
-    
-    # Ссылка на репозиторий
-    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий с подписками</a>")
-    
-    full_message = "\n".join(message_parts)
-    
     # Telegram имеет лимит 4096 символов, разбиваем если нужно
-    if len(full_message) > 4096:
-        for i in range(0, len(full_message), 4000):
-            send_telegram_message(full_message[i:i+4000])
+    if len(_notification_message) > 4096:
+        for i in range(0, len(_notification_message), 4000):
+            send_telegram_message(_notification_message[i:i+4000])
     else:
-        send_telegram_message(full_message)
+        send_telegram_message(_notification_message)
     
     _notification_sent = True
+    _notification_message = ""
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
@@ -442,17 +402,24 @@ def get_ru_cidr_networks() -> Set[ipaddress.IPv4Network]:
                 if not line or line.startswith('#') or line.startswith('//'):
                     continue
                 
+                # Извлекаем CIDR из строки
+                cidr_match = re.search(r'([\d\.]+/\d+)', line)
+                if cidr_match:
+                    try:
+                        network = ipaddress.IPv4Network(cidr_match.group(1), strict=False)
+                        ru_networks.add(network)
+                        continue
+                    except:
+                        pass
+                
+                # Пробуем распарсить как IP/CIDR
                 try:
                     if '/' in line:
-                        # Очистка от возможных лишних символов
-                        line = line.split(',')[0].split(' ')[0].strip()
                         network = ipaddress.IPv4Network(line, strict=False)
                         ru_networks.add(network)
-                    else:
-                        # Проверяем, что это IP-адрес
-                        if re.match(r'^[\d\.]+$', line):
-                            ip = ipaddress.IPv4Address(line)
-                            ru_networks.add(ipaddress.IPv4Network(f"{ip}/32", strict=False))
+                    elif re.match(r'^[\d\.]+$', line):
+                        ip = ipaddress.IPv4Address(line)
+                        ru_networks.add(ipaddress.IPv4Network(f"{ip}/32", strict=False))
                 except:
                     continue
                     
@@ -460,26 +427,10 @@ def get_ru_cidr_networks() -> Set[ipaddress.IPv4Network]:
         except Exception as e:
             log(f"⚠️ Ошибка загрузки CIDR из {source}: {e}")
     
-    # Если не удалось загрузить, используем базовые диапазоны
-    if not ru_networks:
-        log("⚠️ Не удалось загрузить CIDR диапазоны, использую базовые диапазоны РФ")
-        basic_ranges = [
-            "5.1.0.0/24", "5.3.0.0/16", "5.8.0.0/16", "5.16.0.0/14", "5.44.0.0/18",
-            "5.45.0.0/16", "5.53.0.0/16", "5.56.0.0/13", "5.101.0.0/16", "5.128.0.0/14",
-            "5.136.0.0/13", "5.144.0.0/13", "5.158.0.0/16", "5.159.0.0/16", "5.164.0.0/14",
-            "5.188.0.0/16", "5.189.0.0/16", "5.200.0.0/14", "5.227.0.0/16", "5.228.0.0/14",
-            "5.249.0.0/16", "5.250.0.0/16", "5.252.0.0/16", "5.253.0.0/16", "5.254.0.0/16",
-        ]
-        for r in basic_ranges:
-            try:
-                ru_networks.add(ipaddress.IPv4Network(r, strict=False))
-            except:
-                pass
-    
     return ru_networks
 
 def extract_mtproto_host_port(config: str) -> Tuple[Optional[str], Optional[int]]:
-    """Извлекает хост и порт из MTProto строки с поддержкой различных форматов"""
+    """Извлекает хост и порт из MTProto строки"""
     # Формат: mtproto://secret@host:port
     match = re.search(r'mtproto://[^@]*@([^:]+):(\d+)', config)
     if match:
@@ -505,7 +456,7 @@ def extract_mtproto_host_port(config: str) -> Tuple[Optional[str], Optional[int]
 def parse_mtproto_line(line: str) -> Optional[str]:
     """Парсит строку и возвращает стандартизированный MTProto URL"""
     line = line.strip()
-    if not line or line.startswith('#') or line.startswith('//'):
+    if not line or line.startswith('#') or line.startswith('//') or line.startswith('*'):
         return None
     
     # Если уже в формате mtproto://
@@ -517,7 +468,7 @@ def parse_mtproto_line(line: str) -> Optional[str]:
     if match:
         host, port = match.groups()
         # Стандартный секрет для MTProto
-        secret = "ee" + "0" * 62  # Стандартный секрет для MTProto
+        secret = "ee" + "0" * 62
         return f"mtproto://{secret}@{host}:{port}"
     
     # Если есть секрет в строке
@@ -1087,12 +1038,56 @@ def update_readme_table():
     except Exception as e:
         log(f"⚠️ Ошибка README: {e}")
 
+# -------------------- ФОРМИРОВАНИЕ УВЕДОМЛЕНИЯ --------------------
+def build_notification_message():
+    """Формирует единое сообщение с информацией об обновлениях"""
+    global _notification_message
+    
+    if not updated_files and not mtproto_updated:
+        return
+    
+    message_parts = []
+    
+    # Заголовок
+    message_parts.append(f"🔄 <b>Подписки обновлены!</b>")
+    message_parts.append(f"📅 Время: {offset}")
+    message_parts.append("")
+    
+    # V2Ray подписки
+    if updated_files:
+        updated_list = sorted(updated_files)
+        message_parts.append(f"📁 <b>V2Ray подписки:</b>")
+        message_parts.append(f"Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
+        message_parts.append("")
+        message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
+        for file_num in updated_list:
+            raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
+            message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
+            message_parts.append(f"  <code>{raw_url}</code>")
+        message_parts.append("")
+    
+    # MTProto подписки
+    if mtproto_updated:
+        message_parts.append(f"🔷 <b>MTProto прокси:</b>")
+        white_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_white.txt"
+        black_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_black.txt"
+        message_parts.append(f"• <a href='{white_url}'>mtproto_white.txt</a> (РФ)")
+        message_parts.append(f"  <code>{white_url}</code>")
+        message_parts.append(f"• <a href='{black_url}'>mtproto_black.txt</a> (Мир)")
+        message_parts.append(f"  <code>{black_url}</code>")
+        message_parts.append("")
+    
+    # Ссылка на репозиторий
+    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий с подписками</a>")
+    
+    _notification_message = "\n".join(message_parts)
+
 # -------------------- MAIN --------------------
 def main(dry_run: bool = False):
-    global mtproto_updated, _notification_sent
+    global mtproto_updated, _notification_sent, _notification_message
     
-    # Сбрасываем флаги при каждом запуске
     _notification_sent = False
+    _notification_message = ""
     
     log("🚀 Начало обновления конфигураций")
     log(f"📅 Время запуска: {offset}")
@@ -1132,8 +1127,9 @@ def main(dry_run: bool = False):
     if not dry_run:
         update_readme_table()
     
-    # Отправка уведомления в Telegram, если были обновления (только один раз)
-    if (updated_files or mtproto_updated) and not dry_run:
+    # Формируем и отправляем единое уведомление
+    build_notification_message()
+    if _notification_message and not dry_run:
         send_update_notification()
     
     # Вывод логов
