@@ -131,7 +131,7 @@ def get_best_configs(file_path: str, count: int) -> list:
     return [cfg for cfg, _ in results[:count]]
 
 def format_config_for_telegram(config: str, index: int, ping_ms: float = None) -> str:
-    """Форматирует конфиг для отправки в Telegram"""
+    """Форматирует конфиг для отправки в Telegram (полная ссылка без сокращений)"""
     # Извлекаем хост и порт для отображения
     host_port = extract_host_and_port(config)
     location = ""
@@ -141,10 +141,78 @@ def format_config_for_telegram(config: str, index: int, ping_ms: float = None) -
     
     ping_text = f" | 🏓 {ping_ms:.0f}ms" if ping_ms else ""
     
-    # Используем HTML-сущности для корректного отображения
+    # Экранируем для HTML, но сохраняем полную ссылку
     config_escaped = html.escape(config)
     
     return f"<b>{index}</b>. <code>{config_escaped}</code>{ping_text}{location}"
+
+def send_best_configs_to_telegram():
+    """Отправляет лучшие конфиги в Telegram с разбивкой на части"""
+    if not updated_files:
+        return
+    
+    message_parts = []
+    
+    # Заголовок
+    message_parts.append(f"🔄 <b>V2Ray подписки обновлены!</b>")
+    message_parts.append(f"📅 Время: {offset}")
+    updated_list = sorted(updated_files)
+    message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
+    message_parts.append("")
+    
+    # Лучшие ключи из выбранных файлов
+    message_parts.append("🏆 <b>Лучшие ключи (наименьший пинг):</b>")
+    message_parts.append("")
+    
+    for file_num in sorted(TOP_FILES):
+        if file_num in updated_files or file_num == 26:
+            file_path = f"githubmirror/{file_num}.txt"
+            count = TOP_COUNTS.get(file_num, 3)
+            best_configs = get_best_configs(file_path, count)
+            
+            if best_configs:
+                message_parts.append(f"📄 <b>{file_num}.txt</b> (лучшие {len(best_configs)}):")
+                for i, cfg in enumerate(best_configs, 1):
+                    # Получаем пинг для отображения
+                    host_port = extract_host_and_port(cfg)
+                    ping_ms = None
+                    if host_port:
+                        host, port = host_port
+                        start_time = time.time()
+                        if ping_host(host, port, PING_TIMEOUT):
+                            ping_ms = (time.time() - start_time) * 1000
+                    message_parts.append(format_config_for_telegram(cfg, i, ping_ms))
+                message_parts.append("")
+    
+    # Ссылки на подписки
+    message_parts.append("🔗 <b>Ссылки на подписки:</b>")
+    for file_num in updated_list:
+        raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{file_num}.txt"
+        message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
+    
+    # Отправляем сообщение частями, если оно слишком длинное
+    full_message = "\n".join(message_parts)
+    
+    # Telegram имеет лимит 4096 символов
+    if len(full_message) > 4096:
+        # Разбиваем по частям, сохраняя структуру
+        current_part = []
+        current_length = 0
+        
+        for line in full_message.split('\n'):
+            if current_length + len(line) + 1 > 4000:  # Оставляем запас
+                if current_part:
+                    send_telegram_message("\n".join(current_part))
+                    current_part = []
+                    current_length = 0
+            
+            current_part.append(line)
+            current_length += len(line) + 1
+        
+        if current_part:
+            send_telegram_message("\n".join(current_part))
+    else:
+        send_telegram_message(full_message)
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
@@ -818,47 +886,7 @@ def main(dry_run: bool = False):
     
     # Отправка сообщения в Telegram, если были обновления
     if updated_files and not dry_run:
-        # Формируем сообщение об обновлении
-        updated_list = sorted(updated_files)
-        message_parts = []
-        
-        # Заголовок
-        message_parts.append(f"🔄 <b>V2Ray подписки обновлены!</b>")
-        message_parts.append(f"📅 Время: {offset}")
-        message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
-        message_parts.append("")
-        
-        # Лучшие ключи из выбранных файлов
-        message_parts.append("🏆 <b>Лучшие ключи (наименьший пинг):</b>")
-        message_parts.append("")
-        
-        for file_num in sorted(TOP_FILES):
-            if file_num in updated_files or file_num == 26:
-                file_path = f"githubmirror/{file_num}.txt"
-                count = TOP_COUNTS.get(file_num, 3)
-                best_configs = get_best_configs(file_path, count)
-                
-                if best_configs:
-                    message_parts.append(f"📄 <b>{file_num}.txt</b> (лучшие {len(best_configs)}):")
-                    for i, cfg in enumerate(best_configs, 1):
-                        message_parts.append(format_config_for_telegram(cfg, i))
-                    message_parts.append("")
-        
-        # Ссылки на подписки
-        message_parts.append("🔗 <b>Ссылки на подписки:</b>")
-        for file_num in updated_list:
-            raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{file_num}.txt"
-            message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
-        
-        full_message = "\n".join(message_parts)
-        
-        # Отправляем сообщение (если оно не слишком длинное)
-        if len(full_message) > 4096:
-            # Разбиваем на части
-            for i in range(0, len(full_message), 4000):
-                send_telegram_message(full_message[i:i+4000])
-        else:
-            send_telegram_message(full_message)
+        send_best_configs_to_telegram()
     
     # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
