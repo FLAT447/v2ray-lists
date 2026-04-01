@@ -25,6 +25,7 @@ REPO_NAME = "FLAT447/v2ray-lists"
 # Telegram настройки
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
 PING_TIMEOUT = 2.0
@@ -66,30 +67,53 @@ thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
 
 # -------------------- TELEGRAM --------------------
-def send_telegram_message(message: str):
-    """Отправляет сообщение в Telegram"""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        log("⚠️ Telegram не настроен: отсутствуют TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID")
+def send_telegram_message(message: str, send_to_channel: bool = True):
+    """Отправляет сообщение в Telegram (чат и/или канал)"""
+    if not TELEGRAM_BOT_TOKEN:
+        log("⚠️ Telegram не настроен: отсутствует TELEGRAM_BOT_TOKEN")
         return False
     
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True
-        }
-        response = requests.post(url, json=payload, timeout=10)
-        if response.status_code == 200:
-            log("📨 Сообщение отправлено в Telegram")
-            return True
-        else:
-            log(f"⚠️ Ошибка отправки в Telegram: {response.status_code}")
-            return False
-    except Exception as e:
-        log(f"⚠️ Ошибка отправки в Telegram: {e}")
-        return False
+    success = False
+    
+    # Отправка в основной чат
+    if TELEGRAM_CHAT_ID:
+        try:
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+            payload = {
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": message,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True
+            }
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code == 200:
+                log("📨 Сообщение отправлено в Telegram (чат)")
+                success = True
+            else:
+                log(f"⚠️ Ошибка отправки в чат Telegram: {response.status_code}")
+        except Exception as e:
+            log(f"⚠️ Ошибка отправки в чат Telegram: {e}")
+    
+    # Отправка в канал
+    if send_to_channel and TELEGRAM_CHANNEL_ID:
+        try:
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+            payload = {
+                "chat_id": TELEGRAM_CHANNEL_ID,
+                "text": message,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True
+            }
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code == 200:
+                log("📨 Сообщение отправлено в Telegram (канал)")
+                success = True
+            else:
+                log(f"⚠️ Ошибка отправки в канал Telegram: {response.status_code}")
+        except Exception as e:
+            log(f"⚠️ Ошибка отправки в канал Telegram: {e}")
+    
+    return success
 
 def send_update_notification():
     """Отправляет уведомление об обновлении подписок"""
@@ -121,9 +145,9 @@ def send_update_notification():
     # Telegram имеет лимит 4096 символов, разбиваем если нужно
     if len(full_message) > 4096:
         for i in range(0, len(full_message), 4000):
-            send_telegram_message(full_message[i:i+4000])
+            send_telegram_message(full_message[i:i+4000], True)
     else:
-        send_telegram_message(full_message)
+        send_telegram_message(full_message, True)
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
