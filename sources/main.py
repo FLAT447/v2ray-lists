@@ -18,6 +18,7 @@ import re
 import os
 import time
 import ipaddress
+import socks  # <-- добавлено для SOCKS5
 from typing import Set, Tuple, List, Optional
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
@@ -176,7 +177,12 @@ EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
     "https://raw.githubusercontent.com/zieng2/wl/main/vless.txt",
+    "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
+    "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
+    "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
+    "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
     "https://whiteprime.github.io/xraycheck/configs/white-list_available",
+    "https://wlrus.lol/confs/selected.txt"
 ]
 
 REMOTE_PATHS = [f"githubmirror/{i+1}.txt" for i in range(len(URLS))]
@@ -426,6 +432,27 @@ def parse_mtproto_line(line: str) -> Optional[str]:
     
     return None
 
+def check_mtproto_proxy(config_str: str) -> bool:
+    """
+    Проверяет работоспособность MTProto прокси через SOCKS5.
+    Пытается подключиться к реальному серверу Telegram.
+    """
+    host_port = extract_host_and_port(config_str)
+    if not host_port:
+        return False
+    host, port = host_port
+    try:
+        # Создаём сокет через SOCKS5
+        s = socks.socksocket()
+        s.set_proxy(socks.SOCKS5, host, port)
+        s.settimeout(PING_TIMEOUT)
+        # Пытаемся подключиться к IP Telegram (один из адресов)
+        s.connect(("149.154.167.99", 443))
+        s.close()
+        return True
+    except Exception:
+        return False
+
 def process_mtproto():
     """Обрабатывает MTProto прокси"""
     global mtproto_updated
@@ -467,17 +494,14 @@ def process_mtproto():
     log(f"📊 Уникальных MTProto конфигов: {len(unique_configs)}")
     
     if unique_configs and ENABLE_PING_CHECK:
-        log(f"🔍 Проверка пинга для MTProto...")
+        log(f"🔍 Проверка работоспособности MTProto (SOCKS5)...")
         
         def check_mtproto(cfg):
-            # Извлекаем хост и порт
-            match = re.search(r'mtproto://[^@]*@([^:]+):(\d+)', cfg)
-            if not match:
-                match = re.search(r'mtproto://([^:]+):(\d+)', cfg)
-            if match:
-                host, port = match.group(1), int(match.group(2))
-                if ping_host(host, port, PING_TIMEOUT):
-                    return cfg, host
+            if check_mtproto_proxy(cfg):
+                # Извлекаем хост для определения страны
+                host_port = extract_host_and_port(cfg)
+                host = host_port[0] if host_port else None
+                return cfg, host
             return None, None
         
         working = []
@@ -491,20 +515,24 @@ def process_mtproto():
         log(f"✅ Рабочих MTProto: {len(working)}")
         
         for cfg, host in working:
-            try:
-                ip_addr = ipaddress.IPv4Address(host)
-                is_ru = any(ip_addr in network for network in ru_networks)
-                if is_ru:
-                    white_list.append(cfg)
-                else:
+            if host:
+                try:
+                    ip_addr = ipaddress.IPv4Address(host)
+                    is_ru = any(ip_addr in network for network in ru_networks)
+                    if is_ru:
+                        white_list.append(cfg)
+                    else:
+                        black_list.append(cfg)
+                except:
                     black_list.append(cfg)
-            except:
+            else:
                 black_list.append(cfg)
     else:
+        # Если проверка отключена, просто разделяем по IP
         for cfg in unique_configs:
-            host_match = re.search(r'@([^:]+):', cfg)
-            if host_match:
-                host = host_match.group(1)
+            host_port = extract_host_and_port(cfg)
+            host = host_port[0] if host_port else None
+            if host:
                 try:
                     ip_addr = ipaddress.IPv4Address(host)
                     is_ru = any(ip_addr in network for network in ru_networks)
