@@ -132,16 +132,16 @@ def get_best_configs(file_path: str, count: int) -> list:
 
 def format_config_for_telegram(config: str, index: int, ping_ms: float = None) -> str:
     """Форматирует конфиг для отправки в Telegram"""
-    # Сокращаем длинные ссылки
-    if len(config) > 100:
-        # Для vmess/vless/trojan показываем только начало
-        if config.startswith(("vmess://", "vless://", "trojan://")):
-            prefix = config.split("://")[0]
-            config_short = f"{prefix}://...{config[-50:]}"
-        else:
-            config_short = config[:100] + "..."
-    else:
-        config_short = config
+    # Пытаемся извлечь хост и порт
+    host_port = extract_host_and_port(config)
+    location = ""
+    if host_port:
+        host, port = host_port
+        location = f"📍 {host}:{port}"
+    
+    ping_text = f" | 🏓 {ping_ms:.0f}ms" if ping_ms else ""
+    
+    return f"<b>{index}</b>. <code>{config}</code>\n{location}{ping_text}"
     
     # Пытаемся извлечь хост и порт
     host_port = extract_host_and_port(config)
