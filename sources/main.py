@@ -167,9 +167,9 @@ def send_update_notification():
         message_parts.append(f"🔷 <b>MTProto прокси:</b>")
         white_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_white.txt"
         black_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_black.txt"
-        message_parts.append(f"• <a href='{white_url}'>mtproto_white.txt</a> (РФ)")
+        message_parts.append(f"• <a href='{white_url}'>mtproto_white.txt</a> (БС)")
         message_parts.append(f"  <code>{white_url}</code>")
-        message_parts.append(f"• <a href='{black_url}'>mtproto_black.txt</a> (Мир)")
+        message_parts.append(f"• <a href='{black_url}'>mtproto_black.txt</a> ")
         message_parts.append(f"  <code>{black_url}</code>")
         message_parts.append("")
     
