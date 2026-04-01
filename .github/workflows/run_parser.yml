@@ -25,6 +25,8 @@ jobs:
       - name: Run script
         env:
           MY_TOKEN: ${{ secrets.VPN_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          # Запускаем скрипт из папки sources
           python sources/main.py
+
