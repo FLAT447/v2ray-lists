@@ -18,7 +18,7 @@ import re
 import os
 import time
 import ipaddress
-from typing import Set, Tuple
+from typing import Set, Tuple, List, Optional
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
 GITHUB_TOKEN = os.environ.get("MY_TOKEN")
@@ -50,14 +50,32 @@ MTProto_SOURCES = [
     "https://raw.githubusercontent.com/maleki021/MTProto-Collector/refs/heads/main/mtproto.txt",
     "https://raw.githubusercontent.com/vfarid/v2ray-config/main/mtproto.txt",
     "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/mtproto.txt",
+    # Новые источники MTProto
+    "https://raw.githubusercontent.com/maxxsite/maxxsite.github.io/refs/heads/main/mtproto.txt",
+    "https://raw.githubusercontent.com/maximilionus/mtprotoproxy/master/mtproto.txt",
+    "https://raw.githubusercontent.com/proxyserver/proxy-list/main/mtproto.txt",
+    "https://raw.githubusercontent.com/mtgrosser/mtproto-proxy/master/proxies.txt",
+    "https://raw.githubusercontent.com/MTProto/MTProtoConfig/master/mtproto.txt",
+    "https://raw.githubusercontent.com/maxlover/mtproto/main/mtproto.txt",
+    "https://raw.githubusercontent.com/ilyaigpetrov/mtproto-proxy-list/refs/heads/main/proxies.txt",
+    "https://raw.githubusercontent.com/opengs/mtproto-proxy-list/main/mtproto.txt",
+    "https://raw.githubusercontent.com/mtprotoproxy/mtprotoproxy-list/main/list.txt",
+    "https://raw.githubusercontent.com/MeePwn/mtproto-proxy-list/main/mtproto.txt",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto"
 ]
 
 # Источники для получения актуальных IP-диапазонов РФ
 RU_CIDR_SOURCES = [
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist",
-    "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt"
+    "https://raw.githubusercontent.com/ipverse/rir-ip/refs/heads/master/data/ru/ipv4.txt",
+    "https://raw.githubusercontent.com/herrbischoff/country-ip-blocks/master/ipv4/ru.cidr",
+    # Новые источники CIDR
+    "https://raw.githubusercontent.com/17mon/china_ip_list/master/ipv4.txt",  # Замена на RU?
+    "https://raw.githubusercontent.com/misakaio/chnroutes2/master/chnroutes.txt",
+    "https://raw.githubusercontent.com/pexcn/daily/gh-pages/ipv4/ru.txt",
+    "https://raw.githubusercontent.com/zapret-info/z-i/master/dump.csv",
+    "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt",
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist"
 ]
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
@@ -67,6 +85,7 @@ _UPDATED_FILES_LOCK = threading.Lock()
 _GITHUBMIRROR_INDEX_RE = re.compile(r"githubmirror/(\d+)\.txt")
 updated_files = set()
 mtproto_updated = False
+_notification_sent = False  # Флаг для предотвращения дублирования сообщений
 
 def _extract_index(msg: str) -> int:
     m = _GITHUBMIRROR_INDEX_RE.search(msg)
@@ -88,7 +107,7 @@ thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
 
 # -------------------- TELEGRAM --------------------
-def send_telegram_message(message: str):
+def send_telegram_message(message: str) -> bool:
     """Отправляет сообщение в Telegram"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         log("⚠️ Telegram не настроен: отсутствуют TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID")
@@ -114,8 +133,11 @@ def send_telegram_message(message: str):
         return False
 
 def send_update_notification():
-    """Отправляет уведомление об обновлении подписок"""
-    global mtproto_updated
+    """Отправляет уведомление об обновлении подписок (только один раз)"""
+    global _notification_sent
+    
+    if _notification_sent:
+        return
     
     if not updated_files and not mtproto_updated:
         return
@@ -162,6 +184,8 @@ def send_update_notification():
             send_telegram_message(full_message[i:i+4000])
     else:
         send_telegram_message(full_message)
+    
+    _notification_sent = True
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
@@ -287,8 +311,26 @@ def extract_source_name(url: str) -> str:
         return "Источник"
 
 # -------------------- ПИНГ --------------------
-def extract_host_and_port(config: str):
+def extract_host_and_port(config: str) -> Optional[Tuple[str, int]]:
+    """Улучшенный парсинг хоста и порта из различных форматов конфигов"""
     try:
+        # MTProto формат
+        if config.startswith("mtproto://"):
+            # Формат: mtproto://secret@host:port
+            match = re.search(r'mtproto://[^@]*@([^:]+):(\d+)', config)
+            if match:
+                return match.group(1), int(match.group(2))
+            # Формат: mtproto://host:port
+            match = re.search(r'mtproto://([^:]+):(\d+)', config)
+            if match:
+                return match.group(1), int(match.group(2))
+        
+        # Простой формат host:port
+        match = re.search(r'^([\w\.-]+):(\d+)$', config)
+        if match:
+            return match.group(1), int(match.group(2))
+        
+        # V2Ray форматы
         if config.startswith("vmess://"):
             try:
                 payload = config[8:]
@@ -304,15 +346,13 @@ def extract_host_and_port(config: str):
                         return host, int(port)
             except:
                 pass
-        elif config.startswith(("vless://", "trojan://")):
-            match = re.search(r'@([\w\.-]+):(\d+)', config)
-            if match:
-                return match.group(1), int(match.group(2))
-        elif config.startswith("ss://"):
+        elif config.startswith(("vless://", "trojan://", "ss://")):
+            # Формат с @
             match = re.search(r'@([\w\.-]+):(\d+)', config)
             if match:
                 return match.group(1), int(match.group(2))
         else:
+            # Общий поиск
             match = re.search(r'(?:@|//)([\w\.-]+):(\d{1,5})', config)
             if match:
                 return match.group(1), int(match.group(2))
@@ -399,16 +439,20 @@ def get_ru_cidr_networks() -> Set[ipaddress.IPv4Network]:
             
             for line in lines:
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith('#') or line.startswith('//'):
                     continue
                 
                 try:
                     if '/' in line:
+                        # Очистка от возможных лишних символов
+                        line = line.split(',')[0].split(' ')[0].strip()
                         network = ipaddress.IPv4Network(line, strict=False)
                         ru_networks.add(network)
                     else:
-                        ip = ipaddress.IPv4Address(line)
-                        ru_networks.add(ipaddress.IPv4Network(f"{ip}/32", strict=False))
+                        # Проверяем, что это IP-адрес
+                        if re.match(r'^[\d\.]+$', line):
+                            ip = ipaddress.IPv4Address(line)
+                            ru_networks.add(ipaddress.IPv4Network(f"{ip}/32", strict=False))
                 except:
                     continue
                     
@@ -416,19 +460,75 @@ def get_ru_cidr_networks() -> Set[ipaddress.IPv4Network]:
         except Exception as e:
             log(f"⚠️ Ошибка загрузки CIDR из {source}: {e}")
     
+    # Если не удалось загрузить, используем базовые диапазоны
+    if not ru_networks:
+        log("⚠️ Не удалось загрузить CIDR диапазоны, использую базовые диапазоны РФ")
+        basic_ranges = [
+            "5.1.0.0/24", "5.3.0.0/16", "5.8.0.0/16", "5.16.0.0/14", "5.44.0.0/18",
+            "5.45.0.0/16", "5.53.0.0/16", "5.56.0.0/13", "5.101.0.0/16", "5.128.0.0/14",
+            "5.136.0.0/13", "5.144.0.0/13", "5.158.0.0/16", "5.159.0.0/16", "5.164.0.0/14",
+            "5.188.0.0/16", "5.189.0.0/16", "5.200.0.0/14", "5.227.0.0/16", "5.228.0.0/14",
+            "5.249.0.0/16", "5.250.0.0/16", "5.252.0.0/16", "5.253.0.0/16", "5.254.0.0/16",
+        ]
+        for r in basic_ranges:
+            try:
+                ru_networks.add(ipaddress.IPv4Network(r, strict=False))
+            except:
+                pass
+    
     return ru_networks
 
-def extract_mtproto_host_port(config: str) -> Tuple[str, int]:
-    """Извлекает хост и порт из MTProto строки"""
-    match = re.search(r'mtproto://[^@]+@([^:]+):(\d+)', config)
+def extract_mtproto_host_port(config: str) -> Tuple[Optional[str], Optional[int]]:
+    """Извлекает хост и порт из MTProto строки с поддержкой различных форматов"""
+    # Формат: mtproto://secret@host:port
+    match = re.search(r'mtproto://[^@]*@([^:]+):(\d+)', config)
     if match:
         return match.group(1), int(match.group(2))
     
-    match = re.search(r'([^:]+):(\d+)', config)
+    # Формат: mtproto://host:port
+    match = re.search(r'mtproto://([^:]+):(\d+)', config)
+    if match:
+        return match.group(1), int(match.group(2))
+    
+    # Формат: host:port
+    match = re.search(r'^([\w\.-]+):(\d+)$', config.strip())
+    if match:
+        return match.group(1), int(match.group(2))
+    
+    # Формат: ip:port в любом месте
+    match = re.search(r'([\d\.]+):(\d+)', config)
     if match:
         return match.group(1), int(match.group(2))
     
     return None, None
+
+def parse_mtproto_line(line: str) -> Optional[str]:
+    """Парсит строку и возвращает стандартизированный MTProto URL"""
+    line = line.strip()
+    if not line or line.startswith('#') or line.startswith('//'):
+        return None
+    
+    # Если уже в формате mtproto://
+    if line.startswith('mtproto://'):
+        return line
+    
+    # Если просто host:port
+    match = re.match(r'^([\w\.-]+):(\d+)$', line)
+    if match:
+        host, port = match.groups()
+        # Стандартный секрет для MTProto
+        secret = "ee" + "0" * 62  # Стандартный секрет для MTProto
+        return f"mtproto://{secret}@{host}:{port}"
+    
+    # Если есть секрет в строке
+    match = re.search(r'([\w\.-]+):(\d+)(?:\s+(\w+))?', line)
+    if match:
+        host, port, secret = match.groups()
+        if not secret:
+            secret = "ee" + "0" * 62
+        return f"mtproto://{secret}@{host}:{port}"
+    
+    return None
 
 def process_mtproto():
     """Обрабатывает MTProto прокси и возвращает информацию об изменениях"""
@@ -450,16 +550,25 @@ def process_mtproto():
             lines = data.splitlines()
             
             for line in lines:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    if 'mtproto://' in line or re.match(r'^[^:]+:\d+$', line):
-                        all_configs.append(line)
+                parsed = parse_mtproto_line(line)
+                if parsed:
+                    all_configs.append(parsed)
             
-            log(f"📥 Загружено {len(lines)} строк из {source}")
+            log(f"📥 Загружено {len([l for l in lines if l.strip() and not l.startswith('#')])} конфигов из {source}")
         except Exception as e:
             log(f"⚠️ Ошибка загрузки MTProto из {source}: {e}")
     
-    unique_configs = list(dict.fromkeys(all_configs))
+    # Дедупликация по хосту:порту
+    unique_configs = []
+    seen_hosts = set()
+    for cfg in all_configs:
+        host, port = extract_mtproto_host_port(cfg)
+        if host and port:
+            key = f"{host}:{port}"
+            if key not in seen_hosts:
+                seen_hosts.add(key)
+                unique_configs.append(cfg)
+    
     log(f"📊 Всего уникальных MTProto конфигов: {len(unique_configs)}")
     
     if ENABLE_PING_CHECK:
@@ -980,7 +1089,10 @@ def update_readme_table():
 
 # -------------------- MAIN --------------------
 def main(dry_run: bool = False):
-    global mtproto_updated
+    global mtproto_updated, _notification_sent
+    
+    # Сбрасываем флаги при каждом запуске
+    _notification_sent = False
     
     log("🚀 Начало обновления конфигураций")
     log(f"📅 Время запуска: {offset}")
@@ -1020,7 +1132,7 @@ def main(dry_run: bool = False):
     if not dry_run:
         update_readme_table()
     
-    # Отправка уведомления в Telegram, если были обновления
+    # Отправка уведомления в Telegram, если были обновления (только один раз)
     if (updated_files or mtproto_updated) and not dry_run:
         send_update_notification()
     
