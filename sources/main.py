@@ -132,27 +132,19 @@ def get_best_configs(file_path: str, count: int) -> list:
 
 def format_config_for_telegram(config: str, index: int, ping_ms: float = None) -> str:
     """Форматирует конфиг для отправки в Telegram"""
-    # Пытаемся извлечь хост и порт
+    # Извлекаем хост и порт для отображения
     host_port = extract_host_and_port(config)
     location = ""
     if host_port:
         host, port = host_port
-        location = f"📍 {host}:{port}"
+        location = f"\n📍 {host}:{port}"
     
     ping_text = f" | 🏓 {ping_ms:.0f}ms" if ping_ms else ""
     
-    return f"<b>{index}</b>. <code>{config}</code>\n{location}{ping_text}"
+    # Используем HTML-сущности для корректного отображения
+    config_escaped = html.escape(config)
     
-    # Пытаемся извлечь хост и порт
-    host_port = extract_host_and_port(config)
-    location = ""
-    if host_port:
-        host, port = host_port
-        location = f"📍 {host}:{port}"
-    
-    ping_text = f" | 🏓 {ping_ms:.0f}ms" if ping_ms else ""
-    
-    return f"<b>{index}</b>. <code>{config_short}</code>\n{location}{ping_text}"
+    return f"<b>{index}</b>. <code>{config_escaped}</code>{ping_text}{location}"
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
