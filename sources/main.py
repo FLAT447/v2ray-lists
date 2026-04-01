@@ -105,11 +105,12 @@ def send_update_notification():
     message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
     message_parts.append("")
     
-    # Ссылки на подписки
-    message_parts.append("🔗 <b>Ссылки на подписки:</b>")
+    # RAW ссылки на подписки
+    message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
     for file_num in updated_list:
-        raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{file_num}.txt"
+        raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
         message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
+        message_parts.append(f"  <code>{raw_url}</code>")
     
     # Ссылка на репозиторий
     message_parts.append("")
