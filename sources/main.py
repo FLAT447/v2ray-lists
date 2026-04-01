@@ -17,9 +17,6 @@ import json
 import re
 import os
 import time
-import ipaddress
-import socks  # <-- добавлено для SOCKS5
-from typing import Set, Tuple, List, Optional
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
 GITHUB_TOKEN = os.environ.get("MY_TOKEN")
@@ -42,34 +39,12 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 # Номера подписок, которые должны содержать только пингуемые сервера
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
-# -------------------- MTProto НАСТРОЙКИ --------------------
-# Проверенные источники MTProto (только рабочие)
-MTProto_SOURCES = [
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto",
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto",
-    "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/MT_PROTO",
-    "https://raw.githubusercontent.com/Gozargah/Marzban-node/master/README.md",
-    "https://raw.githubusercontent.com/maleki021/MTProto-Collector/main/mtproto.txt",
-    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/mtproto.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/mtproto.txt",
-]
-
-# Источники для получения актуальных IP-диапазонов РФ
-RU_CIDR_SOURCES = [
-    "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt",
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist",
-]
-
 # -------------------- ЛОГИРОВАНИЕ --------------------
 LOGS_BY_FILE: dict[int, list[str]] = defaultdict(list)
 _LOG_LOCK = threading.Lock()
 _UPDATED_FILES_LOCK = threading.Lock()
 _GITHUBMIRROR_INDEX_RE = re.compile(r"githubmirror/(\d+)\.txt")
 updated_files = set()
-file_26_updated = False
-mtproto_updated = False
-_notification_sent = False
-_notification_message = ""
 
 def _extract_index(msg: str) -> int:
     m = _GITHUBMIRROR_INDEX_RE.search(msg)
@@ -91,9 +66,10 @@ thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
 
 # -------------------- TELEGRAM --------------------
-def send_telegram_message(message: str) -> bool:
+def send_telegram_message(message: str):
     """Отправляет сообщение в Telegram"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        log("⚠️ Telegram не настроен: отсутствуют TELEGRAM_BOT_TOKEN или TELEGRAM_CHAT_ID")
         return False
     
     try:
@@ -105,28 +81,49 @@ def send_telegram_message(message: str) -> bool:
             "disable_web_page_preview": True
         }
         response = requests.post(url, json=payload, timeout=10)
-        return response.status_code == 200
+        if response.status_code == 200:
+            log("📨 Сообщение отправлено в Telegram")
+            return True
+        else:
+            log(f"⚠️ Ошибка отправки в Telegram: {response.status_code}")
+            return False
     except Exception as e:
         log(f"⚠️ Ошибка отправки в Telegram: {e}")
         return False
 
 def send_update_notification():
-    """Отправляет единое уведомление об обновлении подписок"""
-    global _notification_sent, _notification_message
-    
-    if _notification_sent:
+    """Отправляет уведомление об обновлении подписок"""
+    if not updated_files:
         return
     
-    if not _notification_message.strip():
-        return
+    message_parts = []
     
-    if len(_notification_message) > 4096:
-        for i in range(0, len(_notification_message), 4000):
-            send_telegram_message(_notification_message[i:i+4000])
+    # Заголовок
+    message_parts.append(f"🔄 <b>V2Ray подписки обновлены!</b>")
+    message_parts.append(f"📅 Время: {offset}")
+    updated_list = sorted(updated_files)
+    message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
+    message_parts.append("")
+    
+    # RAW ссылки на подписки
+    message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
+    for file_num in updated_list:
+        raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
+        message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
+        message_parts.append(f"  <code>{raw_url}</code>")
+    
+    # Ссылка на репозиторий
+    message_parts.append("")
+    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий с подписками</a>")
+    
+    full_message = "\n".join(message_parts)
+    
+    # Telegram имеет лимит 4096 символов, разбиваем если нужно
+    if len(full_message) > 4096:
+        for i in range(0, len(full_message), 4000):
+            send_telegram_message(full_message[i:i+4000])
     else:
-        send_telegram_message(_notification_message)
-    
-    _notification_sent = True
+        send_telegram_message(full_message)
 
 # -------------------- GITHUB --------------------
 if not GITHUB_TOKEN:
@@ -141,36 +138,42 @@ except Exception as e:
     log(f"❌ Ошибка подключения: {e}")
     exit(1)
 
+try:
+    remaining, limit = g.rate_limiting
+    log(f"ℹ️ GitHub API: {remaining}/{limit} запросов")
+except Exception:
+    pass
+
 if not os.path.exists("githubmirror"):
     os.mkdir("githubmirror")
 
 # -------------------- ИСТОЧНИКИ --------------------
 URLS = [
-    "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt",
-    "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt",
-    "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt",
-    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt",
-    "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/hk/vless.txt",
-    "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt",
-    "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
-    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
-    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
-    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
-    "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt",
-    "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt",
-    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
-    "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt",
-    "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub",
-    "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt",
-    "https://raw.githubusercontent.com/free18/v2ray/refs/heads/main/v.txt",
-    "https://github.com/MhdiTaheri/V2rayCollector/raw/refs/heads/main/sub/mix",
-    "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt",
-    "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt",
-    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri",
-    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/ru",
-    "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
+    "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt", #1
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt", #2
+    "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt", #3
+    "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt", #4
+    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt", #5
+    "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/hk/vless.txt", #6
+    "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt", #7
+    "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt", #8
+    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", #9
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", #10
+    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt", #11
+    "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt", #12
+    "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt", #13
+    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", #14
+    "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt", #15
+    "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub", #16
+    "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt", #17
+    "https://raw.githubusercontent.com/free18/v2ray/refs/heads/main/v.txt", #18
+    "https://github.com/MhdiTaheri/V2rayCollector/raw/refs/heads/main/sub/mix", #19
+    "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
+    "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
+    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/ru", #23
+    "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
+    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
 
 EXTRA_URLS_FOR_26 = [
@@ -182,7 +185,9 @@ EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
     "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
     "https://whiteprime.github.io/xraycheck/configs/white-list_available",
-    "https://wlrus.lol/confs/selected.txt"
+    "https://wlrus.lol/confs/selected.txt",
+    "https://ety.twinkvibe.gay/whitelist",
+    "https://whiteprime.github.io/xraycheck/configs/white-list_available_st(top100)"
 ]
 
 REMOTE_PATHS = [f"githubmirror/{i+1}.txt" for i in range(len(URLS))]
@@ -244,24 +249,8 @@ def extract_source_name(url: str) -> str:
         return "Источник"
 
 # -------------------- ПИНГ --------------------
-def extract_host_and_port(config: str) -> Optional[Tuple[str, int]]:
-    """Парсинг хоста и порта из различных форматов конфигов"""
+def extract_host_and_port(config: str):
     try:
-        # MTProto формат
-        if config.startswith("mtproto://"):
-            match = re.search(r'mtproto://[^@]*@([^:]+):(\d+)', config)
-            if match:
-                return match.group(1), int(match.group(2))
-            match = re.search(r'mtproto://([^:]+):(\d+)', config)
-            if match:
-                return match.group(1), int(match.group(2))
-        
-        # Простой формат host:port
-        match = re.search(r'^([\w\.-]+):(\d+)$', config)
-        if match:
-            return match.group(1), int(match.group(2))
-        
-        # V2Ray форматы
         if config.startswith("vmess://"):
             try:
                 payload = config[8:]
@@ -277,7 +266,11 @@ def extract_host_and_port(config: str) -> Optional[Tuple[str, int]]:
                         return host, int(port)
             except:
                 pass
-        elif config.startswith(("vless://", "trojan://", "ss://")):
+        elif config.startswith(("vless://", "trojan://")):
+            match = re.search(r'@([\w\.-]+):(\d+)', config)
+            if match:
+                return match.group(1), int(match.group(2))
+        elif config.startswith("ss://"):
             match = re.search(r'@([\w\.-]+):(\d+)', config)
             if match:
                 return match.group(1), int(match.group(2))
@@ -356,224 +349,6 @@ def filter_insecure_configs(local_path, data, log_enabled=True):
     
     return "\n".join(result), filtered_count
 
-# -------------------- MTProto ФУНКЦИИ --------------------
-def get_ru_cidr_networks() -> Set[ipaddress.IPv4Network]:
-    """Получает актуальные CIDR диапазоны РФ из внешних источников"""
-    ru_networks = set()
-    
-    for source in RU_CIDR_SOURCES:
-        try:
-            data = fetch_data(source, timeout=10, max_attempts=2, allow_http_downgrade=False)
-            lines = data.splitlines()
-            
-            for line in lines:
-                line = line.strip()
-                if not line or line.startswith('#') or line.startswith('//'):
-                    continue
-                
-                # Извлекаем CIDR
-                cidr_match = re.search(r'([\d\.]+/\d+)', line)
-                if cidr_match:
-                    try:
-                        network = ipaddress.IPv4Network(cidr_match.group(1), strict=False)
-                        ru_networks.add(network)
-                        continue
-                    except:
-                        pass
-                
-                try:
-                    if '/' in line:
-                        network = ipaddress.IPv4Network(line, strict=False)
-                        ru_networks.add(network)
-                    elif re.match(r'^[\d\.]+$', line):
-                        ip = ipaddress.IPv4Address(line)
-                        ru_networks.add(ipaddress.IPv4Network(f"{ip}/32", strict=False))
-                except:
-                    continue
-                    
-            log(f"📡 Загружено {len(ru_networks)} CIDR из {source}")
-        except Exception as e:
-            log(f"⚠️ Ошибка загрузки CIDR из {source}: {e}")
-    
-    return ru_networks
-
-def parse_mtproto_line(line: str) -> Optional[str]:
-    """Парсит строку и возвращает стандартизированный MTProto URL"""
-    line = line.strip()
-    if not line or line.startswith('#') or line.startswith('//') or line.startswith('*'):
-        return None
-    
-    # Если уже в формате mtproto://
-    if line.startswith('mtproto://'):
-        # Проверяем, есть ли секрет
-        if '@' in line:
-            return line
-        # Добавляем стандартный секрет
-        match = re.search(r'mtproto://([^:]+):(\d+)', line)
-        if match:
-            host, port = match.groups()
-            secret = "ee" + "0" * 62
-            return f"mtproto://{secret}@{host}:{port}"
-    
-    # Если просто host:port
-    match = re.match(r'^([\w\.-]+):(\d+)$', line)
-    if match:
-        host, port = match.groups()
-        secret = "ee" + "0" * 62
-        return f"mtproto://{secret}@{host}:{port}"
-    
-    # Если есть секрет в строке
-    match = re.search(r'([\w\.-]+):(\d+)(?:\s+(\w+))?', line)
-    if match:
-        host, port, secret = match.groups()
-        if not secret:
-            secret = "ee" + "0" * 62
-        return f"mtproto://{secret}@{host}:{port}"
-    
-    return None
-
-def check_mtproto_proxy(config_str: str) -> bool:
-    """
-    Проверяет работоспособность MTProto прокси через SOCKS5.
-    Пытается подключиться к реальному серверу Telegram.
-    """
-    host_port = extract_host_and_port(config_str)
-    if not host_port:
-        return False
-    host, port = host_port
-    try:
-        # Создаём сокет через SOCKS5
-        s = socks.socksocket()
-        s.set_proxy(socks.SOCKS5, host, port)
-        s.settimeout(PING_TIMEOUT)
-        # Пытаемся подключиться к IP Telegram (один из адресов)
-        s.connect(("149.154.167.99", 443))
-        s.close()
-        return True
-    except Exception:
-        return False
-
-def process_mtproto():
-    """Обрабатывает MTProto прокси"""
-    global mtproto_updated
-    
-    log("🔷 Обработка MTProto прокси...")
-    
-    white_list, black_list = [], []
-    
-    log("🌍 Загрузка CIDR диапазонов РФ...")
-    ru_networks = get_ru_cidr_networks()
-    log(f"✅ Загружено {len(ru_networks)} CIDR диапазонов РФ")
-    
-    all_configs = []
-    
-    for source in MTProto_SOURCES:
-        try:
-            data = fetch_data(source, timeout=10, max_attempts=2, allow_http_downgrade=False)
-            lines = data.splitlines()
-            count = 0
-            
-            for line in lines:
-                parsed = parse_mtproto_line(line)
-                if parsed:
-                    all_configs.append(parsed)
-                    count += 1
-            
-            log(f"📥 Загружено {count} MTProto конфигов из {source.split('/')[-1]}")
-        except Exception as e:
-            log(f"⚠️ Ошибка загрузки из {source}: {e}")
-    
-    # Дедупликация
-    unique_configs = []
-    seen = set()
-    for cfg in all_configs:
-        if cfg not in seen:
-            seen.add(cfg)
-            unique_configs.append(cfg)
-    
-    log(f"📊 Уникальных MTProto конфигов: {len(unique_configs)}")
-    
-    if unique_configs and ENABLE_PING_CHECK:
-        log(f"🔍 Проверка работоспособности MTProto (SOCKS5)...")
-        
-        def check_mtproto(cfg):
-            if check_mtproto_proxy(cfg):
-                # Извлекаем хост для определения страны
-                host_port = extract_host_and_port(cfg)
-                host = host_port[0] if host_port else None
-                return cfg, host
-            return None, None
-        
-        working = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=PING_MAX_WORKERS) as executor:
-            futures = [executor.submit(check_mtproto, cfg) for cfg in unique_configs]
-            for future in concurrent.futures.as_completed(futures):
-                cfg, host = future.result()
-                if cfg:
-                    working.append((cfg, host))
-        
-        log(f"✅ Рабочих MTProto: {len(working)}")
-        
-        for cfg, host in working:
-            if host:
-                try:
-                    ip_addr = ipaddress.IPv4Address(host)
-                    is_ru = any(ip_addr in network for network in ru_networks)
-                    if is_ru:
-                        white_list.append(cfg)
-                    else:
-                        black_list.append(cfg)
-                except:
-                    black_list.append(cfg)
-            else:
-                black_list.append(cfg)
-    else:
-        # Если проверка отключена, просто разделяем по IP
-        for cfg in unique_configs:
-            host_port = extract_host_and_port(cfg)
-            host = host_port[0] if host_port else None
-            if host:
-                try:
-                    ip_addr = ipaddress.IPv4Address(host)
-                    is_ru = any(ip_addr in network for network in ru_networks)
-                    if is_ru:
-                        white_list.append(cfg)
-                    else:
-                        black_list.append(cfg)
-                except:
-                    black_list.append(cfg)
-            else:
-                black_list.append(cfg)
-    
-    log(f"🇷🇺 Белый список (РФ): {len(white_list)}")
-    log(f"🌍 Чёрный список (Мир): {len(black_list)}")
-    
-    # Сохраняем файлы
-    white_path = "githubmirror/mtproto_white.txt"
-    black_path = "githubmirror/mtproto_black.txt"
-    
-    white_content = "\n".join(white_list)
-    black_content = "\n".join(black_list)
-    
-    # Проверяем изменения
-    white_changed = not os.path.exists(white_path) or open(white_path, "r", encoding="utf-8").read() != white_content
-    black_changed = not os.path.exists(black_path) or open(black_path, "r", encoding="utf-8").read() != black_content
-    
-    with open(white_path, "w", encoding="utf-8") as f:
-        f.write(white_content)
-    with open(black_path, "w", encoding="utf-8") as f:
-        f.write(black_content)
-    
-    log(f"📁 Сохранён белый список: {white_path}")
-    log(f"📁 Сохранён чёрный список: {black_path}")
-    
-    if white_changed or black_changed:
-        mtproto_updated = True
-        if white_changed:
-            upload_to_github(white_path, "githubmirror/mtproto_white.txt")
-        if black_changed:
-            upload_to_github(black_path, "githubmirror/mtproto_black.txt")
-
 # -------------------- ЗАГРУЗКА И СОХРАНЕНИЕ --------------------
 def download_and_save(idx):
     url = URLS[idx]
@@ -586,6 +361,7 @@ def download_and_save(idx):
         
         lines = [l.strip() for l in data.splitlines() if l.strip()]
         
+        # Фильтруем по пингу только нужные файлы
         if file_number in PING_FILTERED_FILES:
             lines = filter_by_ping(lines, file_number)
         
@@ -594,6 +370,7 @@ def download_and_save(idx):
         if os.path.exists(local_path):
             with open(local_path, "r", encoding="utf-8") as f:
                 if f.read() == data:
+                    log(f"🔄 Изменений для {local_path} нет (локально). Пропуск загрузки в GitHub.")
                     return None
         
         save_to_local_file(local_path, data)
@@ -604,23 +381,31 @@ def download_and_save(idx):
 
 def upload_to_github(local_path, remote_path):
     if not os.path.exists(local_path):
+        log(f"❌ Файл {local_path} не найден.")
         return
 
     with open(local_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    for attempt in range(1, 6):
+    max_retries = 5
+
+    for attempt in range(1, max_retries + 1):
         try:
             try:
                 file_in_repo = REPO.get_contents(remote_path)
                 current_sha = file_in_repo.sha
                 
+                # Безопасное получение содержимого
                 try:
                     remote_content = file_in_repo.decoded_content.decode("utf-8", errors="replace")
-                except:
-                    remote_content = None
+                except (AssertionError, AttributeError):
+                    if hasattr(file_in_repo, 'content') and file_in_repo.content:
+                        remote_content = base64.b64decode(file_in_repo.content).decode("utf-8", errors="replace")
+                    else:
+                        remote_content = None
                 
                 if remote_content == content:
+                    log(f"🔄 Изменений для {remote_path} нет.")
                     return
                     
             except GithubException as e_get:
@@ -628,53 +413,44 @@ def upload_to_github(local_path, remote_path):
                     basename = os.path.basename(remote_path)
                     REPO.create_file(
                         path=remote_path,
-                        message=f"🆕 Первый коммит {basename}: {offset}",
+                        message=f"🆕 Первый коммит {basename} по часовому поясу Европа/Москва: {offset}",
                         content=content,
                     )
                     log(f"🆕 Файл {remote_path} создан.")
-                    if remote_path.startswith("githubmirror/"):
-                        if remote_path == "githubmirror/26.txt":
-                            global file_26_updated
-                            file_26_updated = True
-                        elif "mtproto" not in remote_path:
-                            try:
-                                file_index = int(remote_path.split('/')[1].split('.')[0])
-                                with _UPDATED_FILES_LOCK:
-                                    updated_files.add(file_index)
-                            except:
-                                pass
+                    file_index = int(remote_path.split('/')[1].split('.')[0])
+                    with _UPDATED_FILES_LOCK:
+                        updated_files.add(file_index)
                     return
                 else:
+                    log(f"⚠️ Ошибка при получении {remote_path}: {e_get.data.get('message', str(e_get))}")
                     return
 
             basename = os.path.basename(remote_path)
             REPO.update_file(
                 path=remote_path,
-                message=f"🚀 Обновление {basename}: {offset}",
+                message=f"🚀 Обновление {basename} по часовому поясу Европа/Москва: {offset}",
                 content=content,
                 sha=current_sha,
             )
-            log(f"🚀 Файл {remote_path} обновлён.")
-            if remote_path.startswith("githubmirror/"):
-                if remote_path == "githubmirror/26.txt":
-                    file_26_updated = True
-                elif "mtproto" not in remote_path:
-                    try:
-                        file_index = int(remote_path.split('/')[1].split('.')[0])
-                        with _UPDATED_FILES_LOCK:
-                            updated_files.add(file_index)
-                    except:
-                        pass
+            log(f"🚀 Файл {remote_path} обновлён в репозитории.")
+            file_index = int(remote_path.split('/')[1].split('.')[0])
+            with _UPDATED_FILES_LOCK:
+                updated_files.add(file_index)
             return
             
         except GithubException as e_upd:
-            if getattr(e_upd, "status", None) == 409 and attempt < 5:
-                time.sleep(0.5 * (2 ** (attempt - 1)))
+            if getattr(e_upd, "status", None) == 409 and attempt < max_retries:
+                wait_time = 0.5 * (2 ** (attempt - 1))
+                log(f"⚠️ Конфликт SHA для {remote_path}, попытка {attempt}/{max_retries}, ждем {wait_time} сек")
+                time.sleep(wait_time)
                 continue
             else:
+                log(f"❌ Не удалось обновить {remote_path}: {e_upd.data.get('message', str(e_upd))}")
                 return
 
-# -------------------- 26-Й ФАЙЛ --------------------
+    log(f"❌ Не удалось обновить {remote_path} после {max_retries} попыток")
+
+# -------------------- 26-Й ФАЙЛ (ПОЛНЫЙ СПИСОК SNI) --------------------
 SNI_DOMAINS = [
     "00.img.avito.st", "01.img.avito.st", "02.img.avito.st", "03.img.avito.st",
     "04.img.avito.st", "05.img.avito.st", "06.img.avito.st", "07.img.avito.st",
@@ -875,10 +651,16 @@ SNI_DOMAINS = [
 ]
 
 def create_filtered_configs():
-    """Создает 26-й файл с конфигами"""
-    global file_26_updated
+    """Создает 26-й файл с конфигами (только пингуемые)"""
     
-    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in SNI_DOMAINS) + r")", re.IGNORECASE)
+    # Оптимизация доменов
+    sorted_domains = sorted(SNI_DOMAINS, key=len)
+    optimized = []
+    for d in sorted_domains:
+        if not any(ex in d for ex in optimized):
+            optimized.append(d)
+    
+    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")")
     
     def extract_from_file(file_idx):
         path = f"githubmirror/{file_idx}.txt"
@@ -887,21 +669,24 @@ def create_filtered_configs():
         try:
             with open(path, "r") as f:
                 content = f.read()
-            content = re.sub(r'(vmess|vless|trojan|ss|ssr)://', r'\n\1://', content)
+            content = re.sub(r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://', r'\n\1://', content)
             return [l.strip() for l in content.splitlines() if l.strip() and sni_regex.search(l)]
         except:
             return []
     
+    # Собираем конфиги из файлов 1-25
     all_configs = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         futures = [executor.submit(extract_from_file, i) for i in range(1, 26)]
         for future in concurrent.futures.as_completed(futures):
             all_configs.extend(future.result())
     
+    # Загружаем доп. источники
     def load_extra(url):
         try:
-            data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT, max_attempts=EXTRA_URL_MAX_ATTEMPTS)
-            data = re.sub(r'(vmess|vless|trojan|ss|ssr)://', r'\n\1://', data)
+            data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT, max_attempts=EXTRA_URL_MAX_ATTEMPTS, allow_http_downgrade=False)
+            data, _ = filter_insecure_configs("githubmirror/26.txt", data, log_enabled=False)
+            data = re.sub(r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://', r'\n\1://', data)
             return [l.strip() for l in data.splitlines() if l.strip() and not l.startswith('#')]
         except:
             return []
@@ -915,32 +700,28 @@ def create_filtered_configs():
     all_configs.extend(extra)
     
     # Дедупликация
-    seen = set()
+    seen_full = set()
+    seen_hp = set()
     unique = []
     for cfg in all_configs:
-        if cfg not in seen:
-            seen.add(cfg)
-            unique.append(cfg)
+        if cfg in seen_full:
+            continue
+        seen_full.add(cfg)
+        hp = extract_host_and_port(cfg)
+        if hp:
+            key = f"{hp[0].lower()}:{hp[1]}"
+            if key in seen_hp:
+                continue
+            seen_hp.add(key)
+        unique.append(cfg)
     
+    # Проверка пинга для 26-го файла
     unique = filter_by_ping(unique, 26)
     
     path = "githubmirror/26.txt"
-    
-    # Проверяем изменения
-    old_content = ""
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            old_content = f.read()
-    
-    new_content = "\n".join(unique)
-    
     with open(path, "w", encoding="utf-8") as f:
-        f.write(new_content)
-    
-    if old_content != new_content:
-        file_26_updated = True
-    
-    log(f"📁 Файл {path}: {len(unique)} конфигов")
+        f.write("\n".join(unique))
+    log(f"📁 Создан файл {path} с {len(unique)} конфигами")
     return path, len(unique)
 
 # -------------------- README --------------------
@@ -958,9 +739,9 @@ def update_readme_table():
             if i <= 25:
                 source = f"[{extract_source_name(URLS[i-1])}]({URLS[i-1]})"
             else:
-                source = f"[Обход SNI белых списков]({raw_url})"
+                source = f"[Обход SNI/CIDR белых списков]({raw_url})"
             
-            if i in updated_files or (i == 26 and file_26_updated):
+            if i in updated_files:
                 rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {time_part} | {date_part} |")
             else:
                 match = re.search(rf"\|\s*{i}\s*\|.*?\|\s*(.*?)\s*\|\s*(.*?)\s*\|", old)
@@ -969,111 +750,65 @@ def update_readme_table():
                 else:
                     rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | Никогда | Никогда |")
         
-        rows.append(f"| W | [`mtproto_white.txt`](https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/mtproto_white.txt) | MTProto White (РФ) | {time_part} | {date_part} |")
-        rows.append(f"| B | [`mtproto_black.txt`](https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/mtproto_black.txt) | MTProto Black (Мир) | {time_part} | {date_part} |")
-        
         new_table = "| № | Файл | Источник | Время | Дата |\n|--|--|--|--|--|\n" + "\n".join(rows)
         new_content = re.sub(r"\| № \| Файл \| Источник \| Время \| Дата \|[\s\S]*?\|--\|--\|--\|--\|--\|[\s\S]*?(\n\n## |$)", new_table + r"\1", old)
         
         if new_content != old:
-            REPO.update_file("README.md", f"📝 Обновление таблицы: {offset}", new_content, readme.sha)
-            log("📝 Таблица README.md обновлена")
+            REPO.update_file("README.md", f"📝 Обновление таблицы в README.md по часовому поясу Европа/Москва: {offset}", new_content, readme.sha)
+            log("📝 Таблица в README.md обновлена")
     except Exception as e:
         log(f"⚠️ Ошибка README: {e}")
 
-# -------------------- ФОРМИРОВАНИЕ УВЕДОМЛЕНИЯ --------------------
-def build_notification_message():
-    """Формирует единое сообщение с информацией об обновлениях"""
-    global _notification_message
-    
-    all_updated = set(updated_files)
-    if file_26_updated:
-        all_updated.add(26)
-    
-    if not all_updated and not mtproto_updated:
-        return
-    
-    message_parts = []
-    message_parts.append(f"🔄 <b>Подписки обновлены!</b>")
-    message_parts.append(f"📅 Время: {offset}")
-    message_parts.append("")
-    
-    if all_updated:
-        updated_list = sorted(all_updated)
-        message_parts.append(f"📁 <b>V2Ray подписки:</b>")
-        message_parts.append(f"Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
-        message_parts.append("")
-        message_parts.append("🔗 <b>Ссылки для импорта (RAW):</b>")
-        for file_num in updated_list:
-            raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
-            message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
-            message_parts.append(f"  <code>{raw_url}</code>")
-        message_parts.append("")
-    
-    if mtproto_updated:
-        message_parts.append(f"🔷 <b>MTProto прокси:</b>")
-        white_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_white.txt"
-        black_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/mtproto_black.txt"
-        message_parts.append(f"• <a href='{white_url}'>mtproto_white.txt</a> (РФ)")
-        message_parts.append(f"  <code>{white_url}</code>")
-        message_parts.append(f"• <a href='{black_url}'>mtproto_black.txt</a> (Мир)")
-        message_parts.append(f"  <code>{black_url}</code>")
-        message_parts.append("")
-    
-    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий с подписками</a>")
-    
-    _notification_message = "\n".join(message_parts)
-
 # -------------------- MAIN --------------------
 def main(dry_run: bool = False):
-    global mtproto_updated, file_26_updated, _notification_sent, _notification_message, updated_files
-    
-    _notification_sent = False
-    _notification_message = ""
-    file_26_updated = False
-    updated_files.clear()
-    
     log("🚀 Начало обновления конфигураций")
-    log(f"📅 Время: {offset}")
-    log(f"🔍 Пинг: {'вкл' if ENABLE_PING_CHECK else 'выкл'}")
+    log(f"📅 Время запуска: {offset}")
+    log(f"🔍 Проверка пинга: {'включена' if ENABLE_PING_CHECK else 'выключена'}")
+    log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
     
-    # Скачиваем файлы 1-25
-    with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as pool:
-        futures = [pool.submit(download_and_save, i) for i in range(len(URLS))]
+    # Скачиваем файлы 1-25 и собираем информацию об обновлениях
+    download_results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as download_pool, \
+         concurrent.futures.ThreadPoolExecutor(max_workers=6) as upload_pool:
+        
+        futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS))]
+        uploads = []
+        
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res and not dry_run:
-                upload_to_github(res[0], res[1])
+                download_results.append(res)
+                uploads.append(upload_pool.submit(upload_to_github, res[0], res[1]))
+        
+        for u in concurrent.futures.as_completed(uploads):
+            try:
+                u.result()
+            except Exception as e:
+                log(f"⚠️ Ошибка при загрузке: {e}")
     
     # Создаём 26-й файл
-    if not dry_run:
-        path_26, _ = create_filtered_configs()
-        if path_26:
-            upload_to_github(path_26, "githubmirror/26.txt")
+    path_26, count_26 = create_filtered_configs()
+    if not dry_run and path_26:
+        upload_to_github(path_26, "githubmirror/26.txt")
+        download_results.append((path_26, "githubmirror/26.txt", 26, count_26))
     
-    # MTProto
-    if not dry_run:
-        process_mtproto()
-    
-    # README
     if not dry_run:
         update_readme_table()
     
-    # Уведомление
-    build_notification_message()
-    if _notification_message and not dry_run:
+    # Отправка уведомления в Telegram, если были обновления
+    if updated_files and not dry_run:
         send_update_notification()
     
-    # Логи
+    # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
         if k == 0:
-            print("\n----- Общие -----")
+            print("\n----- Общие сообщения -----")
         else:
             print(f"\n----- {k}.txt -----")
         for msg in LOGS_BY_FILE[k]:
             print(msg)
     
-    log("✅ Готово")
+    log("✅ Обновление завершено")
 
 if __name__ == "__main__":
     import argparse
