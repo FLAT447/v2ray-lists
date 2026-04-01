@@ -1,4 +1,5 @@
 # v2ray-lists
+# README не оформлен, используйте GitHub IO https://flat447.github.io/v2ray-lists
 
 ## 📊 Статистика репозитория
 | Показатель | Значение |
