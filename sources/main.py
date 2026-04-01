@@ -42,29 +42,31 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
 # -------------------- MTProto НАСТРОЙКИ --------------------
-# Рабочие источники MTProto
+# Источники MTProto из репозитория WhitePrime/xraycheck (рабочие)
 MTProto_SOURCES = [
+    # Основные источники из xraycheck
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto",
-    "https://raw.githubusercontent.com/Gozargah/Marzban-node/master/README.md",
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto(top100)",
+    "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto(top100)",
+    
+    # Другие проверенные источники
     "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/MT_PROTO",
-    "https://raw.githubusercontent.com/proxyserver/proxy-list/main/proxy-list.txt",
+    "https://raw.githubusercontent.com/Gozargah/Marzban-node/master/README.md",
     "https://raw.githubusercontent.com/maleki021/MTProto-Collector/main/mtproto.txt",
     "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/main/mtproto.txt",
     "https://raw.githubusercontent.com/vfarid/v2ray-config/main/mtproto.txt",
-    "https://raw.githubusercontent.com/maxxsite/maxxsite.github.io/main/mtproto.txt",
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/mtproto.txt",
-    "https://raw.githubusercontent.com/peytonz0/Free-Configuration/main/mtproto.txt",
-    "https://raw.githubusercontent.com/mtprotoproxy/mtprotoproxy-list/main/list.txt",
+    "https://raw.githubusercontent.com/maxxsite/maxxsite.github.io/main/mtproto.txt",
+    "https://raw.githubusercontent.com/proxyserver/proxy-list/main/proxy-list.txt",
 ]
 
-# Источники для получения актуальных IP-диапазонов РФ
+# Источники для получения актуальных IP-диапазонов РФ (проверенные)
 RU_CIDR_SOURCES = [
     "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist",
     "https://raw.githubusercontent.com/herrbischoff/country-ip-blocks/master/ipv4/ru.cidr",
     "https://raw.githubusercontent.com/ipverse/rir-ip/master/data/ru/ipv4.txt",
-    "https://raw.githubusercontent.com/misakaio/chnroutes2/master/chnroutes.txt",
 ]
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
@@ -522,7 +524,7 @@ def process_mtproto():
     
     log(f"📊 Всего уникальных MTProto конфигов: {len(unique_configs)}")
     
-    if ENABLE_PING_CHECK:
+    if ENABLE_PING_CHECK and unique_configs:
         log(f"🔍 Проверка пинга для MTProto прокси...")
         
         def check_mtproto(cfg):
