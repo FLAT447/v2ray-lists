@@ -100,8 +100,8 @@ def send_telegram_msg(white_list, black_list):
     top_black = black_list[:3]
 
     # Формируем блоки с прокси
-    white_links_text = "\n".join([f"💎 <code>{l}</code>" for l in top_white]) if top_white else "<i>Список пуст</i>"
-    black_links_text = "\n".join([f"🔌 <code>{l}</code>" for l in top_black]) if top_black else "<i>Список пуст</i>"
+    white_links_text = "\n".join([f"💎 {l}" for l in top_white]) if top_white else "<i>Список пуст</i>"
+    black_links_text = "\n".join([f"🔌 {l}" for l in top_black]) if top_black else "<i>Список пуст</i>"
 
     text = (
         "<b>🔔 Списки прокси обновлены!</b>\n\n"
