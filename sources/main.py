@@ -38,7 +38,7 @@ EXTRA_URL_TIMEOUT = 6
 EXTRA_URL_MAX_ATTEMPTS = 2
 
 # Номера подписок, которые должны содержать только пингуемые сервера
-PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
+PING_FILTERED_FILES = {1, 6, 18, 22, 23, 24, 25, 26}
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
 LOGS_BY_FILE: dict[int, list[str]] = defaultdict(list)
