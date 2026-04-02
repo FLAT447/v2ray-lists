@@ -17,12 +17,6 @@ import json
 import re
 import os
 import time
-import asyncio
-
-# -------------------- TELEGRAM (aiogram) --------------------
-from aiogram import Bot, exceptions
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
 GITHUB_TOKEN = os.environ.get("MY_TOKEN")
@@ -72,54 +66,48 @@ zone = zoneinfo.ZoneInfo("Europe/Moscow")
 thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
 
-# -------------------- TELEGRAM (aiogram) --------------------
-_bot = None
-if TELEGRAM_BOT_TOKEN:
-    _bot = Bot(
-        token=TELEGRAM_BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
-
+# -------------------- TELEGRAM (синхронный через requests) --------------------
 def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
-    """Отправляет сообщение в Telegram через aiogram (чат и/или канал)"""
-    if not TELEGRAM_BOT_TOKEN or _bot is None:
+    """Синхронная отправка сообщения через Telegram Bot API"""
+    if not TELEGRAM_BOT_TOKEN:
         log("⚠️ Telegram не настроен: отсутствует TELEGRAM_BOT_TOKEN")
         return False
 
-    async def _async_send():
-        success = False
-        # Отправка в основной чат
-        if TELEGRAM_CHAT_ID:
-            try:
-                await _bot.send_message(
-                    chat_id=TELEGRAM_CHAT_ID,
-                    text=message,
-                    disable_web_page_preview=True
-                )
+    success = False
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "text": message,
+        "disable_web_page_preview": True,
+        "parse_mode": "HTML"
+    }
+
+    # Отправка в основной чат
+    if TELEGRAM_CHAT_ID:
+        try:
+            payload["chat_id"] = TELEGRAM_CHAT_ID
+            resp = requests.post(url, json=payload, timeout=10)
+            if resp.status_code == 200:
                 log("📨 Сообщение отправлено в Telegram (чат)")
                 success = True
-            except exceptions.TelegramError as e:
-                log(f"⚠️ Ошибка отправки в чат Telegram: {e}")
-        # Отправка в канал
-        if send_to_channel and TELEGRAM_CHANNEL_ID:
-            try:
-                await _bot.send_message(
-                    chat_id=TELEGRAM_CHANNEL_ID,
-                    text=message,
-                    disable_web_page_preview=True
-                )
+            else:
+                log(f"⚠️ Ошибка отправки в чат: {resp.status_code} {resp.text}")
+        except Exception as e:
+            log(f"⚠️ Исключение при отправке в чат: {e}")
+
+    # Отправка в канал
+    if send_to_channel and TELEGRAM_CHANNEL_ID:
+        try:
+            payload["chat_id"] = TELEGRAM_CHANNEL_ID
+            resp = requests.post(url, json=payload, timeout=10)
+            if resp.status_code == 200:
                 log("📨 Сообщение отправлено в Telegram (канал)")
                 success = True
-            except exceptions.TelegramError as e:
-                log(f"⚠️ Ошибка отправки в канал Telegram: {e}")
-        return success
+            else:
+                log(f"⚠️ Ошибка отправки в канал: {resp.status_code} {resp.text}")
+        except Exception as e:
+            log(f"⚠️ Исключение при отправке в канал: {e}")
 
-    try:
-        # Запускаем асинхронную отправку в синхронном контексте
-        return asyncio.run(_async_send())
-    except Exception as e:
-        log(f"⚠️ Критическая ошибка при отправке Telegram: {e}")
-        return False
+    return success
 
 def send_update_notification():
     """Отправляет уведомление об обновлении подписок"""
@@ -828,13 +816,6 @@ def main(dry_run: bool = False):
     # Отправка уведомления в Telegram, если были обновления
     if updated_files and not dry_run:
         send_update_notification()
-    
-    # Закрываем сессию бота Telegram, если она была создана
-    if _bot:
-        try:
-            asyncio.run(_bot.session.close())
-        except:
-            pass
     
     # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
