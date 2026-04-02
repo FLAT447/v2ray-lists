@@ -2,14 +2,16 @@ name: Proxy Checker
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # Запуск каждые 6 часов
-  workflow_dispatch: # Кнопка для ручного запуска
+    # Запуск каждые 6 часов (можно настроить под себя)
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Позволяет запускать вручную через вкладку Actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -19,13 +21,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Указываем путь к requirements.txt внутри папки sources
-          pip install -r sources/requirements.txt
+          python -m pip install --upgrade pip
+          pip install requests netaddr
 
-      - name: Run script
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+      - name: Run proxy sorter
+        run: python sources/proxy_checker.py  # Предполагается, что ваш скрипт называется main.py
+
+      - name: Commit and Push changes
         run: |
-          python sources/proxy_checker.py
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add white_list.txt black_list.txt
+          # Коммитим только если есть изменения, чтобы не плодить пустые экшены
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
+          git push
