@@ -25,6 +25,10 @@ jobs:
           pip install requests netaddr
 
       - name: Run proxy sorter
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
         run: python sources/proxy_checker.py  # Предполагается, что ваш скрипт называется main.py
 
       - name: Commit and Push changes
