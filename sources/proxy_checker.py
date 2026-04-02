@@ -97,7 +97,7 @@ def send_telegram_msg(w_count, b_count):
 
     text = (
         "<b>🔔 Списки прокси обновлены!</b>\n\n"
-        f"🕒 <i>Время: {time.strftime('%H:%M')} | {time.strftime('%d.%m.%Y')}\n\n"
+        f"🕒 <i>Время: {time.strftime('%H:%M')} | {time.strftime('%d.%m.%Y')}</i>\n\n"
         f"✅ <b>Белые Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/whitelist.txt'>whitelist.txt</a>\n"
         f"🌐 <b>Чёрные Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/blacklist.txt'>blacklist.txt</a>\n\n"
         f"📍 <i><a href='https://github.com/FLAT447/v2ray-lists'>Репозиторий с прокси</a></i>\n"
