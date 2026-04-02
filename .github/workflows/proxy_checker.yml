@@ -8,13 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Устанавливаем часовой пояс для всей виртуальной машины
     env:
       TZ: Europe/Moscow
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Загружаем всю историю для корректного rebase
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,14 +32,43 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-        # Убедитесь, что файл лежит в папке sources/
         run: python sources/proxy_checker.py
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          # Исправлено: теперь имена совпадают с тем, что генерирует скрипт
+          
+          # Добавляем файлы
           git add whitelist.txt blacklist.txt
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
-          git push
+          
+          # Если нет изменений - выходим
+          if git diff --quiet --staged; then
+            echo "✅ No changes to commit"
+            exit 0
+          fi
+          
+          # Коммитим изменения
+          git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
+          
+          # Синхронизация с удалённым репозиторием
+          echo "🔄 Syncing with remote repository..."
+          git fetch origin
+          
+          # Пробуем rebase, при конфликте берём нашу версию файлов
+          if ! git pull --rebase -X ours origin main 2>/dev/null; then
+            echo "⚠️ Rebase failed, resetting to origin/main and reapplying changes..."
+            # Сохраняем наши изменения
+            git stash push -m "local_changes" whitelist.txt blacklist.txt
+            # Сбрасываем до удалённого состояния
+            git reset --hard origin/main
+            # Возвращаем наши изменения
+            git stash pop
+            # Добавляем и коммитим заново
+            git add whitelist.txt blacklist.txt
+            git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
+          fi
+          
+          # Отправляем изменения
+          git push origin main
+          echo "✅ Changes pushed successfully"
