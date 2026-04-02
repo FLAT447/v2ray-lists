@@ -6,15 +6,17 @@ import concurrent.futures
 import logging
 import sys
 import os
-import time
+from datetime import datetime
+import zoneinfo # Доступно в Python 3.9+
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 # --- КОНФИГУРАЦИЯ ---
 MY_CHANNEL = "@flat447"
 TIMEOUT = 3
 MAX_WORKERS = 100
+# Указываем часовой пояс для Москвы
+MSK_TZ = zoneinfo.ZoneInfo("Europe/Moscow")
 
-# Источники данных
 CIDR_SOURCES = [
     "https://raw.githubusercontent.com/ebrasha/cidr-ip-ranges-by-country/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt",
     "https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/cidrlist"
@@ -31,7 +33,6 @@ DOH_SERVERS = [
     "https://dns.quad9.net/dns-query"
 ]
 
-# Telegram API (из GitHub Secrets)
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TG_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
@@ -87,17 +88,18 @@ def check_proxy(link, networks, expected_mode):
     except: return None
 
 def send_telegram_msg(w_count, b_count):
-    """Логика и структура сообщения как в FLAT447/v2ray-lists/main.py"""
     if not TG_BOT_TOKEN:
         logger.error("TG_BOT_TOKEN not set!")
         return
 
-    # Список получателей (чат и канал)
     recipients = [r for r in [TG_CHAT_ID, TG_CHANNEL_ID] if r]
+    
+    # Получаем текущее время в Московском часовом поясе
+    now = datetime.now(MSK_TZ)
 
     text = (
         "<b>🔔 Списки прокси обновлены!</b>\n\n"
-        f"🕒 <i>Время: {time.strftime('%H:%M')} | {time.strftime('%d.%m.%Y')}</i>\n\n"
+        f"🕒 <i>Время: {now.strftime('%H:%M')} | {now.strftime('%d.%m.%Y')}</i>\n\n"
         f"✅ <b>Белые Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/whitelist.txt'>whitelist.txt</a>\n"
         f"🌐 <b>Чёрные Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/blacklist.txt'>blacklist.txt</a>\n\n"
         f"📍 <i><a href='https://github.com/FLAT447/v2ray-lists'>Репозиторий с прокси</a></i>\n"
@@ -149,6 +151,7 @@ def main():
                 if res["type"] == "white": white_res.append(res["link"])
                 else: black_res.append(res["link"])
 
+    # Сохраняем файлы с правильными именами (без подчеркиваний)
     with open("whitelist.txt", "w", encoding="utf-8") as f: f.write("\n".join(white_res))
     with open("blacklist.txt", "w", encoding="utf-8") as f: f.write("\n".join(black_res))
     
