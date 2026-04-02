@@ -87,22 +87,32 @@ def check_proxy(link, networks, expected_mode):
             return {"link": final_link, "type": final_mode}
     except: return None
 
-def send_telegram_msg(w_count, b_count):
+def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN:
         logger.error("TG_BOT_TOKEN not set!")
         return
 
     recipients = [r for r in [TG_CHAT_ID, TG_CHANNEL_ID] if r]
-    
-    # Получаем текущее время в Московском часовом поясе
     now = datetime.now(MSK_TZ)
+
+    # Выбираем топ-3 (или меньше, если список короткий)
+    top_white = white_list[:3]
+    top_black = black_list[:3]
+
+    # Формируем блоки с прокси
+    white_links_text = "\n".join([f"💎 <code>{l}</code>" for l in top_white]) if top_white else "<i>Список пуст</i>"
+    black_links_text = "\n".join([f"🔌 <code>{l}</code>" for l in top_black]) if top_black else "<i>Список пуст</i>"
 
     text = (
         "<b>🔔 Списки прокси обновлены!</b>\n\n"
         f"🕒 <i>Время: {now.strftime('%H:%M')} | {now.strftime('%d.%m.%Y')}</i>\n\n"
-        f"✅ <b>Белые Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/whitelist.txt'>whitelist.txt</a>\n"
-        f"🌐 <b>Чёрные Списки:</b> <a href='https://github.com/FLAT447/v2ray-lists/blob/main/blacklist.txt'>blacklist.txt</a>\n\n"
-        f"📍 <i><a href='https://github.com/FLAT447/v2ray-lists'>Репозиторий с прокси</a></i>\n"
+        f"✅ <b>Топ Белых Прокси:</b>\n{white_links_text}\n\n"
+        f"🌐 <b>Топ Чёрных Прокси:</b>\n{black_links_text}\n\n"
+        "--- — -- — ---\n"
+        f"📁 <b>Полные списки:</b>\n"
+        f"🔹 <a href='https://github.com/FLAT447/v2ray-lists/blob/main/whitelist.txt'>whitelist.txt</a> ({len(white_list)} шт.)\n"
+        f"🔸 <a href='https://github.com/FLAT447/v2ray-lists/blob/main/blacklist.txt'>blacklist.txt</a> ({len(black_list)} шт.)\n\n"
+        f"📍 <i><a href='https://github.com/FLAT447/v2ray-lists'>Репозиторий проекта</a></i>"
     )
     
     for chat_id in recipients:
@@ -120,7 +130,6 @@ def send_telegram_msg(w_count, b_count):
                 logger.error(f"Error sending to {chat_id}: {r.text}")
         except Exception as e:
             logger.error(f"Failed to send to {chat_id}: {e}")
-
 def main():
     logger.info("Starting proxy update...")
     networks = []
@@ -156,7 +165,7 @@ def main():
     with open("blacklist.txt", "w", encoding="utf-8") as f: f.write("\n".join(black_res))
     
     logger.info(f"Complete. W:{len(white_res)} B:{len(black_res)}")
-    send_telegram_msg(len(white_res), len(black_res))
+    send_telegram_msg(white_res, black_res)
 
 if __name__ == "__main__":
     main()
