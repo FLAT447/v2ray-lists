@@ -2,13 +2,15 @@ name: Proxy Checker
 
 on:
   schedule:
-    # Запуск каждые 6 часов (можно настроить под себя)
     - cron: '*/30 * * * *'
-  workflow_dispatch: # Позволяет запускать вручную через вкладку Actions
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Устанавливаем часовой пояс для всей виртуальной машины
+    env:
+      TZ: Europe/Moscow
 
     steps:
       - name: Checkout repository
@@ -29,13 +31,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-        run: python sources/proxy_checker.py  # Предполагается, что ваш скрипт называется main.py
+        # Убедитесь, что файл лежит в папке sources/
+        run: python sources/proxy_checker.py
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add white_list.txt black_list.txt
-          # Коммитим только если есть изменения, чтобы не плодить пустые экшены
+          # Исправлено: теперь имена совпадают с тем, что генерирует скрипт
+          git add whitelist.txt blacklist.txt
           git diff --quiet && git diff --staged --quiet || git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
           git push
