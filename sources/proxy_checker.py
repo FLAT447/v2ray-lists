@@ -23,7 +23,7 @@ CIDR_SOURCES = [
 ]
 
 PROXY_SOURCES = {
-    "black": ["https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto"],
+    "black": ["https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/mtproto", "https://raw.githubusercontent.com/Argh94/Proxy-List/refs/heads/main/MTProto.txt", "https://raw.githubusercontent.com/Argh94/Proxy-List/refs/heads/main/SOCKS5.txt"],
     "white": ["https://raw.githubusercontent.com/WhitePrime/xraycheck/refs/heads/main/configs/white-list_mtproto"]
 }
 
