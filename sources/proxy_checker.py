@@ -134,8 +134,9 @@ def send_telegram_msg(white_list, black_list):
         f"🕒 {now.strftime('%H:%M | %d.%m.%Y')}\n\n"
         f"✅ <b>Белые:</b>\n{top_white}\n\n"
         f"🌐 <b>Чёрные:</b>\n{top_black}\n\n"
-        f"🔹 <a href='https://github.com/{REPO_NAME}/blob/main/whitelist.txt'>Whitelist</a> ({len(white_list)})\n"
-        f"🔸 <a href='https://github.com/{REPO_NAME}/blob/main/blacklist.txt'>Blacklist</a> ({len(black_list)})"
+        f"🔹 <a href='https://github.com/{REPO_NAME}/blob/main/whitelist.txt'>whitelist.txt</a> ({len(white_list)})\n"
+        f"🔸 <a href='https://github.com/{REPO_NAME}/blob/main/blacklist.txt'>blacklist.txt</a> ({len(black_list)})\n\n"
+        f"📍 <a href='https://github.com/{REPO_NAME}>Репозиторий проекта</a>"
     )
 
     for cid in [TG_CHAT_ID, TG_CHANNEL_ID]:
