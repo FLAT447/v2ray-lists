@@ -1,74 +1,31 @@
-name: Proxy Checker
+name: Update Proxy Lists
 
 on:
   schedule:
-    - cron: '0 */1 * * *'
-  workflow_dispatch:
+    - cron: '0 */1 * * *' # Запуск каждые 6 часов
+  workflow_dispatch:      # Кнопка для ручного запуска
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      TZ: Europe/Moscow
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Загружаем всю историю для корректного rebase
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install requests netaddr
+          pip install requests PyGithub
 
-      - name: Run proxy sorter
+      - name: Run script
         env:
+          GH_TOKEN: ${{ secrets.VPN_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
         run: python sources/proxy_checker.py
-
-      - name: Commit and Push changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          
-          # Добавляем файлы
-          git add whitelist.txt blacklist.txt
-          
-          # Если нет изменений - выходим
-          if git diff --quiet --staged; then
-            echo "✅ No changes to commit"
-            exit 0
-          fi
-          
-          # Коммитим изменения
-          git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
-          
-          # Синхронизация с удалённым репозиторием
-          echo "🔄 Syncing with remote repository..."
-          git fetch origin
-          
-          # Пробуем rebase, при конфликте берём нашу версию файлов
-          if ! git pull --rebase -X ours origin main 2>/dev/null; then
-            echo "⚠️ Rebase failed, resetting to origin/main and reapplying changes..."
-            # Сохраняем наши изменения
-            git stash push -m "local_changes" whitelist.txt blacklist.txt
-            # Сбрасываем до удалённого состояния
-            git reset --hard origin/main
-            # Возвращаем наши изменения
-            git stash pop
-            # Добавляем и коммитим заново
-            git add whitelist.txt blacklist.txt
-            git commit -m "Update proxy lists: $(date +'%Y-%m-%d %H:%M')"
-          fi
-          
-          # Отправляем изменения
-          git push origin main
-          echo "✅ Changes pushed successfully"
