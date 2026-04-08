@@ -189,7 +189,7 @@ URLS = [
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://raw.githubusercontent.com/Hidashimora/free-vpn-anti-rkn/main/configs/29.txt", #23
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS.txt", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
@@ -205,6 +205,7 @@ EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/Hidashimora/free-vpn-anti-rkn/main/configs/30.txt",
     "https://wlrus.lol/confs/selected.txt",
     "https://ety.twinkvibe.gay/whitelist",
+    "https://white-lists.vercel.app/api/filter?code=RU",
     "https://raw.githubusercontent.com/Hidashimora/free-vpn-anti-rkn/main/configs/31.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
 ]
