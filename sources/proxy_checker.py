@@ -133,10 +133,10 @@ def send_telegram_msg(white_list, black_list):
     top_black = "\n".join([f"🔌 {l}" for l in black_list[:3]]) or "<i>Пусто</i>"
 
     text = (
-        f"<b>🔔 Списки обновлены!</b>\n"
+        f"<b>🔔 Списки MTProxy обновлены!</b>\n"
         f"🕒 {now.strftime('%H:%M | %d.%m.%Y')}\n\n"
-        f"✅ <b>Белые:</b>\n{top_white}\n\n"
-        f"🌐 <b>Чёрные:</b>\n{top_black}\n\n"
+        f"✅ <b>Белые Списки:</b>\n{top_white}\n\n"
+        f"🌐 <b>Чёрные Списки:</b>\n{top_black}\n\n"
         f"🔹 <a href='https://github.com/{REPO_NAME}/blob/main/whitelist.txt'>whitelist.txt</a> ({len(white_list)})\n"
         f"🔸 <a href='https://github.com/{REPO_NAME}/blob/main/blacklist.txt'>blacklist.txt</a> ({len(black_list)})\n\n"
         f"📍 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>"
