@@ -1,5 +1,5 @@
 # v2ray-lists
-# README не оформлен, используйте GitHub IO https://flat447.github.io/v2ray-lists | The README is not ready, use the GitHub IO https://flat447.github.io/v2ray-lists
+# README не оформлен, используйте GitHub IO https://flat447.github.io/v2ray-lists-site | The README is not ready, use the GitHub IO https://flat447.github.io/v2ray-lists-site
 
 ## 📊 Статистика репозитория
 | Показатель | Значение |
