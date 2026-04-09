@@ -113,7 +113,7 @@ def update_github(white_content, black_content):
         for path, content in files.items():
             try:
                 curr_file = repo.get_contents(path)
-                repo.update_file(path, f"Update {path} {now_str}", content, curr_file.sha)
+                repo.update_file(path, f"🚀 Обновление {path} по часовому поясу Европа/Москва: {now_str}", content, curr_file.sha)
                 logger.info(f"Файл {path} обновлен.")
             except Exception:
                 repo.create_file(path, f"Create {path} {now_str}", content)
