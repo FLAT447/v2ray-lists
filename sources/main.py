@@ -132,7 +132,8 @@ def send_update_notification():
     
     # Ссылка на репозиторий
     message_parts.append("")
-    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий с подписками</a>")
+    message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>")
+    message_parts.append("⚡️ <a href='https://flat447.github.io/v2ray-lists-site'>Сайт проекта</a>")
     
     full_message = "\n".join(message_parts)
     
