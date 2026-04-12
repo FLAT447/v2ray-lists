@@ -42,7 +42,7 @@ PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
 # Шаблон заголовка для каждого файла
 HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
-#profile-web-page-url: https://github.com/FLAT447/v2ray-lists
+#profile-web-page-url: https://flat447.github.io/v2ray-lists-site
 #profile-title: V2Ray Lists {num}
 #support-url: https://t.me/flat447
 #profile-update-interval: 1
