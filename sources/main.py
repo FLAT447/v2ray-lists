@@ -40,6 +40,14 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 # Номера подписок, которые должны содержать только пингуемые сервера
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
+# Шаблон заголовка для каждого файла
+HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
+#profile-web-page-url: https://github.com/FLAT447/v2ray-lists
+#profile-title: V2Ray Lists {num}
+#support-url: https://t.me/flat447
+#profile-update-interval: 1
+"""
+
 # -------------------- ЛОГИРОВАНИЕ --------------------
 LOGS_BY_FILE: dict[int, list[str]] = defaultdict(list)
 _LOG_LOCK = threading.Lock()
@@ -113,30 +121,30 @@ def send_update_notification():
     """Отправляет уведомление об обновлении подписок"""
     if not updated_files:
         return
-    
+
     message_parts = []
-    
+
     # Заголовок
     message_parts.append(f"🔄 <b>V2Ray подписки обновлены!</b>")
     message_parts.append(f"📅 Время: {offset}")
     updated_list = sorted(updated_files)
     message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
     message_parts.append("")
-    
+
     # RAW ссылки на подписки
     message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
     for file_num in updated_list:
         raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
         message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
         message_parts.append(f"  <code>{raw_url}</code>")
-    
+
     # Ссылка на репозиторий
     message_parts.append("")
     message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>")
     message_parts.append("⚡️ <a href='https://flat447.github.io/v2ray-lists-site'>Сайт проекта</a>")
-    
+
     full_message = "\n".join(message_parts)
-    
+
     # Telegram имеет лимит 4096 символов, разбиваем если нужно
     if len(full_message) > 4096:
         for i in range(0, len(full_message), 4000):
@@ -255,10 +263,17 @@ def fetch_data(url: str, timeout: int = 10, max_attempts: int = 3, session=None,
                 continue
             raise exc
 
-def save_to_local_file(path, content):
+def add_file_header(content: str, file_num: int) -> str:
+    """Добавляет заголовочные комментарии в начало файла с подстановкой номера."""
+    header = HEADER_TEMPLATE.format(num=file_num)
+    return header + "\n" + content
+
+def save_to_local_file(path, content, file_num):
+    """Сохраняет контент с добавленным заголовком в локальный файл."""
+    content_with_header = add_file_header(content, file_num)
     with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
-    log(f"📁 Данные сохранены локально в {path}")
+        f.write(content_with_header)
+    log(f"📁 Данные сохранены локально в {path} (добавлен заголовок #{file_num})")
 
 def extract_source_name(url: str) -> str:
     try:
@@ -327,20 +342,20 @@ def filter_by_ping(configs: list, file_num: int) -> list:
     """Фильтрует список конфигов по пингу"""
     if not ENABLE_PING_CHECK:
         return configs
-    
+
     log(f"🔍 Проверка пинга для {len(configs)} конфигов (файл {file_num})...")
     working = []
-    
+
     def check_one(cfg):
         return cfg if check_config_availability(cfg) else None
-    
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_MAX_WORKERS) as executor:
         futures = [executor.submit(check_one, cfg) for cfg in configs]
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             if result:
                 working.append(result)
-    
+
     log(f"📊 Файл {file_num}: {len(working)}/{len(configs)} рабочих серверов")
     return working
 
@@ -365,10 +380,10 @@ def filter_insecure_configs(local_path, data, log_enabled=True):
         result.append(original_line)
 
     filtered_count = len(splitted) - len(result)
-    
+
     if filtered_count > 0 and log_enabled:
         log(f"ℹ️ Отфильтровано {filtered_count} небезопасных конфигов для {local_path}")
-    
+
     return "\n".join(result), filtered_count
 
 # -------------------- ЗАГРУЗКА И СОХРАНЕНИЕ --------------------
@@ -376,26 +391,27 @@ def download_and_save(idx):
     url = URLS[idx]
     local_path = LOCAL_PATHS[idx]
     file_number = idx + 1
-    
+
     try:
         data = fetch_data(url)
         data, _ = filter_insecure_configs(local_path, data, log_enabled=False)
-        
+
         lines = [l.strip() for l in data.splitlines() if l.strip()]
-        
+
         # Фильтруем по пингу только нужные файлы
         if file_number in PING_FILTERED_FILES:
             lines = filter_by_ping(lines, file_number)
-        
+
         data = "\n".join(lines)
-        
+        content_with_header = add_file_header(data, file_number)
+
         if os.path.exists(local_path):
             with open(local_path, "r", encoding="utf-8") as f:
-                if f.read() == data:
+                if f.read() == content_with_header:
                     log(f"🔄 Изменений для {local_path} нет (локально). Пропуск загрузки в GitHub.")
                     return None
-        
-        save_to_local_file(local_path, data)
+
+        save_to_local_file(local_path, data, file_number)
         return local_path, REMOTE_PATHS[idx], file_number, len(lines)
     except Exception as e:
         log(f"⚠️ Ошибка при скачивании {url}: {str(e)[:100]}")
@@ -416,7 +432,7 @@ def upload_to_github(local_path, remote_path):
             try:
                 file_in_repo = REPO.get_contents(remote_path)
                 current_sha = file_in_repo.sha
-                
+
                 # Безопасное получение содержимого
                 try:
                     remote_content = file_in_repo.decoded_content.decode("utf-8", errors="replace")
@@ -425,11 +441,11 @@ def upload_to_github(local_path, remote_path):
                         remote_content = base64.b64decode(file_in_repo.content).decode("utf-8", errors="replace")
                     else:
                         remote_content = None
-                
+
                 if remote_content == content:
                     log(f"🔄 Изменений для {remote_path} нет.")
                     return
-                    
+
             except GithubException as e_get:
                 if getattr(e_get, "status", None) == 404:
                     basename = os.path.basename(remote_path)
@@ -459,7 +475,7 @@ def upload_to_github(local_path, remote_path):
             with _UPDATED_FILES_LOCK:
                 updated_files.add(file_index)
             return
-            
+
         except GithubException as e_upd:
             if getattr(e_upd, "status", None) == 409 and attempt < max_retries:
                 wait_time = 0.5 * (2 ** (attempt - 1))
@@ -674,16 +690,16 @@ SNI_DOMAINS = [
 
 def create_filtered_configs():
     """Создает 26-й файл с конфигами (только пингуемые)"""
-    
+
     # Оптимизация доменов
     sorted_domains = sorted(SNI_DOMAINS, key=len)
     optimized = []
     for d in sorted_domains:
         if not any(ex in d for ex in optimized):
             optimized.append(d)
-    
+
     sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")")
-    
+
     def extract_from_file(file_idx):
         path = f"githubmirror/{file_idx}.txt"
         if not os.path.exists(path):
@@ -695,14 +711,14 @@ def create_filtered_configs():
             return [l.strip() for l in content.splitlines() if l.strip() and sni_regex.search(l)]
         except:
             return []
-    
+
     # Собираем конфиги из файлов 1-25
     all_configs = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         futures = [executor.submit(extract_from_file, i) for i in range(1, 26)]
         for future in concurrent.futures.as_completed(futures):
             all_configs.extend(future.result())
-    
+
     # Загружаем доп. источники
     def load_extra(url):
         try:
@@ -712,15 +728,15 @@ def create_filtered_configs():
             return [l.strip() for l in data.splitlines() if l.strip() and not l.startswith('#')]
         except:
             return []
-    
+
     extra = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(load_extra, url) for url in EXTRA_URLS_FOR_26]
         for future in concurrent.futures.as_completed(futures):
             extra.extend(future.result())
-    
+
     all_configs.extend(extra)
-    
+
     # Дедупликация
     seen_full = set()
     seen_hp = set()
@@ -736,14 +752,15 @@ def create_filtered_configs():
                 continue
             seen_hp.add(key)
         unique.append(cfg)
-    
+
     # Проверка пинга для 26-го файла
     unique = filter_by_ping(unique, 26)
-    
+
     path = "githubmirror/26.txt"
+    content_with_header = add_file_header("\n".join(unique), 26)
     with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(unique))
-    log(f"📁 Создан файл {path} с {len(unique)} конфигами")
+        f.write(content_with_header)
+    log(f"📁 Создан файл {path} с {len(unique)} конфигами (добавлен заголовок #26)")
     return path, len(unique)
 
 # -------------------- README --------------------
@@ -752,17 +769,17 @@ def update_readme_table():
         readme = REPO.get_contents("README.md")
         old = readme.decoded_content.decode("utf-8")
         time_part, date_part = offset.split(" | ")
-        
+
         rows = []
         for i in range(1, 27):
             filename = f"{i}.txt"
             raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{i}.txt"
-            
+
             if i <= 25:
                 source = f"[{extract_source_name(URLS[i-1])}]({URLS[i-1]})"
             else:
                 source = f"[Обход SNI/CIDR белых списков]({raw_url})"
-            
+
             if i in updated_files:
                 rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {time_part} | {date_part} |")
             else:
@@ -771,10 +788,10 @@ def update_readme_table():
                     rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {match.group(1)} | {match.group(2)} |")
                 else:
                     rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | Никогда | Никогда |")
-        
+
         new_table = "| № | Файл | Источник | Время | Дата |\n|--|--|--|--|--|\n" + "\n".join(rows)
         new_content = re.sub(r"\| № \| Файл \| Источник \| Время \| Дата \|[\s\S]*?\|--\|--\|--\|--\|--\|[\s\S]*?(\n\n## |$)", new_table + r"\1", old)
-        
+
         if new_content != old:
             REPO.update_file("README.md", f"📝 Обновление таблицы в README.md по часовому поясу Европа/Москва: {offset}", new_content, readme.sha)
             log("📝 Таблица в README.md обновлена")
@@ -787,40 +804,40 @@ def main(dry_run: bool = False):
     log(f"📅 Время запуска: {offset}")
     log(f"🔍 Проверка пинга: {'включена' if ENABLE_PING_CHECK else 'выключена'}")
     log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
-    
+
     # Скачиваем файлы 1-25 и собираем информацию об обновлениях
     download_results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as download_pool, \
          concurrent.futures.ThreadPoolExecutor(max_workers=6) as upload_pool:
-        
+
         futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS))]
         uploads = []
-        
+
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res and not dry_run:
                 download_results.append(res)
                 uploads.append(upload_pool.submit(upload_to_github, res[0], res[1]))
-        
+
         for u in concurrent.futures.as_completed(uploads):
             try:
                 u.result()
             except Exception as e:
                 log(f"⚠️ Ошибка при загрузке: {e}")
-    
+
     # Создаём 26-й файл
     path_26, count_26 = create_filtered_configs()
     if not dry_run and path_26:
         upload_to_github(path_26, "githubmirror/26.txt")
         download_results.append((path_26, "githubmirror/26.txt", 26, count_26))
-    
+
     if not dry_run:
         update_readme_table()
-    
+
     # Отправка уведомления в Telegram, если были обновления
     if updated_files and not dry_run:
         send_update_notification()
-    
+
     # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
         if k == 0:
@@ -829,7 +846,7 @@ def main(dry_run: bool = False):
             print(f"\n----- {k}.txt -----")
         for msg in LOGS_BY_FILE[k]:
             print(msg)
-    
+
     log("✅ Обновление завершено")
 
 if __name__ == "__main__":
