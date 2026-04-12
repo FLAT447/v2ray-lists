@@ -263,6 +263,22 @@ def fetch_data(url: str, timeout: int = 10, max_attempts: int = 3, session=None,
                 continue
             raise exc
 
+def clean_existing_headers(content: str) -> str:
+    """Удаляет существующие метаданные подписок (строки вида #key: value)"""
+    lines = content.splitlines()
+    cleaned = []
+    # Ключевые слова, характерные для метаданных подписок
+    metadata_prefixes = (
+        "#profile-title:", "#profile-update-interval:", "#profile-web-page-url:",
+        "#support-url:", "#announce:", "#update-url:", "#subscribe-url:"
+    )
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("#") and any(stripped.startswith(p) for p in metadata_prefixes):
+            continue
+        cleaned.append(line)
+    return "\n".join(cleaned)
+
 def add_file_header(content: str, file_num: int) -> str:
     """Добавляет заголовочные комментарии в начало файла с подстановкой номера."""
     header = HEADER_TEMPLATE.format(num=file_num)
@@ -394,6 +410,8 @@ def download_and_save(idx):
 
     try:
         data = fetch_data(url)
+        # Очистка существующих метаданных
+        data = clean_existing_headers(data)
         data, _ = filter_insecure_configs(local_path, data, log_enabled=False)
 
         lines = [l.strip() for l in data.splitlines() if l.strip()]
@@ -707,8 +725,17 @@ def create_filtered_configs():
         try:
             with open(path, "r") as f:
                 content = f.read()
+            # Разбиваем на протоколы
             content = re.sub(r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://', r'\n\1://', content)
-            return [l.strip() for l in content.splitlines() if l.strip() and sni_regex.search(l)]
+            configs = []
+            for line in content.splitlines():
+                stripped = line.strip()
+                # Пропускаем комментарии
+                if not stripped or stripped.startswith('#'):
+                    continue
+                if sni_regex.search(stripped):
+                    configs.append(stripped)
+            return configs
         except:
             return []
 
@@ -723,6 +750,7 @@ def create_filtered_configs():
     def load_extra(url):
         try:
             data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT, max_attempts=EXTRA_URL_MAX_ATTEMPTS, allow_http_downgrade=False)
+            data = clean_existing_headers(data)
             data, _ = filter_insecure_configs("githubmirror/26.txt", data, log_enabled=False)
             data = re.sub(r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://', r'\n\1://', data)
             return [l.strip() for l in data.splitlines() if l.strip() and not l.startswith('#')]
