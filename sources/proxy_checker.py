@@ -41,7 +41,7 @@ DOH_SERVERS = [
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TG_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
-GH_TOKEN = os.environ.get("GH_TOKEN")
+GH_TOKEN = os.environ.get("MY_TOKEN")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
