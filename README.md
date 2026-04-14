@@ -143,3 +143,32 @@ python proxy_checker                # генерирует файлы whitelist.
 
 **5.** Выбираем нужный вам сервер и затем нажимаем на кнопку ▶️ в правом нижнем углу.
 </details>
+<details>
+
+<summary>Гайд для Android TV</summary>
+
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.0.18/v2rayNG_2.0.18-fdroid_universal.apk)
+
+> Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
+
+> Обход SNI/CIDR белых списков: **[26](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/26.png)**
+
+**2.** Скачиваем **«QR-коды»** вечно актуальных конфигов — [Ссылка](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes)
+
+**3**. Заходим в приложение **«v2rayNG»** и в правом верхнем углу нажимаем на ➕, а затем выбираем **«Импорт из QR-кода»**, выбираем картинку нажав на иконку фото в правом верхнем углу.
+
+**4.** Нажимаем **«справа сверху на три точки»**, а затем **«Проверить задержку профилей»**, после окончания проверки в этом же меню нажмите на **«Сортировать по результатам теста»**. 
+
+**5.** Выбираем нужный вам сервер и затем нажимаем на кнопку ▶️ в правом нижнем углу.
+
+</details>
+<details>
+<summary>Обновление конфигов в v2rayNG</summary>
+
+**1.** Нажимаем на **«иконку трех полосок»** в **«левом верхнем углу»**.
+
+**2.** Выбираем вкладку **«Группы»**.
+
+**3.** Нажимаем на **«иконку кружка со стрелкой»** в **«правом верхнем углу»**.
+
+</details> 
