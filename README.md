@@ -150,7 +150,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.0.18/v2rayNG_2.0.18-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.1/v2rayNG_2.1.1-fdroid_universal.apk)
 
 > Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
 
