@@ -122,21 +122,38 @@ def update_github(white_content, black_content):
                 repo.create_file(path, f"Create {path} {now_str}", content)
     except Exception as e: logger.error(f"GH Error: {e}")
 
-async def send_telegram_msg(white_count, black_count):
+async def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN: return
+    
     now = datetime.now(MSK_TZ)
+    # Топ-3 самых быстрых прокси для РФ
+    top_white = "\n".join([f"💎 <code>{p['link']}</code>" for p in white_list[:3]]) or "<i>Нет доступных</i>"
+    # Топ-3 самых быстрых зарубежных прокси
+    top_black = "\n".join([f"🔌 <code>{p['link']}</code>" for p in black_list[:3]]) or "<i>Нет доступных</i>"
+
     text = (
-        f"<b>⚡️ Прокси обновлены и отсортированы!</b>\n"
+        f"<b>🔔 Обновление MTProxy</b>\n"
         f"🕒 {now.strftime('%H:%M | %d.%m.%Y')}\n\n"
-        f"💎 Белые (RU): <b>{white_count}</b>\n"
-        f"🔌 Остальные: <b>{black_count}</b>\n\n"
-        f"🚀 <i>Все прокси проверены на пинг и отсортированы по скорости.</i>"
+        f"✅ <b>Для работы в РФ (Белый список):</b>\n{top_white}\n\n"
+        f"🌐 <b>Зарубежные (Черный список):</b>\n{top_black}\n\n"
+        f"📊 Всего проверено и отсортировано:\n"
+        f"└ Белых: {len(white_list)} | Остальных: {len(black_list)}\n\n"
+        f"📍 <a href='https://github.com/{REPO_NAME}'>Исходники и полные списки</a>"
     )
+
     async with aiohttp.ClientSession() as session:
         for cid in [TG_CHAT_ID, TG_CHANNEL_ID]:
             if cid:
-                await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
-                                   json={"chat_id": cid, "text": text, "parse_mode": "HTML"})
+                try:
+                    await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
+                        json={
+                            "chat_id": cid, 
+                            "text": text, 
+                            "parse_mode": "HTML", 
+                            "disable_web_page_preview": True
+                        })
+                except Exception as e:
+                    logger.error(f"Ошибка отправки в TG: {e}")
 
 async def main():
     logger.info("Начало работы...")
