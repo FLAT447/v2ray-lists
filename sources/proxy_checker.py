@@ -9,13 +9,13 @@ import time
 from datetime import datetime
 import zoneinfo
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
-from github import Github
+from github import Github, Auth
 from async_lru import alru_cache
 
 # --- КОНФИГУРАЦИЯ ---
 MY_CHANNEL = "@flat447"
-TIMEOUT = 4  # Оптимально для отсева медленных прокси
-MAX_CONCURRENT_TASKS = 200
+TIMEOUT = 4  # Секунд на проверку (отсекаем медленные прокси)
+MAX_CONCURRENT_TASKS = 200 # Лимит одновременных соединений
 MSK_TZ = zoneinfo.ZoneInfo("Europe/Moscow")
 REPO_NAME = "FLAT447/v2ray-lists"
 
@@ -35,6 +35,7 @@ PROXY_SOURCES = [
 
 DOH_SERVERS = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
 
+# Переменные окружения
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TG_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
@@ -47,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 @alru_cache(maxsize=1024)
 async def resolve_doh(session, hostname):
+    """Асинхронный резолвер с кэшированием."""
     try:
         ipaddress.ip_address(hostname)
         return hostname
@@ -65,7 +67,7 @@ async def resolve_doh(session, hostname):
     return None
 
 async def check_proxy(session, link, networks, semaphore):
-    """Проверка прокси с замером задержки (Latency)."""
+    """Проверка доступности с замером задержки (Latency)."""
     async with semaphore:
         try:
             parsed = urlparse(link)
@@ -78,7 +80,7 @@ async def check_proxy(session, link, networks, semaphore):
             ip = await resolve_doh(session, server)
             if not ip: return None
 
-            # Замер задержки соединения
+            # Замер задержки (RTT)
             start_time = time.perf_counter()
             try:
                 conn = asyncio.open_connection(ip, int(port))
@@ -89,11 +91,11 @@ async def check_proxy(session, link, networks, semaphore):
             except:
                 return None
 
-            # Фильтрация по сетям
+            # Определяем тип по CIDR (Белый - РФ, Черный - мир)
             ip_obj = ipaddress.ip_address(ip)
             is_in_cidr = any(ip_obj in net for net in networks)
             
-            # Сборка финальной ссылки
+            # Формируем финальную ссылку с вашим каналом
             query = params.copy()
             query['channel'] = [MY_CHANNEL]
             new_query = urlencode(query, doseq=True, safe='@')
@@ -103,32 +105,42 @@ async def check_proxy(session, link, networks, semaphore):
                 "link": final_link, 
                 "type": "white" if is_in_cidr else "black",
                 "latency": latency,
-                "id": f"{ip}:{port}" # Для удаления дублей
+                "id": f"{ip}:{port}" # Для дедупликации
             }
         except:
             return None
 
 def update_github(white_content, black_content):
-    if not GH_TOKEN: return
+    """Обновление файлов в репозитории через GitHub API."""
+    if not GH_TOKEN:
+        logger.warning("GH_TOKEN не найден. Пропускаю.")
+        return
     try:
-        g = Github(GH_TOKEN)
+        auth = Auth.Token(GH_TOKEN)
+        g = Github(auth=auth)
         repo = g.get_repo(REPO_NAME)
         now_str = datetime.now(MSK_TZ).strftime('%d.%m.%Y %H:%M')
-        for path, content in {"whitelist.txt": white_content, "blacklist.txt": black_content}.items():
+        
+        files = {"whitelist.txt": white_content, "blacklist.txt": black_content}
+
+        for path, content in files.items():
             try:
                 curr = repo.get_contents(path)
                 repo.update_file(path, f"🚀 Latency Sort Update: {now_str}", content, curr.sha)
+                logger.info(f"GitHub: {path} обновлен.")
             except:
                 repo.create_file(path, f"Create {path} {now_str}", content)
-    except Exception as e: logger.error(f"GH Error: {e}")
+                logger.info(f"GitHub: {path} создан.")
+    except Exception as e:
+        logger.error(f"GitHub Error: {e}")
 
 async def send_telegram_msg(white_list, black_list):
+    """Отправка отчета с ТОП-3 быстрыми ссылками."""
     if not TG_BOT_TOKEN: return
     
     now = datetime.now(MSK_TZ)
-    # Топ-3 самых быстрых прокси для РФ
+    # Формируем список ссылок (тег <code> позволяет копировать нажатием)
     top_white = "\n".join([f"💎 <code>{p['link']}</code>" for p in white_list[:3]]) or "<i>Нет доступных</i>"
-    # Топ-3 самых быстрых зарубежных прокси
     top_black = "\n".join([f"🔌 <code>{p['link']}</code>" for p in black_list[:3]]) or "<i>Нет доступных</i>"
 
     text = (
@@ -143,69 +155,83 @@ async def send_telegram_msg(white_list, black_list):
 
     async with aiohttp.ClientSession() as session:
         for cid in [TG_CHAT_ID, TG_CHANNEL_ID]:
-            if cid:
-                try:
-                    await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
-                        json={
-                            "chat_id": cid, 
-                            "text": text, 
-                            "parse_mode": "HTML", 
-                            "disable_web_page_preview": True
-                        })
-                except Exception as e:
-                    logger.error(f"Ошибка отправки в TG: {e}")
+            if not cid: continue
+            try:
+                await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
+                                   json={"chat_id": cid, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True})
+            except Exception as e:
+                logger.error(f"Ошибка TG ({cid}): {e}")
 
 async def main():
-    logger.info("Начало работы...")
+    logger.info("Запуск процесса...")
+    
     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0"}) as session:
-        # 1. Сетки
+        # 1. Загрузка сетей CIDR
         networks = []
         for url in CIDR_SOURCES:
             try:
                 async with session.get(url) as r:
-                    networks.extend([ipaddress.ip_network(l.strip(), False) for l in (await r.text()).splitlines() if l.strip() and not l.startswith('#')])
-            except: pass
+                    lines = (await r.text()).splitlines()
+                    for line in lines:
+                        if line.strip() and not line.startswith('#'):
+                            try: networks.append(ipaddress.ip_network(line.strip(), strict=False))
+                            except: continue
+            except Exception as e:
+                logger.error(f"Ошибка загрузки CIDR: {e}")
+        
+        # Схлопываем подсети для ускорения поиска
         networks = list(ipaddress.collapse_addresses(networks))
 
-        # 2. Сбор
+        # 2. Сбор ссылок из всех источников
         all_links = set()
         for url in PROXY_SOURCES:
             try:
-                async with session.get(url) as r:
-                    all_links.update(re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', await r.text()))
-            except: pass
+                async with session.get(url, timeout=15) as r:
+                    content = await r.text()
+                    links = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', content)
+                    all_links.update(links)
+            except Exception as e:
+                logger.info(f"Источник {url} недоступен (пропуск).")
 
-        # 3. Проверка
+        logger.info(f"Найдено {len(all_links)} ссылок. Начинаю проверку...")
+
+        # 3. Асинхронная проверка с семафором
         sem = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
         tasks = [check_proxy(session, link, networks, sem) for link in all_links]
         results = await asyncio.gather(*tasks)
 
-        # 4. Фильтрация дублей и сортировка
-        valid_results = [r for r in results if r]
+        # 4. Фильтрация дублей и распределение
+        valid_proxies = [r for r in results if r]
         
-        # Используем словарь для дедупликации по IP:Port (оставляем самый быстрый вариант)
-        unique_proxies = {}
-        for p in valid_results:
+        # Дедупликация: если IP:Port повторяется, берем тот, где пинг ниже
+        unique_map = {}
+        for p in valid_proxies:
             pid = p['id']
-            if pid not in unique_proxies or p['latency'] < unique_proxies[pid]['latency']:
-                unique_proxies[pid] = p
+            if pid not in unique_map or p['latency'] < unique_map[pid]['latency']:
+                unique_map[pid] = p
 
-        # Распределение по спискам
-        white_list = [p for p in unique_proxies.values() if p['type'] == 'white']
-        black_list = [p for p in unique_proxies.values() if p['type'] == 'black']
+        # Разделение по спискам
+        white_list = [p for p in unique_map.values() if p['type'] == 'white']
+        black_list = [p for p in unique_map.values() if p['type'] == 'black']
 
-        # СОРТИРОВКА ПО ПИНГУ (Latency)
+        # Сортировка по задержке (быстрые в начале)
         white_list.sort(key=lambda x: x['latency'])
         black_list.sort(key=lambda x: x['latency'])
 
-        # 5. Сохранение
-        update_github(
-            "\n".join([p['link'] for p in white_list]),
-            "\n".join([p['link'] for p in black_list])
-        )
+        # 5. Сохранение на GitHub
+        white_final = "\n".join([p['link'] for p in white_list])
+        black_final = "\n".join([p['link'] for p in black_list])
         
-        await send_telegram_msg(len(white_list), len(black_list))
-        logger.info("Обновление завершено успешно.")
+        # Выносим синхронный вызов GitHub за пределы асинхронной сессии
+        await asyncio.to_thread(update_github, white_final, black_final)
+        
+        # 6. Уведомление в Telegram
+        await send_telegram_msg(white_list, black_list)
+        
+        logger.info(f"Готово! Белых: {len(white_list)}, Остальных: {len(black_list)}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
