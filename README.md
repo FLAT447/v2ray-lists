@@ -61,8 +61,8 @@
 | 24  | [`24.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/24.txt)               | [Mr-Meshky/vify](https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt)                                                                             |
 | 25  | [`25.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/25.txt)               | [V2RayRoot/V2RayConfig](https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt)                                                     |
 | 26  | [`26.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt)               | [Обход SNI/CIDR белых списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt)                                                        |
-| 27  | [`whitelist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/whitelist.txt) | [Списки MTProxy для Белых Списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/whitelist.txt)                                             |
-| 28  | [`blacklist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/blacklist.txt) | [Списки MTProxy для Чёрных списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/blacklist.txt)                                            |
+| 27  | [`whitelist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/whitelist.txt) | [Списки MTProxy для Белых Списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/whitelist.txt)                                             |
+| 28  | [`blacklist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/blacklist.txt) | [Списки MTProxy для Чёрных списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/blacklist.txt)                                            |
 
 
 ---
