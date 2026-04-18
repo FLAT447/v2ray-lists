@@ -131,7 +131,7 @@ python proxy_checker                # генерирует файлы whitelist.
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.0.18/v2rayNG_2.0.18-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.1/v2rayNG_2.1.1-fdroid_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
