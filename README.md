@@ -7,7 +7,6 @@
 - [📑 Содержание](#-содержание)
 - [🚀 Быстрый старт](#-быстрый-старт)
 - [📊 Статус конфигов](#-статус-конфигов)
-- [📊 Статистика репозитория](#-статистика-репозитория)
 - [🗂 Структура репозитория](#-структура-репозитория)
 - [🔧 Локальный запуск генератора](#-локальный-запуск-генератора)
 - [🗂️ Основные подписки]( #-основные-подписки)
@@ -64,10 +63,6 @@
 | 26  | [`26.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt)               | [Обход SNI/CIDR белых списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt)                                                        |
 | 27  | [`whitelist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/whitelist.txt) | [Списки MTProxy для Белых Списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/whitelist.txt)                                             |
 | 28  | [`blacklist.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/blacklist.txt) | [Списки MTProxy для Чёрных списков](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/blacklist.txt)                                            |
-
----
-## 📊 Статистика репозитория
-
 
 
 ---
