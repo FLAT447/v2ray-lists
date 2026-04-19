@@ -229,7 +229,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для MacOS</summary>
 
-**1.** Скачиваем **«Hiddify»** — [Ссылка](https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-MacOS.dmg)
+**1.** Скачиваем **«Hiddify»** — [Ссылка](https://github.com/hiddify/hiddify-app/releases/download/v4.1.1/Hiddify-MacOS.dmg)
 
 **2.** Нажимаем **«Новый профиль»**.
 
