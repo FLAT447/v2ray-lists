@@ -118,27 +118,43 @@ def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
     return success
 
 def send_update_notification():
-    """Отправляет уведомление об обновлении подписок"""
+    """Отправляет уведомление об обновлении подписок с указанием количества конфигов"""
     if not updated_files:
         return
 
     message_parts = []
-
-    # Заголовок
     message_parts.append(f"🔄 <b>V2Ray подписки обновлены!</b>")
     message_parts.append(f"📅 Время: {offset}")
+
     updated_list = sorted(updated_files)
-    message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{i}.txt' for i in updated_list])}")
+    total_configs = 0
+    file_info = []
+
+    for file_num in updated_list:
+        local_path = f"githubmirror/{file_num}.txt"
+        config_count = 0
+        if os.path.exists(local_path):
+            with open(local_path, "r", encoding="utf-8") as f:
+                # Считаем только строки конфигураций (не комментарии и не пустые)
+                for line in f:
+                    stripped = line.strip()
+                    if stripped and not stripped.startswith('#'):
+                        config_count += 1
+            total_configs += config_count
+            file_info.append((file_num, config_count))
+        else:
+            file_info.append((file_num, 0))
+
+    message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{num}.txt' for num in updated_list])}")
+    message_parts.append(f"📊 Всего конфигураций: {total_configs}")
     message_parts.append("")
 
-    # RAW ссылки на подписки
     message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
-    for file_num in updated_list:
+    for file_num, count in file_info:
         raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
-        message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a>")
+        message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a> ({count} конфиг.)")
         message_parts.append(f"  <code>{raw_url}</code>")
 
-    # Ссылка на репозиторий
     message_parts.append("")
     message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>")
     message_parts.append("⚡️ <a href='https://flat447.github.io/v2ray-lists-site'>Сайт проекта</a>")
