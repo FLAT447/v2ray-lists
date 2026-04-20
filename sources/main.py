@@ -244,6 +244,33 @@ LOCAL_PATHS.append("githubmirror/26.txt")
 # -------------------- НАСТРОЙКИ --------------------
 urllib3.disable_warnings()
 CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/143.0.0.0 Safari/537.36"
+BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
+
+def decode_if_base64(data: str) -> str:
+    """
+    Проверяет, является ли строка целиком закодированной в Base64.
+    Если да — декодирует её, иначе возвращает исходные данные.
+    """
+    # Удаляем пробелы и символы перевода строки
+    stripped = data.strip()
+    
+    # Быстрая проверка: отсутствие переносов строк и только допустимые символы Base64
+    if '\n' not in stripped and BASE64_PATTERN.match(stripped):
+        try:
+            # Добавляем padding, если его нет (кратность 4)
+            missing_padding = len(stripped) % 4
+            if missing_padding:
+                stripped += '=' * (4 - missing_padding)
+            decoded_bytes = base64.b64decode(stripped)
+            decoded_str = decoded_bytes.decode('utf-8', errors='replace')
+            # Если после декодирования получилось многострочное содержимое с протоколами,
+            # считаем это валидной подпиской.
+            if any(proto in decoded_str for proto in ('vmess://', 'vless://', 'trojan://', 'ss://', 'tuic://')):
+                log(f"🔓 Обнаружена и декодирована Base64 подписка (длина {len(decoded_str)} символов)")
+                return decoded_str
+        except Exception as e:
+            log(f"⚠️ Ошибка при декодировании Base64: {e}")
+    return data
 
 def _build_session(max_pool_size: int) -> requests.Session:
     session = requests.Session()
@@ -426,6 +453,7 @@ def download_and_save(idx):
 
     try:
         data = fetch_data(url)
+        data = decode_if_base64(data)
         # Очистка существующих метаданных
         data = clean_existing_headers(data)
         data, _ = filter_insecure_configs(local_path, data, log_enabled=False)
