@@ -44,6 +44,55 @@ logger = logging.getLogger(__name__)
 
 # --- ФУНКЦИИ ---
 
+def is_socks5_proxy(link):
+    """Проверяет, является ли ссылка SOCKS5 прокси - такие нужно отсеивать"""
+    # Проверяем наличие слова socks в ссылке
+    if 'socks' in link.lower():
+        return True
+    
+    parsed = urlparse(link)
+    params = parse_qs(parsed.query)
+    
+    # Проверяем наличие параметров, характерных для SOCKS5
+    user = params.get('user', [None])[0]
+    password = params.get('pass', [None])[0] or params.get('password', [None])[0]
+    
+    # SOCKS5 прокси обычно имеют параметры user и pass
+    if user is not None and password is not None:
+        return True
+    
+    return False
+
+def validate_mtproto_link(link):
+    """Проверяет валидность MTProto ссылки"""
+    parsed = urlparse(link)
+    params = parse_qs(parsed.query)
+    
+    # Проверяем наличие обязательных параметров для MTProto
+    server = params.get('server', [None])[0]
+    port = params.get('port', [None])[0]
+    secret = params.get('secret', [None])[0]
+    
+    # MTProto прокси должен иметь server, port и secret
+    if not server or not port or not secret:
+        return False
+    
+    # Проверяем формат secret (должен быть hex строкой)
+    try:
+        int(secret, 16)
+    except ValueError:
+        return False
+    
+    # Проверяем, что порт - число в допустимом диапазоне
+    try:
+        port_num = int(port)
+        if port_num < 1 or port_num > 65535:
+            return False
+    except ValueError:
+        return False
+    
+    return True
+
 @alru_cache(maxsize=1024)
 async def resolve_doh(session, hostname):
     try:
@@ -158,15 +207,35 @@ async def main():
             except: pass
         networks = list(ipaddress.collapse_addresses(networks))
 
-        # 2. Сбор
+        # 2. Сбор ссылок с фильтрацией SOCKS5 и валидацией MTProto
         all_links = set()
+        socks5_count = 0
+        invalid_mtproto_count = 0
+        
         for url in PROXY_SOURCES:
             try:
                 async with session.get(url, timeout=10) as r:
-                    all_links.update(re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', await r.text()))
-            except: pass
+                    found_links = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', await r.text())
+                    
+                    for link in found_links:
+                        # Отсеиваем SOCKS5 прокси
+                        if is_socks5_proxy(link):
+                            socks5_count += 1
+                            continue
+                        
+                        # Проверяем валидность MTProto
+                        if validate_mtproto_link(link):
+                            all_links.add(link)
+                        else:
+                            invalid_mtproto_count += 1
+                            
+            except Exception as e:
+                logger.error(f"Ошибка при сборе из {url}: {e}")
 
-        # 3. Проверка
+        logger.info(f"Статистика сбора: SOCKS5 отсеяно - {socks5_count}, невалидных MTProto - {invalid_mtproto_count}")
+        logger.info(f"Всего собрано {len(all_links)} валидных MTProto ссылок")
+
+        # 3. Проверка работоспособности
         sem = asyncio.Semaphore(MAX_WORKERS)
         tasks = [check_proxy(session, link, networks, sem) for link in all_links]
         results = await asyncio.gather(*tasks)
@@ -180,6 +249,8 @@ async def main():
 
         white_list = sorted([p for p in unique_map.values() if p['type'] == 'white'], key=lambda x: x['latency'])
         black_list = sorted([p for p in unique_map.values() if p['type'] == 'black'], key=lambda x: x['latency'])
+
+        logger.info(f"Итоговая статистика: Белый список - {len(white_list)} прокси, Черный список - {len(black_list)} прокси")
 
         # 5. Сохранение и ТГ
         await asyncio.to_thread(update_github, "\n".join([p['link'] for p in white_list]), "\n".join([p['link'] for p in black_list]))
