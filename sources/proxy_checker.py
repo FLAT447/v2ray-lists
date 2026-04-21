@@ -144,24 +144,65 @@ async def check_proxy(session, link, networks, semaphore):
         except: return None
 
 def update_github(white_content, black_content):
-    if not GH_TOKEN: return
+    """Обновляет whitelist.txt, blacklist.txt и stats.json в репозитории."""
+    if not GH_TOKEN:
+        return
     try:
         auth = Auth.Token(GH_TOKEN)
         g = Github(auth=auth)
         repo = g.get_repo(REPO_NAME)
-        now_str = datetime.now(MSK_TZ).strftime('%d.%m.%Y %H:%M')
-        
+        now_str = datetime.now(MSK_TZ).strftime('%H:%M | %d.%m.%Y')
+        now_iso = datetime.now(MSK_TZ).isoformat()
+
+        # 1. Обновление текстовых файлов (whitelist.txt и blacklist.txt)
         files = {"whitelist.txt": white_content, "blacklist.txt": black_content}
         for path, content in files.items():
             try:
                 curr = repo.get_contents(path)
-                # Изначальный стиль коммита: 🚀 Обновление [файл] по часовому поясу...
                 commit_msg = f"🚀 Обновление {path} по часовому поясу Европа/Москва: {now_str}"
                 repo.update_file(path, commit_msg, content, curr.sha)
                 logger.info(f"GitHub: {path} обновлен.")
             except:
                 repo.create_file(path, f"Create {path} {now_str}", content)
-    except Exception as e: logger.error(f"GitHub Error: {e}")
+
+        # 2. Обновление stats.json (поиск секции и частичное обновление)
+        stats_path = "stats.json"
+        white_count = len(white_content.splitlines()) if white_content else 0
+        black_count = len(black_content.splitlines()) if black_content else 0
+
+        try:
+            curr_file = repo.get_contents(stats_path)
+            current_stats = json.loads(curr_file.decoded_content.decode())
+        except:
+            # Если файла нет, создаём начальную структуру (но она уже есть, поэтому этот блок редко сработает)
+            current_stats = {}
+
+        # Обновляем глобальное время последнего обновления
+        current_stats["last_global_update"] = now_str
+
+        # Убеждаемся, что объект "files" существует
+        if "files" not in current_stats:
+            current_stats["files"] = {}
+
+        # Добавляем / обновляем секцию "mtproto" внутри "files"
+        current_stats["files"]["mtproto"] = {
+            "white_count": white_count,
+            "black_count": black_count,
+            "updated": now_str
+        }
+
+        new_content = json.dumps(current_stats, indent=2, ensure_ascii=False)
+        commit_msg_stats = f"📊 Обновление статистики MTProto {now_str}"
+
+        try:
+            repo.update_file(stats_path, commit_msg_stats, new_content, curr_file.sha)
+            logger.info(f"GitHub: {stats_path} обновлен.")
+        except NameError:
+            repo.create_file(stats_path, f"Create {stats_path} {now_str}", new_content)
+            logger.info(f"GitHub: {stats_path} создан.")
+
+    except Exception as e:
+        logger.error(f"GitHub Error: {e}")
 
 async def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN: return
