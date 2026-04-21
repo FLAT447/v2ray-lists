@@ -48,6 +48,9 @@ HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или �
 #profile-update-interval: 1
 """
 
+# Файл статистики
+STATS_JSON_PATH = "stats.json"
+
 # -------------------- ЛОГИРОВАНИЕ --------------------
 LOGS_BY_FILE: dict[int, list[str]] = defaultdict(list)
 _LOG_LOCK = threading.Lock()
@@ -870,6 +873,67 @@ def update_readme_table():
     except Exception as e:
         log(f"⚠️ Ошибка README: {e}")
 
+def update_stats_json(updated_info: dict):
+    """
+    Обновляет stats.json в репозитории, сохраняя время обновления и количество конфигов.
+    updated_info: словарь {номер_файла: количество_конфигов}
+    """
+    if not updated_info:
+        log("ℹ️ Нет обновлённых файлов для записи в stats.json")
+        return
+
+    try:
+        try:
+            # Пытаемся получить существующий файл
+            stats_file = REPO.get_contents(STATS_JSON_PATH)
+            current_sha = stats_file.sha
+            content = stats_file.decoded_content.decode("utf-8")
+            stats = json.loads(content)
+        except GithubException as e:
+            if getattr(e, "status", None) == 404:
+                # Файл не существует, создадим новую структуру
+                stats = {"last_global_update": "", "files": {}}
+                current_sha = None
+            else:
+                raise
+
+        # Обновляем данные
+        stats["last_global_update"] = offset
+        if "files" not in stats:
+            stats["files"] = {}
+
+        for file_num, count in updated_info.items():
+            stats["files"][str(file_num)] = {
+                "count": count,
+                "updated": offset
+            }
+
+        new_content = json.dumps(stats, indent=2, ensure_ascii=False)
+
+        if current_sha is None:
+            # Создаём файл
+            REPO.create_file(
+                path=STATS_JSON_PATH,
+                message=f"📊 Создание stats.json с данными обновления",
+                content=new_content,
+            )
+            log(f"🆕 Файл {STATS_JSON_PATH} создан в репозитории")
+        else:
+            # Обновляем, только если есть изменения
+            if new_content != content:
+                REPO.update_file(
+                    path=STATS_JSON_PATH,
+                    message=f"📊 Обновление статистики по состоянию на {offset}",
+                    content=new_content,
+                    sha=current_sha,
+                )
+                log(f"📊 Статистика в {STATS_JSON_PATH} обновлена")
+            else:
+                log(f"ℹ️ Статистика в {STATS_JSON_PATH} не изменилась")
+
+    except Exception as e:
+        log(f"⚠️ Ошибка при обновлении {STATS_JSON_PATH}: {e}")
+
 # -------------------- MAIN --------------------
 def main(dry_run: bool = False):
     log("🚀 Начало обновления конфигураций")
@@ -903,8 +967,21 @@ def main(dry_run: bool = False):
         upload_to_github(path_26, "githubmirror/26.txt")
         download_results.append((path_26, "githubmirror/26.txt", 26, count_26))
 
+    # Обновляем README
     if not dry_run:
         update_readme_table()
+
+    # Собираем статистику для обновлённых файлов
+    updated_stats_info = {}
+    for res in download_results:
+        # res = (local_path, remote_path, file_number, config_count)
+        file_num = res[2]
+        count = res[3]
+        updated_stats_info[file_num] = count
+
+    # Обновляем stats.json (только для сухого прогона не трогаем GitHub)
+    if not dry_run and updated_stats_info:
+        update_stats_json(updated_stats_info)
 
     # Отправка уведомления в Telegram, если были обновления
     if updated_files and not dry_run:
