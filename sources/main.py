@@ -209,7 +209,7 @@ URLS = [
     "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt", #15
     "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub", #16
     "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt", #17
-    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/hy2-secure.txt", #18
+    "https://github.com/rtwo2/FastNodes/raw/refs/heads/main/sub/protocols/hysteria2.txt", #18
     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt", #19
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
