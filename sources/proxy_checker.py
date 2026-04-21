@@ -11,6 +11,7 @@ import zoneinfo
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from github import Github, Auth
 from async_lru import alru_cache
+import json
 
 # --- КОНФИГУРАЦИЯ ---
 MY_CHANNEL = "@flat447"
