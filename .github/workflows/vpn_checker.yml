@@ -2,8 +2,8 @@ name: Update VPN Configs
 
 on:
   schedule:
-    - cron: '0 */1 * * *' # Запуск каждые 6 часов
-  workflow_dispatch: # Кнопка для ручного запуска
+    - cron: '0 */1 * * *' 
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -19,7 +19,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Указываем путь к requirements.txt внутри папки sources
           pip install -r sources/requirements.txt
 
       - name: Run script
