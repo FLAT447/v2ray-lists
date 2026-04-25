@@ -12,19 +12,21 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from github import Github, Auth
 from async_lru import alru_cache
 import json
+import cloudscraper # Необходимо: pip install cloudscraper
 
 # --- КОНФИГУРАЦИЯ ---
 MY_CHANNEL = "@flat447"
-TIMEOUT = 6  # Увеличено для более стабильной проверки через ТСПУ
+TIMEOUT = 6  
 MAX_WORKERS = 200 
 MSK_TZ = zoneinfo.ZoneInfo("Europe/Moscow")
 REPO_NAME = "FLAT447/v2ray-lists"
 
-# Использование стабильных агрегаторов российских подсетей
 CIDR_SOURCES = [
+    "https://raw.githubusercontent.com/herrbischoff/country-ip-blocks/master/ipv4/ru.cidr",
     "https://raw.githubusercontent.com/ipverse/rir-ip/master/country/ru/ipv4-aggregated.txt"
 ]
 
+# Обычные текстовые источники
 PROXY_SOURCES = [
     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/tg-proxy/MTProto.txt",
     "https://raw.githubusercontent.com/Argh94/Proxy-List/refs/heads/main/MTProto.txt",
@@ -41,6 +43,12 @@ PROXY_SOURCES = [
     "https://t.me/mtpro_xyz"
 ]
 
+# Сайты с Cloudflare
+EXTERNAL_SITES = [
+    "https://mtprobe.cyou/en/",
+    "https://mtpro.xyz/en/"
+]
+
 DOH_SERVERS = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
 
 TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -54,7 +62,7 @@ logger = logging.getLogger(__name__)
 # --- ФУНКЦИИ ---
 
 def get_faketls_domain(secret):
-    """Извлекает домен маскировки из секрета FakeTLS для проверки его валидности"""
+    """Извлекает домен маскировки из секрета FakeTLS"""
     secret = secret.lower()
     if not secret.startswith('ee') or len(secret) <= 34:
         return None
@@ -65,17 +73,10 @@ def get_faketls_domain(secret):
     except:
         return None
 
-def is_socks5_proxy(link):
-    if 'socks' in link.lower(): return True
-    parsed = urlparse(link)
-    params = parse_qs(parsed.query)
-    return params.get('user') and (params.get('pass') or params.get('password'))
-
 def validate_mtproto_link(link):
-    """Проверяет валидность MTProto и наличие FakeTLS (критично для БС)"""
+    """Жесткая валидация для работы при БС"""
     parsed = urlparse(link)
     params = parse_qs(parsed.query)
-    
     server = params.get('server', [None])[0]
     port = params.get('port', [None])[0]
     secret = params.get('secret', [None])[0]
@@ -83,21 +84,34 @@ def validate_mtproto_link(link):
     if not server or not port or not secret:
         return False
     
-    # ПРОВЕРКА: Только FakeTLS (начинается с ee) выживает при БС
+    # Только FakeTLS (ee...)
     if not secret.lower().startswith('ee'):
         return False
         
-    # Дополнительная проверка на наличие зашитого домена
+    # Наличие домена маскировки обязательно для БС
     if not get_faketls_domain(secret):
         return False
 
     try:
-        port_num = int(port)
-        if not (1 <= port_num <= 65535): return False
-    except:
-        return False
+        if not (1 <= int(port) <= 65535): return False
+    except: return False
     
     return True
+
+def scrape_with_cloudscraper(urls):
+    """Синхронный скрапинг сайтов с Cloudflare"""
+    found_links = []
+    scraper = cloudscraper.create_scraper()
+    for url in urls:
+        try:
+            logger.info(f"Скрапинг через Cloudscraper: {url}")
+            resp = scraper.get(url, timeout=15)
+            if resp.status_code == 200:
+                links = re.findall(r'(tg://proxy\?\S+|https?://t\.me/proxy\?\S+)', resp.text)
+                found_links.extend(links)
+        except Exception as e:
+            logger.error(f"Ошибка Cloudscraper на {url}: {e}")
+    return found_links
 
 @alru_cache(maxsize=1024)
 async def resolve_doh(session, hostname):
@@ -131,7 +145,6 @@ async def check_proxy(session, link, networks, semaphore):
 
             start_time = time.perf_counter()
             try:
-                # В условиях БС важно проверять именно TCP хендшейк с чуть большим таймаутом
                 conn = asyncio.open_connection(ip, int(port))
                 reader, writer = await asyncio.wait_for(conn, timeout=TIMEOUT)
                 latency = int((time.perf_counter() - start_time) * 1000)
@@ -142,12 +155,19 @@ async def check_proxy(session, link, networks, semaphore):
             ip_obj = ipaddress.ip_address(ip)
             is_in_cidr = any(ip_obj in net for net in networks)
             
+            # Обновляем тег канала
             query = params.copy()
             query['channel'] = [MY_CHANNEL]
             new_query = urlencode(query, doseq=True, safe='@')
             final_link = urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", new_query, ""))
 
-            return {"link": final_link, "type": "white" if is_in_cidr else "black", "latency": latency, "id": f"{ip}:{port}"}
+            return {
+                "link": final_link, 
+                "type": "white" if is_in_cidr else "black", 
+                "latency": latency, 
+                "id": f"{ip}:{port}",
+                "port": int(port)
+            }
         except: return None
 
 def update_github(white_content, black_content):
@@ -158,47 +178,39 @@ def update_github(white_content, black_content):
         repo = g.get_repo(REPO_NAME)
         now_str = datetime.now(MSK_TZ).strftime('%H:%M | %d.%m.%Y')
 
-        # 1. Обновление текстовых файлов
+        # 1. Текстовые списки
         files = {"whitelist.txt": white_content, "blacklist.txt": black_content}
         for path, content in files.items():
             try:
                 curr = repo.get_contents(path)
                 commit_msg = f"🚀 Обновление {path} по часовому поясу Европа/Москва: {now_str}"
                 repo.update_file(path, commit_msg, content, curr.sha)
-                logger.info(f"GitHub: {path} обновлен.")
             except:
                 repo.create_file(path, f"Create {path} {now_str}", content)
 
-        # 2. Обновление статистики
+        # 2. Статистика
         stats_path = "stats.json"
-        white_count = len(white_content.splitlines()) if white_content else 0
-        black_count = len(black_content.splitlines()) if black_content else 0
-
         try:
             curr_file = repo.get_contents(stats_path)
-            current_stats = json.loads(curr_file.decoded_content.decode())
-        except:
-            current_stats = {}
+            stats = json.loads(curr_file.decoded_content.decode())
+        except: stats = {}
 
-        current_stats["last_global_update"] = now_str
-        if "files" not in current_stats: current_stats["files"] = {}
-        current_stats["files"]["mtproto"] = {
-            "white_count": white_count,
-            "black_count": black_count,
+        stats["last_global_update"] = now_str
+        if "files" not in stats: stats["files"] = {}
+        stats["files"]["mtproto"] = {
+            "white_count": len(white_content.splitlines()) if white_content else 0,
+            "black_count": len(black_content.splitlines()) if black_content else 0,
             "updated": now_str
         }
 
-        new_content = json.dumps(current_stats, indent=2, ensure_ascii=False)
+        new_stats_content = json.dumps(stats, indent=2, ensure_ascii=False)
         commit_msg_stats = f"📊 Обновление статистики MTProto {now_str}"
-        logger.info(f"GitHub: {stats_path} обновлён.")
-
         try:
-            repo.update_file(stats_path, commit_msg_stats, new_content, curr_file.sha)
+            repo.update_file(stats_path, commit_msg_stats, new_stats_content, curr_file.sha)
         except:
-            repo.create_file(stats_path, f"Create {stats_path} {now_str}", new_content)
+            repo.create_file(stats_path, f"Create {stats_path} {now_str}", new_stats_content)
 
-    except Exception as e:
-        logger.error(f"GitHub Error: {e}")
+    except Exception as e: logger.error(f"GitHub Error: {e}")
 
 async def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN: return
@@ -226,7 +238,7 @@ async def send_telegram_msg(white_list, black_list):
             except Exception as e: logger.error(f"TG Error: {e}")
 
 async def main():
-    logger.info("Запуск процесса фильтрации для БС...")
+    logger.info("Запуск обновления...")
     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0"}) as session:
         # 1. Загрузка CIDR
         networks = []
@@ -236,47 +248,55 @@ async def main():
                     if r.status == 200:
                         lines = (await r.text()).splitlines()
                         for line in lines:
-                            line = line.strip()
-                            if line and not line.startswith('#'):
-                                try: networks.append(ipaddress.ip_network(line, strict=False))
+                            if line.strip() and not line.startswith('#'):
+                                try: networks.append(ipaddress.ip_network(line.strip(), strict=False))
                                 except: continue
             except: pass
         networks = list(ipaddress.collapse_addresses(networks))
-        logger.info(f"Загружено {len(networks)} RU подсетей.")
 
-        # 2. Сбор и жесткая фильтрация FakeTLS
+        # 2. Сбор ссылок
         all_links = set()
+        
+        # Парсим обычные репозитории
         for url in PROXY_SOURCES:
             try:
                 async with session.get(url, timeout=15) as r:
-                    content = await r.text()
-                    found = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', content)
-                    for link in found:
-                        if not is_socks5_proxy(link) and validate_mtproto_link(link):
-                            all_links.add(link)
-            except Exception as e:
-                logger.error(f"Ошибка сбора из {url}: {e}")
+                    found = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', await r.text())
+                    for l in found:
+                        if validate_mtproto_link(l): all_links.add(l)
+            except: pass
+            
+        # Парсим сайты с Cloudflare через cloudscraper
+        external_links = await asyncio.to_thread(scrape_with_cloudscraper, EXTERNAL_SITES)
+        for l in external_links:
+            if validate_mtproto_link(l): all_links.add(l)
 
-        logger.info(f"Собрано {len(all_links)} потенциально рабочих FakeTLS ссылок.")
+        logger.info(f"Всего валидных FakeTLS ссылок собрано: {len(all_links)}")
 
-        # 3. Проверка работоспособности
+        # 3. Проверка
         sem = asyncio.Semaphore(MAX_WORKERS)
         tasks = [check_proxy(session, link, networks, sem) for link in all_links]
         results = await asyncio.gather(*tasks)
 
-        # 4. Фильтрация дублей и сортировка
+        # 4. Фильтрация и приоритезация
         unique_map = {}
         for p in [r for r in results if r]:
             pid = p['id']
+            # Приоритет 443 порту: если такой же IP:Port уже есть, оставляем с меньшим latency
             if pid not in unique_map or p['latency'] < unique_map[pid]['latency']:
                 unique_map[pid] = p
 
-        white_list = sorted([p for p in unique_map.values() if p['type'] == 'white'], key=lambda x: x['latency'])
-        black_list = sorted([p for p in unique_map.values() if p['type'] == 'black'], key=lambda x: x['latency'])
+        # В вайтлисте сначала ставим тех, у кого порт 443, затем по latency
+        white_list = sorted(
+            [p for p in unique_map.values() if p['type'] == 'white'], 
+            key=lambda x: (x['port'] != 443, x['latency'])
+        )
+        black_list = sorted(
+            [p for p in unique_map.values() if p['type'] == 'black'], 
+            key=lambda x: (x['port'] != 443, x['latency'])
+        )
 
-        logger.info(f"Итог: Вайтлист: {len(white_list)}, Блэклист: {len(black_list)}")
-
-        # 5. Сохранение
+        # 5. Сохранение и отчет
         await asyncio.to_thread(update_github, "\n".join([p['link'] for p in white_list]), "\n".join([p['link'] for p in black_list]))
         await send_telegram_msg(white_list, black_list)
         logger.info("Готово!")
