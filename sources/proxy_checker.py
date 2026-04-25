@@ -190,6 +190,7 @@ def update_github(white_content, black_content):
 
         new_content = json.dumps(current_stats, indent=2, ensure_ascii=False)
         commit_msg_stats = f"📊 Обновление статистики MTProto {now_str}"
+        logger.info(f"GitHub: {stats_path} обновлён.")
 
         try:
             repo.update_file(stats_path, commit_msg_stats, new_content, curr_file.sha)
