@@ -31,7 +31,14 @@ PROXY_SOURCES = [
     "https://raw.githubusercontent.com/Grim1313/mtproto-for-telegram/refs/heads/master/all_proxies.txt",
     "https://raw.githubusercontent.com/Argh94/telegram-proxy-scraper/refs/heads/main/proxy.txt",
     "https://raw.githubusercontent.com/Surfboardv2ray/TGProto/refs/heads/main/proxies-tested.txt",
-    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt"
+    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt",
+    "https://t.me/mtp4tg",
+    "https://t.me/TProxyRU",
+    "https://t.me/ProxyMTProto",
+    "https://t.me/ProxyFree_Ru",
+    "https://t.me/TelMTProto",
+    "https://t.me/telega_proxies",
+    "https://t.me/mtpro_xyz"
 ]
 
 DOH_SERVERS = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
