@@ -40,7 +40,8 @@ PROXY_SOURCES = [
     "https://t.me/ProxyFree_Ru",
     "https://t.me/TelMTProto",
     "https://t.me/telega_proxies",
-    "https://t.me/mtpro_xyz"
+    "https://t.me/mtpro_xyz",
+    "https://t.me/wlrforum/1813"
 ]
 
 # Сайты с Cloudflare
