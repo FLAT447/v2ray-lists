@@ -40,6 +40,12 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 # Номера подписок, которые должны содержать только пингуемые сервера
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
+# Настройки геолокации для подписки 10 (каскадные конфиги)
+GEO_API_URL = "http://ip-api.com/json/{ip}?fields=countryCode"
+GEO_BATCH_SIZE = 45          # ip-api.com бесплатный лимит: 45 req/min
+GEO_MAX_WORKERS = 20
+GEO_TIMEOUT = 4.0
+
 # Шаблон заголовка для каждого файла
 HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
 #profile-web-page-url: https://flat447.github.io/v2ray-lists-site
@@ -337,15 +343,6 @@ def save_to_local_file(path, content, file_num):
         f.write(content_with_header)
     log(f"📁 Данные сохранены локально в {path} (добавлен заголовок #{file_num})")
 
-def extract_source_name(url: str) -> str:
-    try:
-        parsed = urllib.parse.urlparse(url)
-        parts = parsed.path.split('/')
-        if len(parts) > 2:
-            return f"{parts[1]}/{parts[2]}"
-        return parsed.netloc
-    except:
-        return "Источник"
 
 # -------------------- ПИНГ --------------------
 def extract_host_and_port(config: str):
@@ -838,40 +835,198 @@ def create_filtered_configs():
     log(f"📁 Создан файл {path} с {len(unique)} конфигами (добавлен заголовок #26)")
     return path, len(unique)
 
-# -------------------- README --------------------
-def update_readme_table():
+# -------------------- 10-Й ФАЙЛ (КАСКАДНЫЕ КОНФИГИ) --------------------
+
+# Кэш геолокации: IP -> код страны (чтобы не дёргать API дважды для одного IP)
+_GEO_CACHE: dict[str, str] = {}
+_GEO_CACHE_LOCK = threading.Lock()
+
+
+def _resolve_host_to_ip(host: str) -> str | None:
+    """Резолвит доменное имя в IP. Если уже IP — возвращает как есть."""
+    # Проверка: уже IPv4?
+    ipv4_re = re.compile(r'^\d{1,3}(?:\.\d{1,3}){3}$')
+    if ipv4_re.match(host):
+        return host
     try:
-        readme = REPO.get_contents("README.md")
-        old = readme.decoded_content.decode("utf-8")
-        time_part, date_part = offset.split(" | ")
+        return socket.gethostbyname(host)
+    except Exception:
+        return None
 
-        rows = []
-        for i in range(1, 27):
-            filename = f"{i}.txt"
-            raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{i}.txt"
 
-            if i <= 25:
-                source = f"[{extract_source_name(URLS[i-1])}]({URLS[i-1]})"
-            else:
-                source = f"[Обход SNI/CIDR белых списков]({raw_url})"
+def _get_country_code(ip: str) -> str | None:
+    """
+    Возвращает двухбуквенный код страны для IP через ip-api.com.
+    Результат кешируется. Возвращает None при ошибке.
+    """
+    with _GEO_CACHE_LOCK:
+        if ip in _GEO_CACHE:
+            return _GEO_CACHE[ip]
+    try:
+        resp = requests.get(
+            GEO_API_URL.format(ip=ip),
+            timeout=GEO_TIMEOUT,
+            headers={"User-Agent": CHROME_UA}
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            code = data.get("countryCode")
+            with _GEO_CACHE_LOCK:
+                _GEO_CACHE[ip] = code
+            return code
+        # 429 — превышен лимит ip-api.com (45 req/min бесплатно)
+        if resp.status_code == 429:
+            time.sleep(60)
+            return _get_country_code(ip)
+    except Exception:
+        pass
+    return None
 
-            if i in updated_files:
-                rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {time_part} | {date_part} |")
-            else:
-                match = re.search(rf"\|\s*{i}\s*\|.*?\|\s*(.*?)\s*\|\s*(.*?)\s*\|", old)
-                if match:
-                    rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {match.group(1)} | {match.group(2)} |")
-                else:
-                    rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | Никогда | Никогда |")
 
-        new_table = "| № | Файл | Источник | Время | Дата |\n|--|--|--|--|--|\n" + "\n".join(rows)
-        new_content = re.sub(r"\| № \| Файл \| Источник \| Время \| Дата \|[\s\S]*?\|--\|--\|--\|--\|--\|[\s\S]*?(\n\n## |$)", new_table + r"\1", old)
+def _is_cascade_config(config: str) -> bool:
+    """
+    Возвращает True если конфиг считается каскадным:
+    - удалось извлечь хост
+    - IP хоста определяется как российский (countryCode == 'RU')
+    """
+    hp = extract_host_and_port(config)
+    if not hp:
+        return False
+    host, _ = hp
+    ip = _resolve_host_to_ip(host)
+    if not ip:
+        return False
+    country = _get_country_code(ip)
+    return country == "RU"
 
-        if new_content != old:
-            REPO.update_file("README.md", f"📝 Обновление таблицы в README.md по часовому поясу Европа/Москва: {offset}", new_content, readme.sha)
-            log("📝 Таблица в README.md обновлена")
-    except Exception as e:
-        log(f"⚠️ Ошибка README: {e}")
+
+def create_cascade_configs():
+    """
+    Создаёт 10-й файл: каскадные конфиги.
+
+    Алгоритм:
+    1. Собираем конфиги из файлов 1-25 (уже скачанных) + EXTRA_URLS_FOR_26.
+    2. Дедупликация по полному тексту и по паре host:port.
+    3. Пинг-фильтр (отсеиваем недоступные сервера).
+    4. Геолокация: оставляем только конфиги с российским IP сервера.
+    5. Сохраняем с заголовком.
+    """
+    log("🌐 [10] Начало сборки каскадных конфигов...")
+
+    # --- Шаг 1: сбор конфигов ---
+    all_configs: list[str] = []
+
+    # Из файлов 1-25
+    for i in range(1, 26):
+        path = f"githubmirror/{i}.txt"
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            content = re.sub(
+                r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://',
+                r'\n\1://', content
+            )
+            for line in content.splitlines():
+                s = line.strip()
+                if s and not s.startswith('#'):
+                    all_configs.append(s)
+        except Exception:
+            pass
+
+    # Из EXTRA_URLS_FOR_26
+    def load_extra_for_10(url):
+        try:
+            data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT,
+                              max_attempts=EXTRA_URL_MAX_ATTEMPTS,
+                              allow_http_downgrade=False)
+            data = clean_existing_headers(data)
+            data, _ = filter_insecure_configs("githubmirror/10.txt", data, log_enabled=False)
+            data = re.sub(
+                r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://',
+                r'\n\1://', data
+            )
+            return [l.strip() for l in data.splitlines() if l.strip() and not l.startswith('#')]
+        except Exception:
+            return []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(load_extra_for_10, url) for url in EXTRA_URLS_FOR_26]
+        for future in concurrent.futures.as_completed(futures):
+            all_configs.extend(future.result())
+
+    log(f"📦 [10] Собрано конфигов до дедупликации: {len(all_configs)}")
+
+    # --- Шаг 2: дедупликация ---
+    seen_full: set[str] = set()
+    seen_hp: set[str] = set()
+    unique: list[str] = []
+    for cfg in all_configs:
+        if cfg in seen_full:
+            continue
+        seen_full.add(cfg)
+        hp = extract_host_and_port(cfg)
+        if hp:
+            key = f"{hp[0].lower()}:{hp[1]}"
+            if key in seen_hp:
+                continue
+            seen_hp.add(key)
+        unique.append(cfg)
+
+    log(f"📦 [10] После дедупликации: {len(unique)}")
+
+    # --- Шаг 3: пинг-фильтр ---
+    unique = filter_by_ping(unique, 10)
+
+    # --- Шаг 4: геолокация (оставляем только RU) ---
+    log(f"🌍 [10] Проверка геолокации для {len(unique)} конфигов...")
+    cascade: list[str] = []
+
+    # Сначала резолвим хосты и собираем уникальные IP для батч-запросов
+    config_ips: list[tuple[str, str | None]] = []
+    for cfg in unique:
+        hp = extract_host_and_port(cfg)
+        if not hp:
+            continue
+        ip = _resolve_host_to_ip(hp[0])
+        config_ips.append((cfg, ip))
+
+    # Геолокация через пул потоков с учётом лимита ip-api.com
+    def check_geo(item: tuple[str, str | None]) -> str | None:
+        cfg, ip = item
+        if not ip:
+            return None
+        country = _get_country_code(ip)
+        return cfg if country == "RU" else None
+
+    # Разбиваем на батчи по GEO_BATCH_SIZE чтобы не превысить 45 req/min
+    for batch_start in range(0, len(config_ips), GEO_BATCH_SIZE):
+        batch = config_ips[batch_start:batch_start + GEO_BATCH_SIZE]
+        batch_t0 = time.time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=GEO_MAX_WORKERS) as executor:
+            futures = [executor.submit(check_geo, item) for item in batch]
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                if result:
+                    cascade.append(result)
+        # Соблюдаем лимит: если батч прошёл быстрее 60 сек — ждём остаток
+        elapsed = time.time() - batch_t0
+        if elapsed < 61 and batch_start + GEO_BATCH_SIZE < len(config_ips):
+            wait = 61 - elapsed
+            log(f"⏳ [10] Пауза {wait:.1f}с для соблюдения лимита ip-api.com...")
+            time.sleep(wait)
+
+    log(f"✅ [10] Каскадных конфигов (RU IP): {len(cascade)}")
+
+    # --- Шаг 5: сохранение ---
+    path = "githubmirror/10.txt"
+    content_with_header = add_file_header("\n".join(cascade), 10)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content_with_header)
+    log(f"📁 Создан файл {path} с {len(cascade)} каскадными конфигами (#10)")
+    return path, len(cascade)
+
 
 def update_stats_json(updated_info: dict):
     """
@@ -942,11 +1097,12 @@ def main(dry_run: bool = False):
     log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
 
     # Скачиваем файлы 1-25 и собираем информацию об обновлениях
+    # Файл 10 генерируется отдельно (каскадные конфиги), пропускаем индекс 9
     download_results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as download_pool, \
          concurrent.futures.ThreadPoolExecutor(max_workers=6) as upload_pool:
 
-        futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS))]
+        futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS)) if i != 9]
         uploads = []
 
         for f in concurrent.futures.as_completed(futures):
@@ -967,9 +1123,11 @@ def main(dry_run: bool = False):
         upload_to_github(path_26, "githubmirror/26.txt")
         download_results.append((path_26, "githubmirror/26.txt", 26, count_26))
 
-    # Обновляем README
-    if not dry_run:
-        update_readme_table()
+    # Создаём 10-й файл (каскадные конфиги с российским IP)
+    path_10, count_10 = create_cascade_configs()
+    if not dry_run and path_10:
+        upload_to_github(path_10, "githubmirror/10.txt")
+        download_results.append((path_10, "githubmirror/10.txt", 10, count_10))
 
     # Собираем статистику для обновлённых файлов
     updated_stats_info = {}
