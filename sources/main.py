@@ -52,7 +52,7 @@ GEOIP_ZIP_URL = "https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.
 
 # Xray-core
 XRAY_BIN = shutil.which("xray") or "/usr/local/bin/xray"
-CASCADE_EGRESS_MAX_WORKERS = 5   # параллельных проверок выходного IP
+CASCADE_EGRESS_MAX_WORKERS = 15   # параллельных проверок выходного IP
 EGRESS_TEST_TIMEOUT = 8
 
 # Шаблон заголовка
