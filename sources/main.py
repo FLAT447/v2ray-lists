@@ -438,6 +438,11 @@ def download_and_cache(idx):
         with downloaded_configs_lock:
             downloaded_configs[file_number] = lines
 
+        # Сохраняем файл локально (кроме 10, который будет пересоздан отдельно)
+        if file_number != 10:
+            path = f"githubmirror/{file_number}.txt"
+            save_to_local_file(path, "\n".join(lines), file_number)
+
         return file_number, lines
     except Exception as e:
         log(f"⚠️ Ошибка при скачивании {url}: {str(e)[:100]}")
@@ -972,6 +977,8 @@ def main(dry_run: bool = False):
                 content = f.read()
             remote_path = f"githubmirror/{fnum}.txt"
             commit_data[remote_path] = content
+        else:
+            log(f"⚠️ Файл {local_path} не найден, пропускаем")
 
     # 6. stats.json
     stats_content = build_stats_json(file_counts) if file_counts and not dry_run else None
