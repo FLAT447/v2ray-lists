@@ -21,6 +21,10 @@ jobs:
         run: |
           pip install -r sources/requirements.txt
 
+      - name: Install Xray-core
+        run: |
+          bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install --version 1.8.21
+
       - name: Run script
         env:
           MY_TOKEN: ${{ secrets.VPN_TOKEN }}
