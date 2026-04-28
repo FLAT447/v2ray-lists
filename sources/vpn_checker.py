@@ -877,32 +877,48 @@ def commit_all_changes(file_paths: dict[str, str], stats_json_content: str = Non
 
     try:
         ref = REPO.get_git_ref("heads/main")
-        latest_commit = REPO.get_git_commit(ref.object.sha)
-        base_tree = latest_commit.tree
+        current_commit = REPO.get_git_commit(ref.object.sha)
 
-        elements = []
+        # Собираем все обновления в порядке обработки
+        updates = []
         for path, content in file_paths.items():
-            blob = REPO.create_git_blob(content, "utf-8")
-            elements.append(InputGitTreeElement(
-                path=path, mode="100644", type="blob", sha=blob.sha
-            ))
-
+            updates.append((path, content))
         if stats_json_content is not None:
-            blob = REPO.create_git_blob(stats_json_content, "utf-8")
-            elements.append(InputGitTreeElement(
-                path=STATS_JSON_PATH, mode="100644", type="blob", sha=blob.sha
-            ))
+            updates.append((STATS_JSON_PATH, stats_json_content))
 
-        if not elements:
+        if not updates:
             return
 
-        new_tree = REPO.create_git_tree(elements, base_tree)
-        commit_message = f"🚀 Обновление по часовому поясу Европа/Москва: {offset}"
-        new_commit = REPO.create_git_commit(commit_message, new_tree, [latest_commit])
-        ref.edit(sha=new_commit.sha)
-        log(f"✅ Единый коммит создан: {new_commit.sha}")
+        for path, content in updates:
+            # Берём текущее дерево
+            base_tree = current_commit.tree
+
+            # Создаём блоб для файла
+            blob = REPO.create_git_blob(content, "utf-8")
+            element = InputGitTreeElement(
+                path=path, mode="100644", type="blob", sha=blob.sha
+            )
+
+            # Создаём новое дерево, заменяя/добавляя файл
+            new_tree = REPO.create_git_tree([element], base_tree)
+
+            # Формируем сообщение коммита с именем файла
+            basename = os.path.basename(path)
+            commit_message = f"🚀 Обновление {basename} по часовому поясу Европа/Москва: {offset}"
+
+            # Создаём коммит на основе текущего родителя
+            new_commit = REPO.create_git_commit(commit_message, new_tree, [current_commit])
+            log(f"✅ Коммит {new_commit.sha}: {commit_message}")
+
+            # Переходим к только что созданному коммиту как к родителю для следующего файла
+            current_commit = new_commit
+
+        # Обновляем ветку main на последний коммит в цепочке
+        ref.edit(sha=current_commit.sha)
+        log(f"✅ Ветка main обновлена на {current_commit.sha}")
+
     except Exception as e:
-        log(f"❌ Ошибка создания коммита: {e}")
+        log(f"❌ Ошибка создания коммитов: {e}")
 
 # -------------------- СТАТИСТИКА --------------------
 def build_stats_json(file_counts: dict[int, int]) -> str:
