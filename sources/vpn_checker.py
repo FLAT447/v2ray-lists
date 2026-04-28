@@ -897,7 +897,7 @@ def commit_all_changes(file_paths: dict[str, str], stats_json_content: str = Non
             return
 
         new_tree = REPO.create_git_tree(elements, base_tree)
-        commit_message = f"🔄 Обновление подписок {offset}"
+        commit_message = f"🚀 Обновление по часовому поясу Европа/Москва: {offset}"
         new_commit = REPO.create_git_commit(commit_message, new_tree, [latest_commit])
         ref.edit(sha=new_commit.sha)
         log(f"✅ Единый коммит создан: {new_commit.sha}")
