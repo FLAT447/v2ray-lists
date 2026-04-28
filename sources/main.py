@@ -1,16 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from collections import defaultdict
-from github import GithubException, Github, Auth
+from github import GithubException, Github, Auth, InputGitTreeElement
 from datetime import datetime
 import concurrent.futures
 import urllib.parse
 import threading
-import subprocess
-import tempfile
 import socket
 import zoneinfo
 import requests
@@ -18,44 +13,41 @@ import urllib3
 import base64
 import html
 import json
-import random
-import string
+import re
+import os
 import time
+import hashlib
 import zipfile
 import csv
 import ipaddress
-import shutil
-import os
-import re
 
 # -------------------- КОНФИГУРАЦИЯ --------------------
 GITHUB_TOKEN = os.environ.get("MY_TOKEN")
 REPO_NAME = "FLAT447/v2ray-lists"
 
+# Telegram настройки
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
+# Настройки пинга
 PING_TIMEOUT = 1.5
 PING_MAX_WORKERS = 200
 ENABLE_PING_CHECK = True
 
+# Настройки загрузки
 DEFAULT_MAX_WORKERS = 16
 EXTRA_URL_TIMEOUT = 6
 EXTRA_URL_MAX_ATTEMPTS = 2
 
+# Номера подписок, которые должны содержать только пингуемые сервера
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
-# GeoIP (IP2Location LITE – без регистрации)
+# Настройки GeoIP (автономная база IP2Location)
 GEOIP_CSV_PATH = "IP2LOCATION-LITE-DB1.CSV"
 GEOIP_ZIP_URL = "https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP"
 
-# Xray-core
-XRAY_BIN = shutil.which("xray") or "/usr/local/bin/xray"
-CASCADE_EGRESS_MAX_WORKERS = 15   # параллельных проверок выходного IP
-EGRESS_TEST_TIMEOUT = 8
-
-# Шаблон заголовка
+# Шаблон заголовка для каждого файла
 HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
 #profile-web-page-url: https://flat447.github.io/v2ray-lists-site
 #profile-title: V2Ray Lists {num}
@@ -63,6 +55,7 @@ HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или �
 #profile-update-interval: 1
 """
 
+# Файл статистики
 STATS_JSON_PATH = "stats.json"
 
 # -------------------- ЛОГИРОВАНИЕ --------------------
@@ -146,18 +139,11 @@ def send_update_notification():
     file_info = []
 
     for file_num in updated_list:
-        local_path = f"githubmirror/{file_num}.txt"
-        config_count = 0
-        if os.path.exists(local_path):
-            with open(local_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    stripped = line.strip()
-                    if stripped and not stripped.startswith('#'):
-                        config_count += 1
-            total_configs += config_count
-            file_info.append((file_num, config_count))
-        else:
-            file_info.append((file_num, 0))
+        with downloaded_configs_lock:
+            configs = downloaded_configs.get(file_num, [])
+        count = len(configs)
+        total_configs += count
+        file_info.append((file_num, count))
 
     message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{num}.txt' for num in updated_list])}")
     message_parts.append(f"📊 Всего конфигураций: {total_configs}")
@@ -205,31 +191,31 @@ if not os.path.exists("githubmirror"):
 
 # -------------------- ИСТОЧНИКИ --------------------
 URLS = [
-    "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt", #1
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt", #2
-    "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt", #3
-    "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt", #4
-    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt", #5
-    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi", #6
-    "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt", #7
-    "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt", #8
-    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", #9
-    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", #10
-    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt", #11
-    "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt", #12
-    "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt", #13
-    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", #14
-    "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt", #15
-    "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub", #16
-    "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt", #17
-    "https://github.com/rtwo2/FastNodes/raw/refs/heads/main/sub/protocols/hysteria2.txt", #18
-    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt", #19
-    "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
-    "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
-    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS.txt", #23
-    "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
-    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
+    "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt",
+    "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt",
+    "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt",
+    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt",
+    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
+    "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt",
+    "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
+    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
+    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
+    "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt",
+    "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt",
+    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
+    "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt",
+    "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub",
+    "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt",
+    "https://github.com/rtwo2/FastNodes/raw/refs/heads/main/sub/protocols/hysteria2.txt",
+    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt",
+    "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt",
+    "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt",
+    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS.txt",
+    "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt",
+    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
 ]
 
 EXTRA_URLS_FOR_26 = [
@@ -249,7 +235,7 @@ EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full"
 ]
 
-# -------------------- СЕТЕВЫЕ УТИЛИТЫ --------------------
+# -------------------- НАСТРОЙКИ СЕТИ --------------------
 urllib3.disable_warnings()
 CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/143.0.0.0 Safari/537.36"
 BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
@@ -434,7 +420,7 @@ def filter_insecure_configs(data: str, log_enabled=True):
         log(f"ℹ️ Отфильтровано {filtered_count} небезопасных конфигов")
     return "\n".join(result), filtered_count
 
-# -------------------- ЗАГРУЗКА ИСТОЧНИКОВ --------------------
+# -------------------- ЗАГРУЗКА И КЭШИРОВАНИЕ --------------------
 def download_and_cache(idx):
     url = URLS[idx]
     file_number = idx + 1
@@ -457,6 +443,7 @@ def download_and_cache(idx):
         log(f"⚠️ Ошибка при скачивании {url}: {str(e)[:100]}")
         return None
 
+# -------------------- ЗАГРУЗКА ДОП. ИСТОЧНИКОВ --------------------
 def fetch_extra_sources(urls: list[str]) -> list[str]:
     all_lines = []
     def load(url):
@@ -474,59 +461,90 @@ def fetch_extra_sources(urls: list[str]) -> list[str]:
             all_lines.extend(future.result())
     return [l.strip() for l in all_lines if l.strip() and not l.startswith('#')]
 
-# -------------------- GeoIP (IP2Location LITE) --------------------
+# -------------------- GeoIP: автономная загрузка IP2Location --------------------
 _geoip_ranges: list[tuple[int, int, str]] = []
 _geoip_loaded = False
 _geoip_lock = threading.Lock()
 
 def _download_ip2location_db():
-    log("📥 Скачивание IP2Location LITE (Country)...")
+    """Скачивает и распаковывает IP2Location LITE DB1 (Country)."""
+    log("📥 Скачивание IP2Location LITE DB1 (Country)...")
     zip_path = "IP2LOCATION-LITE-DB1.CSV.ZIP"
+    
+    # Скачиваем ZIP
     resp = requests.get(GEOIP_ZIP_URL, timeout=60, stream=True)
     resp.raise_for_status()
+    total_size = int(resp.headers.get('content-length', 0))
+    downloaded = 0
     with open(zip_path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=8192):
             f.write(chunk)
+            downloaded += len(chunk)
+            if total_size:
+                log(f"   Загружено: {downloaded * 100 / total_size:.0f}%")
+    
+    # Распаковываем
     log("📦 Распаковка...")
     with zipfile.ZipFile(zip_path, 'r') as zf:
-        csv_name = next((name for name in zf.namelist() if name.endswith('.CSV')), None)
+        csv_name = None
+        for name in zf.namelist():
+            if name.endswith('.CSV'):
+                csv_name = name
+                break
         if not csv_name:
-            raise RuntimeError("CSV не найден в архиве")
+            raise RuntimeError("CSV файл не найден в ZIP архиве")
         zf.extract(csv_name, ".")
         if csv_name != GEOIP_CSV_PATH:
             if os.path.exists(GEOIP_CSV_PATH):
                 os.remove(GEOIP_CSV_PATH)
             os.rename(csv_name, GEOIP_CSV_PATH)
+    
     os.remove(zip_path)
     log("✅ IP2Location база загружена")
 
 def _load_geoip_db():
+    """Загружает CSV базу в память как список диапазонов."""
     global _geoip_ranges, _geoip_loaded
+    
     with _geoip_lock:
         if _geoip_loaded:
             return
+        
         if not os.path.exists(GEOIP_CSV_PATH):
             _download_ip2location_db()
+        
         log("🔍 Загрузка GeoIP базы в память...")
         ranges = []
         with open(GEOIP_CSV_PATH, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             for row in reader:
                 if len(row) >= 3 and row[0].isdigit() and row[1].isdigit():
-                    start, end = int(row[0]), int(row[1])
-                    country = row[2].strip().upper()
-                    ranges.append((start, end, country))
+                    try:
+                        start_ip = int(row[0])
+                        end_ip = int(row[1])
+                        country = row[2].strip().upper()
+                        ranges.append((start_ip, end_ip, country))
+                    except ValueError:
+                        continue
+        
+        # Сортируем по начальному IP для бинарного поиска
         ranges.sort(key=lambda x: x[0])
         _geoip_ranges = ranges
         _geoip_loaded = True
-        log(f"✅ Загружено {len(ranges)} IP-диапазонов")
+        log(f"✅ Загружено {len(ranges)} диапазонов IP")
 
 def _get_country_code(ip_str: str) -> str | None:
+    """Определяет страну по IP используя загруженную базу."""
     _load_geoip_db()
+    
     if not _geoip_ranges:
         return None
+    
     try:
-        ip_int = int(ipaddress.IPv4Address(ip_str))
+        ip = ipaddress.ip_address(ip_str)
+        ip_int = int(ip)
+        
+        # Бинарный поиск
         lo, hi = 0, len(_geoip_ranges) - 1
         while lo <= hi:
             mid = (lo + hi) // 2
@@ -537,213 +555,31 @@ def _get_country_code(ip_str: str) -> str | None:
                 lo = mid + 1
             else:
                 return country
+        return None
     except Exception:
-        pass
-    return None
+        return None
 
 def _resolve_host_to_ip(host: str) -> str | None:
-    if re.match(r'^\d{1,3}(?:\.\d{1,3}){3}$', host):
+    ipv4_re = re.compile(r'^\d{1,3}(?:\.\d{1,3}){3}$')
+    if ipv4_re.match(host):
         return host
     try:
         return socket.gethostbyname(host)
     except Exception:
         return None
 
-# -------------------- XRAY: ПРОВЕРКА ВЫХОДНОГО IP --------------------
-def config_to_xray_outbound(link: str) -> dict | None:
-    """
-    Преобразует ссылку vmess/vless/trojan/ss в JSON-объект outbound для Xray.
-    Возвращает словарь или None при ошибке.
-    """
-    try:
-        if link.startswith("vmess://"):
-            payload = link[8:]
-            # padding
-            rem = len(payload) % 4
-            if rem:
-                payload += '=' * (4 - rem)
-            decoded = base64.b64decode(payload).decode('utf-8')
-            v = json.loads(decoded)
-            out = {
-                "protocol": "vmess",
-                "settings": {"vnext": [{
-                    "address": v.get("add") or v.get("host"),
-                    "port": int(v.get("port", 443)),
-                    "users": [{"id": v.get("id"), "alterId": v.get("aid", 0), "security": v.get("scy", "auto")}]
-                }]}
-            }
-            # streamSettings
-            net = v.get("net", "tcp")
-            stream = {"network": net}
-            if net == "ws":
-                stream["wsSettings"] = {
-                    "path": v.get("path", "/"),
-                    "headers": {"Host": v.get("host", "")}
-                }
-            elif net == "grpc":
-                stream["grpcSettings"] = {"serviceName": v.get("path", "")}
-            elif net == "tcp" and v.get("type") == "http":
-                stream["tcpSettings"] = {"header": {"type": "http", "request": {"path": v.get("path", "/"), "headers": {"Host": v.get("host", "")}}}}
-            if v.get("tls") == "tls":
-                stream["security"] = "tls"
-                stream["tlsSettings"] = {"serverName": v.get("sni") or v.get("host")}
-            out["streamSettings"] = stream
-            return out
-
-        elif link.startswith("vless://"):
-            parsed = urllib.parse.urlparse(link)
-            uuid = parsed.username
-            host = parsed.hostname
-            port = parsed.port or 443
-            params = urllib.parse.parse_qs(parsed.query)
-            net = params.get("type", ["tcp"])[0]
-            security = params.get("security", ["none"])[0]
-            flow = params.get("flow", [None])[0]
-            sni = params.get("sni", [host])[0]
-            pbk = params.get("pbk", [None])[0]
-            fp = params.get("fp", ["chrome"])[0]
-            path = params.get("path", ["/"])[0]
-            out = {
-                "protocol": "vless",
-                "settings": {"vnext": [{
-                    "address": host,
-                    "port": int(port),
-                    "users": [{"id": uuid, "flow": flow, "encryption": "none"}]
-                }]}
-            }
-            stream = {"network": net}
-            if net == "ws":
-                stream["wsSettings"] = {"path": path, "headers": {"Host": sni}}
-            elif net == "grpc":
-                stream["grpcSettings"] = {"serviceName": path}
-            elif net == "tcp" and params.get("headerType", [""])[0] == "http":
-                stream["tcpSettings"] = {"header": {"type": "http", "request": {"path": path, "headers": {"Host": sni}}}}
-            if security == "tls":
-                stream["security"] = "tls"
-                stream["tlsSettings"] = {"serverName": sni}
-            if pbk:
-                stream["security"] = "reality"
-                stream["realitySettings"] = {"serverName": sni, "publicKey": pbk, "fingerprint": fp}
-            out["streamSettings"] = stream
-            return out
-
-        elif link.startswith("trojan://"):
-            parsed = urllib.parse.urlparse(link)
-            uuid = parsed.username
-            host = parsed.hostname
-            port = parsed.port or 443
-            params = urllib.parse.parse_qs(parsed.query)
-            sni = params.get("sni", [host])[0]
-            alpn = params.get("alpn", [None])[0]
-            out = {
-                "protocol": "trojan",
-                "settings": {"servers": [{"address": host, "port": int(port), "password": uuid}]},
-                "streamSettings": {
-                    "network": "tcp",
-                    "security": "tls",
-                    "tlsSettings": {"serverName": sni}
-                }
-            }
-            if alpn:
-                out["streamSettings"]["tlsSettings"]["alpn"] = [alpn]
-            return out
-
-        elif link.startswith("ss://"):
-            # SIP002 и старый формат
-            if "@" in link:
-                parsed = urllib.parse.urlparse(link)
-                # ещё может быть base64
-                userinfo = parsed.username
-                if ":" in userinfo:
-                    method, pwd = base64.b64decode(userinfo).decode().split(":", 1) if not re.match(r'^[\w-]+$', userinfo) else userinfo.split(":", 1)
-                else:
-                    method = userinfo
-                    pwd = ""
-                host = parsed.hostname
-                port = parsed.port or 8388
-                out = {
-                    "protocol": "shadowsocks",
-                    "settings": {"servers": [{"address": host, "port": int(port), "method": method, "password": pwd}]}
-                }
-                return out
-            else:
-                # старый формат base64
-                payload = link[5:].split("#")[0]
-                decoded = base64.b64decode(payload).decode()
-                parts = decoded.split("@")
-                method_pwd = parts[0].split(":")
-                host_port = parts[1].split(":")
-                out = {
-                    "protocol": "shadowsocks",
-                    "settings": {"servers": [{
-                        "address": host_port[0],
-                        "port": int(host_port[1]),
-                        "method": method_pwd[0],
-                        "password": method_pwd[1]
-                    }]}
-                }
-                return out
-    except Exception:
-        pass
-    return None
-
-def check_egress_ip(config_line: str) -> bool:
-    """
-    Возвращает True, если выходной IP (через прокси) не российский.
-    """
-    outbound = config_to_xray_outbound(config_line)
-    if not outbound:
+def _is_cascade_config(config: str) -> bool:
+    hp = extract_host_and_port(config)
+    if not hp:
         return False
+    host, _ = hp
+    ip = _resolve_host_to_ip(host)
+    if not ip:
+        return False
+    country = _get_country_code(ip)
+    return country == "RU"
 
-    # Выбираем случайный порт для SOCKS-входящего
-    socks_port = random.randint(20000, 60000)
-    conf = {
-        "inbounds": [{
-            "port": socks_port,
-            "listen": "127.0.0.1",
-            "protocol": "socks",
-            "settings": {"auth": "noauth", "udp": True}
-        }],
-        "outbounds": [outbound]
-    }
-    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".json", text=True)
-    try:
-        with os.fdopen(tmp_fd, 'w') as f:
-            json.dump(conf, f, indent=2)
-
-        proc = subprocess.Popen(
-            [XRAY_BIN, "run", "-c", tmp_path],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        time.sleep(1.5)  # даём время подняться
-
-        try:
-            # Получаем выходной IP
-            resp = requests.get(
-                "http://ifconfig.me/ip",
-                proxies={
-                    "http": f"socks5h://127.0.0.1:{socks_port}",
-                    "https": f"socks5h://127.0.0.1:{socks_port}"
-                },
-                timeout=EGRESS_TEST_TIMEOUT
-            )
-            egress_ip = resp.text.strip()
-            country = _get_country_code(egress_ip)
-            return country is not None and country != "RU"
-        except Exception:
-            return False
-    finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        try:
-            os.remove(tmp_path)
-        except OSError:
-            pass
-
-# -------------------- SNI ДОМЕНЫ (полный список) --------------------
+# -------------------- СБОРКА ФАЙЛА 26 --------------------
 SNI_DOMAINS = [
     "00.img.avito.st", "01.img.avito.st", "02.img.avito.st", "03.img.avito.st",
     "04.img.avito.st", "05.img.avito.st", "06.img.avito.st", "07.img.avito.st",
@@ -943,21 +779,18 @@ SNI_DOMAINS = [
     "zen.yandex.ru", "честныйзнак.рф"
 ]
 
-# -------------------- СБОРКА 26-го файла --------------------
-def create_filtered_configs(extra_lines: list[str]) -> int:
-    """
-    Собирает 26-й файл из кэшированных конфигов (1–25) + extra_lines,
-    фильтрует по SNI, дедуплицирует, проверяет пинг.
-    Возвращает количество конфигов.
-    """
+
+def create_filtered_configs(extra_lines: list[str]):
     all_configs = []
     with downloaded_configs_lock:
         for fnum, lines in downloaded_configs.items():
             if fnum == 10:
                 continue
             all_configs.extend(lines)
+
     all_configs.extend(extra_lines)
 
+    # SNI фильтр
     sorted_domains = sorted(SNI_DOMAINS, key=len)
     sni_regex = re.compile("|".join(re.escape(d) for d in sorted_domains))
     filtered = [cfg for cfg in all_configs if sni_regex.search(cfg)]
@@ -988,8 +821,8 @@ def create_filtered_configs(extra_lines: list[str]) -> int:
     log(f"📁 Создан файл {path} с {len(unique)} конфигами (#26)")
     return len(unique)
 
-# -------------------- СБОРКА 10-го файла (каскад) --------------------
-def create_cascade_configs(extra_lines: list[str]) -> int:
+# -------------------- СБОРКА ФАЙЛА 10 --------------------
+def create_cascade_configs(extra_lines: list[str]):
     log("🌐 [10] Начало сборки каскадных конфигов...")
 
     all_configs = []
@@ -1017,36 +850,12 @@ def create_cascade_configs(extra_lines: list[str]) -> int:
         unique.append(cfg)
 
     log(f"📦 [10] После дедупликации: {len(unique)}")
+    unique = filter_by_ping(unique, 10)
 
-    # Шаг 1: только серверы с российским IP
-    ru_server = []
-    for cfg in unique:
-        hp = extract_host_and_port(cfg)
-        if not hp:
-            continue
-        host, _ = hp
-        ip = _resolve_host_to_ip(host)
-        if ip and _get_country_code(ip) == "RU":
-            ru_server.append(cfg)
-    log(f"🇷🇺 [10] Серверов с российским IP: {len(ru_server)}")
+    log(f"🌍 [10] Проверка геолокации для {len(unique)} конфигов...")
+    cascade = [cfg for cfg in unique if _is_cascade_config(cfg)]
 
-    # Шаг 2: пинг
-    reachable = filter_by_ping(ru_server, 10)
-
-    # Шаг 3: проверка выходного IP через Xray (реальный egress)
-    log(f"🛰️ [10] Проверка выходного IP для {len(reachable)} серверов...")
-    cascade = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=CASCADE_EGRESS_MAX_WORKERS) as executor:
-        futures = {executor.submit(check_egress_ip, cfg): cfg for cfg in reachable}
-        for future in concurrent.futures.as_completed(futures):
-            cfg = futures[future]
-            try:
-                if future.result():  # True = выходной IP не российский → каскад
-                    cascade.append(cfg)
-            except Exception as e:
-                log(f"⚠️ Ошибка egress-проверки: {e}")
-
-    log(f"✅ [10] Каскадных конфигов (выход за рубеж): {len(cascade)}")
+    log(f"✅ [10] Каскадных конфигов (RU IP): {len(cascade)}")
 
     path = "githubmirror/10.txt"
     save_to_local_file(path, "\n".join(cascade), 10)
@@ -1055,93 +864,50 @@ def create_cascade_configs(extra_lines: list[str]) -> int:
 
     return len(cascade)
 
-# -------------------- ЗАГРУЗКА В GITHUB (старый стиль) --------------------
-def upload_to_github(local_path, remote_path):
-    if not os.path.exists(local_path):
-        log(f"❌ Файл {local_path} не найден.")
-        return
-
-    with open(local_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    max_retries = 5
-
-    for attempt in range(1, max_retries + 1):
-        try:
-            try:
-                file_in_repo = REPO.get_contents(remote_path)
-                current_sha = file_in_repo.sha
-
-                try:
-                    remote_content = file_in_repo.decoded_content.decode("utf-8", errors="replace")
-                except (AssertionError, AttributeError):
-                    if hasattr(file_in_repo, 'content') and file_in_repo.content:
-                        remote_content = base64.b64decode(file_in_repo.content).decode("utf-8", errors="replace")
-                    else:
-                        remote_content = None
-
-                if remote_content == content:
-                    log(f"🔄 Изменений для {remote_path} нет.")
-                    return
-
-            except GithubException as e_get:
-                if getattr(e_get, "status", None) == 404:
-                    basename = os.path.basename(remote_path)
-                    REPO.create_file(
-                        path=remote_path,
-                        message=f"🆕 Первый коммит {basename} по часовому поясу Европа/Москва: {offset}",
-                        content=content,
-                    )
-                    log(f"🆕 Файл {remote_path} создан.")
-                    file_index = int(remote_path.split('/')[1].split('.')[0])
-                    with _UPDATED_FILES_LOCK:
-                        updated_files.add(file_index)
-                    return
-                else:
-                    log(f"⚠️ Ошибка при получении {remote_path}: {e_get.data.get('message', str(e_get))}")
-                    return
-
-            basename = os.path.basename(remote_path)
-            REPO.update_file(
-                path=remote_path,
-                message=f"🚀 Обновление {basename} по часовому поясу Европа/Москва: {offset}",
-                content=content,
-                sha=current_sha,
-            )
-            log(f"🚀 Файл {remote_path} обновлён в репозитории.")
-            file_index = int(remote_path.split('/')[1].split('.')[0])
-            with _UPDATED_FILES_LOCK:
-                updated_files.add(file_index)
-            return
-
-        except GithubException as e_upd:
-            if getattr(e_upd, "status", None) == 409 and attempt < max_retries:
-                wait_time = 0.5 * (2 ** (attempt - 1))
-                log(f"⚠️ Конфликт SHA для {remote_path}, попытка {attempt}/{max_retries}, ждем {wait_time} сек")
-                time.sleep(wait_time)
-                continue
-            else:
-                log(f"❌ Не удалось обновить {remote_path}: {e_upd.data.get('message', str(e_upd))}")
-                return
-
-    log(f"❌ Не удалось обновить {remote_path} после {max_retries} попыток")
-
-# -------------------- СТАТИСТИКА --------------------
-def update_stats_json(file_counts: dict[int, int]):
-    if not file_counts:
-        log("ℹ️ Нет обновлённых файлов для stats.json")
+# -------------------- ЕДИНЫЙ GIT-КОММИТ --------------------
+def commit_all_changes(file_paths: dict[str, str], stats_json_content: str = None):
+    if not file_paths and stats_json_content is None:
+        log("⚠️ Нет изменений для коммита")
         return
 
     try:
+        ref = REPO.get_git_ref("heads/main")
+        latest_commit = REPO.get_git_commit(ref.object.sha)
+        base_tree = latest_commit.tree
+
+        elements = []
+        for path, content in file_paths.items():
+            blob = REPO.create_git_blob(content, "utf-8")
+            elements.append(InputGitTreeElement(
+                path=path, mode="100644", type="blob", sha=blob.sha
+            ))
+
+        if stats_json_content is not None:
+            blob = REPO.create_git_blob(stats_json_content, "utf-8")
+            elements.append(InputGitTreeElement(
+                path=STATS_JSON_PATH, mode="100644", type="blob", sha=blob.sha
+            ))
+
+        if not elements:
+            return
+
+        new_tree = REPO.create_git_tree(elements, base_tree)
+        commit_message = f"🔄 Обновление подписок {offset}"
+        new_commit = REPO.create_git_commit(commit_message, new_tree, [latest_commit])
+        ref.edit(sha=new_commit.sha)
+        log(f"✅ Единый коммит создан: {new_commit.sha}")
+    except Exception as e:
+        log(f"❌ Ошибка создания коммита: {e}")
+
+# -------------------- СТАТИСТИКА --------------------
+def build_stats_json(file_counts: dict[int, int]) -> str:
+    try:
         try:
-            stats_file = REPO.get_contents(STATS_JSON_PATH)
-            current_sha = stats_file.sha
-            content = stats_file.decoded_content.decode("utf-8")
-            stats = json.loads(content)
+            contents = REPO.get_contents(STATS_JSON_PATH)
+            stats = json.loads(contents.decoded_content)
         except GithubException as e:
             if getattr(e, "status", None) == 404:
                 stats = {"last_global_update": "", "files": {}}
-                current_sha = None
             else:
                 raise
 
@@ -1151,86 +917,76 @@ def update_stats_json(file_counts: dict[int, int]):
         for fnum, count in file_counts.items():
             stats["files"][str(fnum)] = {"count": count, "updated": offset}
 
-        new_content = json.dumps(stats, indent=2, ensure_ascii=False)
-
-        if current_sha is None:
-            REPO.create_file(
-                path=STATS_JSON_PATH,
-                message=f"📊 Создание stats.json",
-                content=new_content,
-            )
-            log(f"🆕 Файл {STATS_JSON_PATH} создан")
-        else:
-            if new_content != content:
-                REPO.update_file(
-                    path=STATS_JSON_PATH,
-                    message=f"📊 Обновление статистики {offset}",
-                    content=new_content,
-                    sha=current_sha,
-                )
-                log(f"📊 Статистика обновлена")
-            else:
-                log(f"ℹ️ Статистика не изменилась")
-
+        return json.dumps(stats, indent=2, ensure_ascii=False)
     except Exception as e:
-        log(f"⚠️ Ошибка при обновлении stats.json: {e}")
+        log(f"⚠️ Ошибка при формировании stats.json: {e}")
+        return None
 
 # -------------------- MAIN --------------------
 def main(dry_run: bool = False):
     log("🚀 Начало обновления конфигураций")
     log(f"📅 Время запуска: {offset}")
     log(f"🔍 Проверка пинга: {'включена' if ENABLE_PING_CHECK else 'выключена'}")
+    log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
 
-    # 1. Загрузка доп. источников
+    # 1. Загрузка дополнительных источников
     log("📥 Загрузка дополнительных источников...")
     extra_lines = fetch_extra_sources(EXTRA_URLS_FOR_26)
-    log(f"📥 Загружено: {len(extra_lines)} строк")
+    log(f"📥 Дополнительных конфигов загружено: {len(extra_lines)}")
 
-    # 2. Параллельная загрузка основных файлов (кроме 10-го)
-    file_counts = {}
+    # 2. Параллельная загрузка основных файлов
     with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as pool:
-        futures = {pool.submit(download_and_cache, i): i for i in range(len(URLS)) if i != 9}
-        for future in concurrent.futures.as_completed(futures):
-            res = future.result()
-            if res:
+        futures = []
+        for i in range(len(URLS)):
+            if i == 9:  # 10-й URL пропускаем (будет создан каскадным методом)
+                continue
+            futures.append(pool.submit(download_and_cache, i))
+
+        file_counts = {}
+        for f in concurrent.futures.as_completed(futures):
+            res = f.result()
+            if res is not None:
                 fnum, lines = res
                 file_counts[fnum] = len(lines)
-                updated_files.add(fnum)
+                with _UPDATED_FILES_LOCK:
+                    updated_files.add(fnum)
 
-    # 3. Сборка файла 26
+    # 3. Создание 26-го файла
     log("📁 Сборка файла 26...")
     count_26 = create_filtered_configs(extra_lines)
     file_counts[26] = count_26
     updated_files.add(26)
 
-    # 4. Сборка файла 10 (каскад)
+    # 4. Создание 10-го файла
     log("📁 Сборка файла 10 (каскадные конфиги)...")
     count_10 = create_cascade_configs(extra_lines)
     file_counts[10] = count_10
     updated_files.add(10)
 
-    # 5. Коммиты для каждого изменённого файла
-    if not dry_run:
-        upload_pool = concurrent.futures.ThreadPoolExecutor(max_workers=6)
-        futures = []
-        for fnum in sorted(updated_files):
-            local_path = f"githubmirror/{fnum}.txt"
+    # 5. Подготовка данных для коммита
+    commit_data = {}
+    for fnum in sorted(updated_files):
+        local_path = f"githubmirror/{fnum}.txt"
+        if os.path.exists(local_path):
+            with open(local_path, "r", encoding="utf-8") as f:
+                content = f.read()
             remote_path = f"githubmirror/{fnum}.txt"
-            if os.path.exists(local_path):
-                futures.append(upload_pool.submit(upload_to_github, local_path, remote_path))
-        for f in concurrent.futures.as_completed(futures):
-            try:
-                f.result()
-            except Exception as e:
-                log(f"⚠️ Ошибка при загрузке: {e}")
-        upload_pool.shutdown(wait=True)
+            commit_data[remote_path] = content
 
-        # Обновление stats.json
-        update_stats_json(file_counts)
+    # 6. stats.json
+    stats_content = build_stats_json(file_counts) if file_counts and not dry_run else None
 
-    # 6. Telegram-уведомление
-    if updated_files and not dry_run:
-        send_update_notification()
+    # 7. Коммит
+    if not dry_run:
+        if commit_data:
+            commit_all_changes(commit_data, stats_content)
+        elif stats_content:
+            commit_all_changes({}, stats_content)
+        else:
+            log("ℹ️ Нет новых данных для коммита")
+
+        if updated_files:
+            send_update_notification()
 
     # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
