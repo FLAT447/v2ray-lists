@@ -31,7 +31,7 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
-PING_TIMEOUT = 1.5
+PING_TIMEOUT = 2.0          # было 1.5 → как в старом main.py
 PING_MAX_WORKERS = 200
 ENABLE_PING_CHECK = True
 
@@ -42,10 +42,6 @@ EXTRA_URL_MAX_ATTEMPTS = 2
 
 # Номера подписок, которые должны содержать только пингуемые сервера
 PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
-
-# Настройки GeoIP (автономная база IP2Location)
-GEOIP_CSV_PATH = "IP2LOCATION-LITE-DB1.CSV"
-GEOIP_ZIP_URL = "https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP"
 
 # Шаблон заголовка для каждого файла
 HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
@@ -200,7 +196,7 @@ URLS = [
     "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt",
     "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
     "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
-    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",  # <- 10-й файл
     "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
     "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt",
     "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt",
@@ -959,8 +955,9 @@ def main(dry_run: bool = False):
     with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as pool:
         futures = []
         for i in range(len(URLS)):
-            if i == 9:  # 10-й URL пропускаем (будет создан каскадным методом)
-                continue
+            # Убираем пропуск 10-го URL (индекс 9), чтобы его конфиги попали в 26.txt
+            # if i == 9:
+            #     continue
             futures.append(pool.submit(download_and_cache, i))
 
         file_counts = {}
@@ -978,7 +975,7 @@ def main(dry_run: bool = False):
     file_counts[26] = count_26
     updated_files.add(26)
 
-    # 4. Создание 10-го файла
+    # 4. Создание 10-го файла (каскадный, перезапишет downloaded_configs[10])
     log("📁 Сборка файла 10 (каскадные конфиги)...")
     count_10 = create_cascade_configs(extra_lines)
     file_counts[10] = count_10
