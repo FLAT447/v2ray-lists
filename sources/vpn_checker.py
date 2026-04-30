@@ -28,8 +28,8 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
-PING_TIMEOUT = 2.0
-PING_MAX_WORKERS = 50
+PING_TIMEOUT = 3.0
+PING_MAX_WORKERS = 100
 ENABLE_PING_CHECK = True
 
 # Настройки загрузки
