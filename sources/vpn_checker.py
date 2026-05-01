@@ -29,7 +29,7 @@ TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
 PING_TIMEOUT = 2.0
-PING_MAX_WORKERS = 50
+PING_MAX_WORKERS = 200  # Увеличено для более быстрого пинга множества серверов
 ENABLE_PING_CHECK = True
 
 # Настройки загрузки
@@ -347,57 +347,72 @@ def extract_source_name(url: str) -> str:
     except:
         return "Источник"
 
-# -------------------- ПИНГ --------------------
-def extract_host_and_port(config: str):
+# -------------------- ПИНГ И ПАРСИНГ --------------------
+def extract_server_info(config: str):
+    """
+    Возвращает кортеж (host, port, user_id).
+    Поддерживает VMess, VLESS, Trojan, SS, TUIC, Hysteria/Hysteria2.
+    """
     try:
         if config.startswith("vmess://"):
-            try:
-                payload = config[8:]
-                rem = len(payload) % 4
-                if rem:
-                    payload += '=' * (4 - rem)
-                decoded = base64.b64decode(payload).decode('utf-8', errors='ignore')
-                if decoded.startswith('{'):
-                    j = json.loads(decoded)
-                    host = j.get('add') or j.get('host') or j.get('ip')
-                    port = j.get('port')
-                    if host and port:
-                        return host, int(port)
-            except:
-                pass
-        elif config.startswith(("vless://", "trojan://")):
-            match = re.search(r'@([\w\.-]+):(\d+)', config)
-            if match:
-                return match.group(1), int(match.group(2))
-        elif config.startswith("ss://"):
-            match = re.search(r'@([\w\.-]+):(\d+)', config)
-            if match:
-                return match.group(1), int(match.group(2))
+            payload = config[8:]
+            rem = len(payload) % 4
+            if rem:
+                payload += '=' * (4 - rem)
+            decoded = base64.b64decode(payload).decode('utf-8', errors='ignore')
+            if decoded.startswith('{'):
+                j = json.loads(decoded)
+                host = j.get('add') or j.get('host') or j.get('ip')
+                port = j.get('port')
+                user_id = j.get('id') # UUID для vmess
+                if host and port:
+                    return str(host), int(port), str(user_id) if user_id else None
         else:
-            match = re.search(r'(?:@|//)([\w\.-]+):(\d{1,5})', config)
-            if match:
-                return match.group(1), int(match.group(2))
+            # Универсальный парсинг для остальных протоколов
+            parsed = urllib.parse.urlparse(config)
+            host = parsed.hostname
+            port = parsed.port
+            user_id = parsed.username # Извлекает UUID или пароль до знака @
+            
+            if host and port:
+                return str(host), int(port), str(user_id) if user_id else None
     except:
         pass
-    return None
+    return None, None, None
 
 def ping_host(host: str, port: int, timeout: float = PING_TIMEOUT) -> bool:
+    # 1. Защита от парсинга локальных/пустых адресов напрямую в пинге
+    if host.lower() in {'127.0.0.1', '0.0.0.0', 'localhost', '::1', ''}:
+        return False
+
     try:
+        # 2. Проверка резолвинга DNS
+        # Отсеет нерабочие домены мгновенно, до таймаута TCP
+        resolved_ip = socket.gethostbyname(host)
+        
+        # 3. TCP-пинг
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
-        result = sock.connect_ex((host, port))
+        result = sock.connect_ex((resolved_ip, port))
         sock.close()
         return result == 0
+    except socket.gaierror:
+        # Ошибка DNS (домен не существует)
+        return False
     except:
         return False
 
 def check_config_availability(config: str) -> bool:
     if not ENABLE_PING_CHECK:
         return True
-    host_port = extract_host_and_port(config)
-    if not host_port:
-        return True
-    host, port = host_port
+    
+    host, port, _ = extract_server_info(config)
+    
+    # Если парсер не справился (очень редкий или битый формат), 
+    # считаем условно доступным, чтобы не удалить случайно рабочий нестандартный конфиг
+    if not host or not port:
+        return True 
+        
     return ping_host(host, port, PING_TIMEOUT)
 
 def filter_by_ping(configs: list, file_num: int) -> list:
@@ -421,7 +436,7 @@ def filter_by_ping(configs: list, file_num: int) -> list:
     log(f"📊 Файл {file_num}: {len(working)}/{len(configs)} рабочих серверов")
     return working
 
-# -------------------- ФИЛЬТРАЦИЯ INSECURE --------------------
+# -------------------- ФИЛЬТРАЦИЯ --------------------
 INSECURE_PATTERN = re.compile(
     r'(?:[?&;]|3%[Bb])(allowinsecure|allow_insecure|insecure)=(?:1|true|yes)(?:[&;#]|$|(?=\s|$))',
     re.IGNORECASE
@@ -448,6 +463,43 @@ def filter_insecure_configs(local_path, data, log_enabled=True):
 
     return "\n".join(result), filtered_count
 
+def remove_duplicates(configs: list) -> list:
+    """
+    Умная дедупликация:
+    - Игнорирует локальные хосты
+    - Отсеивает полные дубликаты строк
+    - Оставляет только один конфиг на связку IP:Port
+    """
+    seen_full = set()
+    seen_endpoints = set()
+    unique = []
+    
+    for cfg in configs:
+        if cfg in seen_full:
+            continue
+        
+        host, port, user_id = extract_server_info(cfg)
+        
+        if not host or not port:
+            seen_full.add(cfg)
+            unique.append(cfg)
+            continue
+            
+        if host.lower() in {'127.0.0.1', '0.0.0.0', 'localhost', '::1'}:
+            continue
+            
+        endpoint_key = f"{host.lower()}:{port}"
+        
+        # Если такой сервер (IP:Port) уже был добавлен, пропускаем дубль
+        if endpoint_key in seen_endpoints:
+            continue 
+            
+        seen_endpoints.add(endpoint_key)
+        seen_full.add(cfg)
+        unique.append(cfg)
+        
+    return unique
+
 # -------------------- ЗАГРУЗКА И СОХРАНЕНИЕ --------------------
 def download_and_save(idx):
     url = URLS[idx]
@@ -462,6 +514,9 @@ def download_and_save(idx):
         data, _ = filter_insecure_configs(local_path, data, log_enabled=False)
 
         lines = [l.strip() for l in data.splitlines() if l.strip()]
+        
+        # Добавляем очистку от дублей и мусора
+        lines = remove_duplicates(lines)
 
         # Фильтруем по пингу только нужные файлы
         if file_number in PING_FILTERED_FILES:
@@ -813,20 +868,7 @@ def create_filtered_configs():
     all_configs.extend(extra)
 
     # Дедупликация
-    seen_full = set()
-    seen_hp = set()
-    unique = []
-    for cfg in all_configs:
-        if cfg in seen_full:
-            continue
-        seen_full.add(cfg)
-        hp = extract_host_and_port(cfg)
-        if hp:
-            key = f"{hp[0].lower()}:{hp[1]}"
-            if key in seen_hp:
-                continue
-            seen_hp.add(key)
-        unique.append(cfg)
+    unique = remove_duplicates(all_configs)
 
     # Проверка пинга для 26-го файла
     unique = filter_by_ping(unique, 26)
