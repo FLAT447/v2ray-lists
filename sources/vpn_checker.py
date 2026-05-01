@@ -28,7 +28,7 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
-PING_TIMEOUT = 2.0
+PING_TIMEOUT = 1.5
 PING_MAX_WORKERS = 200  # Увеличено для более быстрого пинга множества серверов
 ENABLE_PING_CHECK = True
 
@@ -150,14 +150,6 @@ def send_update_notification():
 
     message_parts.append(f"📁 Обновлены файлы: {', '.join([f'{num}.txt' for num in updated_list])}")
     message_parts.append(f"📊 Всего конфигураций: {total_configs}")
-    message_parts.append("")
-
-    message_parts.append("🔗 <b>Ссылки для импорта в клиент (RAW):</b>")
-    for file_num, count in file_info:
-        raw_url = f"https://raw.githubusercontent.com/{REPO_NAME}/refs/heads/main/githubmirror/{file_num}.txt"
-        message_parts.append(f"• <a href='{raw_url}'>{file_num}.txt</a> ({count} конфиг.)")
-        message_parts.append(f"  <code>{raw_url}</code>")
-
     message_parts.append("")
     message_parts.append(f"📦 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>")
     message_parts.append("⚡️ <a href='https://flat447.github.io/v2ray-lists-site'>Сайт проекта</a>")
