@@ -21,7 +21,7 @@ TIMEZONE = zoneinfo.ZoneInfo("Europe/Moscow")
 REPO_NAME = "FLAT447/v2ray-lists"
 
 CIDR_SOURCES = [
-    "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/ipwhitelist.txt"
+    "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/cidrwhitelist.txt"
 ]
 
 PROXY_SOURCES = [
