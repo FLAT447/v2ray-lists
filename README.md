@@ -136,7 +136,7 @@ python proxy_checker                # генерирует файлы whitelist.
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.1/v2rayNG_2.1.1-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.4/v2rayNG_2.1.4-fdroid_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -150,7 +150,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.1/v2rayNG_2.1.1-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.4/v2rayNG_2.1.4-fdroid_universal.apk)
 
 > Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
 
