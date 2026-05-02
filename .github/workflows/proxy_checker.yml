@@ -2,8 +2,8 @@ name: Update Proxy Lists
 
 on:
   schedule:
-    - cron: '0 */1 * * *' 
-  workflow_dispatch:      
+    - cron: '0 */1 * * *'   
+  workflow_dispatch:        
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install PyGithub aiohttp async-lru cloudscraper
+          pip install PyGithub aiohttp async-lru
 
       - name: Run script
         env:
