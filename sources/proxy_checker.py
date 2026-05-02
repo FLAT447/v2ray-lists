@@ -12,16 +12,17 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from github import Github, Auth
 from async_lru import alru_cache
 import json
-import cloudscraper 
+import cloudscraper
 
 MY_CHANNEL = "@flat447"
-TIMEOUT = 6  
-MAX_WORKERS = 200 
+TIMEOUT = 6
+MAX_WORKERS = 200
 TIMEZONE = zoneinfo.ZoneInfo("Europe/Moscow")
 REPO_NAME = "FLAT447/v2ray-lists"
 
 CIDR_SOURCES = [
-    "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/cidrwhitelist.txt"
+    "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/cidrwhitelist.txt",
+    "https://github.com/ebrasha/cidr-ip-ranges-by-country/raw/refs/heads/master/CIDR/RU-ipv4-Hackers.Zone.txt"
 ]
 
 PROXY_SOURCES = [
@@ -36,7 +37,8 @@ PROXY_SOURCES = [
     "https://github.com/ALIILAPRO/MTProtoProxy/raw/refs/heads/main/mtproto.txt",
     "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_all.txt",
     "https://github.com/yDanterav/mtproto-for-telegram/raw/refs/heads/master/all_proxies.txt",
-    "https://github.com/LoneKingCode/free-proxy-db/raw/refs/heads/main/proxies/mtproto.txt"
+    "https://github.com/LoneKingCode/free-proxy-db/raw/refs/heads/main/proxies/mtproto.txt",
+    "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_ru.txt"
 ]
 
 EXTERNAL_SITES = [
@@ -66,27 +68,29 @@ def get_faketls_domain(secret):
     except:
         return None
 
-def validate_mtproto_link(link):
-    """Жесткая валидация для работы при БС"""
+def is_faketls_link(link):
+    """Проверяет, является ли ссылка FakeTLS-прокси (секрет ee + домен)"""
+    parsed = urlparse(link)
+    params = parse_qs(parsed.query)
+    secret = params.get('secret', [None])[0]
+    if not secret:
+        return False
+    return get_faketls_domain(secret) is not None
+
+def is_valid_proxy_link(link):
+    """Минимальная проверка: есть server, port, secret"""
     parsed = urlparse(link)
     params = parse_qs(parsed.query)
     server = params.get('server', [None])[0]
     port = params.get('port', [None])[0]
     secret = params.get('secret', [None])[0]
-    
     if not server or not port or not secret:
         return False
-    
-    if not secret.lower().startswith('ee'):
-        return False
-        
-    if not get_faketls_domain(secret):
-        return False
-
     try:
-        if not (1 <= int(port) <= 65535): return False
-    except: return False
-    
+        if not (1 <= int(port) <= 65535):
+            return False
+    except ValueError:
+        return False
     return True
 
 def scrape_with_cloudscraper(urls):
@@ -109,30 +113,41 @@ async def resolve_doh(session, hostname):
     try:
         ipaddress.ip_address(hostname)
         return hostname
-    except ValueError: pass
+    except ValueError:
+        pass
     for provider in DOH_SERVERS:
         try:
             params = {"name": hostname, "type": "A"}
-            async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=5) as resp:
+            async with session.get(provider, params=params,
+                                   headers={"accept": "application/dns-json"}, timeout=5) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     if "Answer" in data:
                         for ans in data["Answer"]:
-                            if ans["type"] == 1: return ans["data"]
-        except: continue
+                            if ans["type"] == 1:
+                                return ans["data"]
+        except:
+            continue
     return None
 
 async def check_proxy(session, link, networks, semaphore):
+    """
+    Проверяет доступность и определяет тип:
+    - white: FakeTLS (секрет ee + домен) И IP входит в CIDR-списки
+    - black: всё остальное
+    """
     async with semaphore:
         try:
             parsed = urlparse(link)
             params = parse_qs(parsed.query)
             server = params.get('server', [None])[0]
             port = params.get('port', [None])[0]
-            if not server or not port: return None
+            if not server or not port:
+                return None
 
             ip = await resolve_doh(session, server)
-            if not ip: return None
+            if not ip:
+                return None
 
             start_time = time.perf_counter()
             try:
@@ -141,27 +156,34 @@ async def check_proxy(session, link, networks, semaphore):
                 latency = int((time.perf_counter() - start_time) * 1000)
                 writer.close()
                 await writer.wait_closed()
-            except: return None
+            except Exception:
+                return None
 
             ip_obj = ipaddress.ip_address(ip)
             is_in_cidr = any(ip_obj in net for net in networks)
-            
+            is_faketls = is_faketls_link(link)
+
+            # White — только FakeTLS + IP внутри CIDR
+            proxy_type = "white" if (is_faketls and is_in_cidr) else "black"
+
             query = params.copy()
             query['channel'] = [MY_CHANNEL]
             new_query = urlencode(query, doseq=True, safe='@')
             final_link = urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", new_query, ""))
 
             return {
-                "link": final_link, 
-                "type": "white" if is_in_cidr else "black", 
-                "latency": latency, 
+                "link": final_link,
+                "type": proxy_type,
+                "latency": latency,
                 "id": f"{ip}:{port}",
                 "port": int(port)
             }
-        except: return None
+        except Exception:
+            return None
 
 def update_github(white_content, black_content):
-    if not GH_TOKEN: return
+    if not GH_TOKEN:
+        return
     try:
         auth = Auth.Token(GH_TOKEN)
         g = Github(auth=auth)
@@ -181,10 +203,12 @@ def update_github(white_content, black_content):
         try:
             curr_file = repo.get_contents(stats_path)
             stats = json.loads(curr_file.decoded_content.decode())
-        except: stats = {}
+        except:
+            stats = {}
 
         stats["last_global_update"] = now_str
-        if "files" not in stats: stats["files"] = {}
+        if "files" not in stats:
+            stats["files"] = {}
         stats["files"]["mtproto"] = {
             "white_count": len(white_content.splitlines()) if white_content else 0,
             "black_count": len(black_content.splitlines()) if black_content else 0,
@@ -198,10 +222,12 @@ def update_github(white_content, black_content):
         except:
             repo.create_file(stats_path, f"Create {stats_path} {now_str}", new_stats_content)
 
-    except Exception as e: logger.error(f"GitHub Error: {e}")
+    except Exception as e:
+        logger.error(f"GitHub Error: {e}")
 
 async def send_telegram_msg(white_list, black_list):
-    if not TG_BOT_TOKEN: return
+    if not TG_BOT_TOKEN:
+        return
     now = datetime.now(TIMEZONE)
     top_white = "\n".join([f"💎 {p['link']}" for p in white_list[:3]]) or "<i>Пусто</i>"
     top_black = "\n".join([f"🔌 {p['link']}" for p in black_list[:3]]) or "<i>Пусто</i>"
@@ -209,8 +235,8 @@ async def send_telegram_msg(white_list, black_list):
     text = (
         f"<b>🔔 Списки MTProxy обновлены!</b>\n"
         f"🕒 {now.strftime('%H:%M | %d.%m.%Y')}\n\n"
-        f"✅ <b>Белые Списки:</b>\n{top_white}\n\n"
-        f"🌐 <b>Чёрные Списки:</b>\n{top_black}\n\n"
+        f"✅ <b>Белые Списки (FakeTLS + CIDR):</b>\n{top_white}\n\n"
+        f"🌐 <b>Чёрные Списки (все остальные):</b>\n{top_black}\n\n"
         f"🔹 <a href='https://github.com/{REPO_NAME}/blob/main/whitelist.txt'>whitelist.txt</a> ({len(white_list)})\n"
         f"🔸 <a href='https://github.com/{REPO_NAME}/blob/main/blacklist.txt'>blacklist.txt</a> ({len(black_list)})\n\n"
         f"📍 <a href='https://github.com/{REPO_NAME}'>Репозиторий проекта</a>\n"
@@ -219,15 +245,20 @@ async def send_telegram_msg(white_list, black_list):
 
     async with aiohttp.ClientSession() as session:
         for cid in [TG_CHAT_ID, TG_CHANNEL_ID]:
-            if not cid: continue
+            if not cid:
+                continue
             try:
-                await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
-                    json={"chat_id": cid, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True})
-            except Exception as e: logger.error(f"TG Error: {e}")
+                await session.post(
+                    f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
+                    json={"chat_id": cid, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True}
+                )
+            except Exception as e:
+                logger.error(f"TG Error: {e}")
 
 async def main():
     logger.info("Запуск обновления...")
     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0"}) as session:
+        # Загрузка CIDR-списков
         networks = []
         for url in CIDR_SOURCES:
             try:
@@ -236,26 +267,34 @@ async def main():
                         lines = (await r.text()).splitlines()
                         for line in lines:
                             if line.strip() and not line.startswith('#'):
-                                try: networks.append(ipaddress.ip_network(line.strip(), strict=False))
-                                except: continue
-            except: pass
+                                try:
+                                    networks.append(ipaddress.ip_network(line.strip(), strict=False))
+                                except:
+                                    continue
+            except:
+                pass
         networks = list(ipaddress.collapse_addresses(networks))
+        logger.info(f"Загружено CIDR-подсетей: {len(networks)}")
 
         all_links = set()
-        
+
         for url in PROXY_SOURCES:
             try:
                 async with session.get(url, timeout=15) as r:
-                    found = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', await r.text())
+                    text = await r.text()
+                    found = re.findall(r'(tg://(?:proxy|socks)\?\S+|https?://t\.me/(?:proxy|socks)\?\S+)', text)
                     for l in found:
-                        if validate_mtproto_link(l): all_links.add(l)
-            except: pass
-            
+                        if is_valid_proxy_link(l):
+                            all_links.add(l)
+            except Exception as e:
+                logger.warning(f"Ошибка загрузки {url}: {e}")
+
         external_links = await asyncio.to_thread(scrape_with_cloudscraper, EXTERNAL_SITES)
         for l in external_links:
-            if validate_mtproto_link(l): all_links.add(l)
+            if is_valid_proxy_link(l):
+                all_links.add(l)
 
-        logger.info(f"Всего валидных FakeTLS ссылок собрано: {len(all_links)}")
+        logger.info(f"Всего валидных ссылок собрано: {len(all_links)}")
 
         sem = asyncio.Semaphore(MAX_WORKERS)
         tasks = [check_proxy(session, link, networks, sem) for link in all_links]
@@ -268,15 +307,21 @@ async def main():
                 unique_map[pid] = p
 
         white_list = sorted(
-            [p for p in unique_map.values() if p['type'] == 'white'], 
+            [p for p in unique_map.values() if p['type'] == 'white'],
             key=lambda x: (x['port'] != 443, x['latency'])
         )
         black_list = sorted(
-            [p for p in unique_map.values() if p['type'] == 'black'], 
+            [p for p in unique_map.values() if p['type'] == 'black'],
             key=lambda x: (x['port'] != 443, x['latency'])
         )
 
-        await asyncio.to_thread(update_github, "\n".join([p['link'] for p in white_list]), "\n".join([p['link'] for p in black_list]))
+        logger.info(f"White (FakeTLS + CIDR): {len(white_list)}, Black (other): {len(black_list)}")
+
+        await asyncio.to_thread(
+            update_github,
+            "\n".join([p['link'] for p in white_list]),
+            "\n".join([p['link'] for p in black_list])
+        )
         await send_telegram_msg(white_list, black_list)
         logger.info("Готово!")
 
