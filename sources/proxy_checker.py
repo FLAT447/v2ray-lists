@@ -1,22 +1,23 @@
 import asyncio
 import aiohttp
+import socket
 import ipaddress
 import re
 import logging
 import os
 import time
-import random
 from datetime import datetime
 import zoneinfo
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from github import Github, Auth
 from async_lru import alru_cache
 import json
+import cloudscraper 
 
 MY_CHANNEL = "@flat447"
-TIMEOUT = 6
-MAX_WORKERS = 200
-TZ = zoneinfo.ZoneInfo("Europe/Moscow")
+TIMEOUT = 6  
+MAX_WORKERS = 200 
+TIMEZONE = zoneinfo.ZoneInfo("Europe/Moscow")
 REPO_NAME = "FLAT447/v2ray-lists"
 
 CIDR_SOURCES = [
@@ -30,7 +31,12 @@ PROXY_SOURCES = [
     "https://raw.githubusercontent.com/Grim1313/mtproto-for-telegram/refs/heads/master/all_proxies.txt",
     "https://raw.githubusercontent.com/Argh94/telegram-proxy-scraper/refs/heads/main/proxy.txt",
     "https://raw.githubusercontent.com/Surfboardv2ray/TGProto/refs/heads/main/proxies-tested.txt",
-    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt",
+    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt"
+]
+
+EXTERNAL_SITES = [
+    "https://mtprobe.cyou/en/",
+    "https://mtpro.xyz/en/"
 ]
 
 DOH_SERVERS = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
@@ -44,6 +50,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 def get_faketls_domain(secret):
+    """Извлекает домен маскировки из секрета FakeTLS"""
     secret = secret.lower()
     if not secret.startswith('ee') or len(secret) <= 34:
         return None
@@ -55,6 +62,7 @@ def get_faketls_domain(secret):
         return None
 
 def validate_mtproto_link(link):
+    """Жесткая валидация для работы при БС"""
     parsed = urlparse(link)
     params = parse_qs(parsed.query)
     server = params.get('server', [None])[0]
@@ -63,30 +71,33 @@ def validate_mtproto_link(link):
     
     if not server or not port or not secret:
         return False
+    
     if not secret.lower().startswith('ee'):
         return False
+        
     if not get_faketls_domain(secret):
         return False
+
     try:
         if not (1 <= int(port) <= 65535): return False
     except: return False
+    
     return True
 
-def generate_handshake():
-    nonce = random.randbytes(4)
-    packet = b'\xef' + nonce
-    return packet, nonce
-
-async def check_mtproto_handshake(reader, writer, nonce):
-    try:
-        writer.write(b'\xef' + nonce)
-        await writer.drain()
-        data = await asyncio.wait_for(reader.readexactly(17), timeout=2.0)
-        if data[0] == 0xef and data[1:5] == nonce:
-            return True
-    except:
-        pass
-    return False
+def scrape_with_cloudscraper(urls):
+    """Синхронный скрапинг сайтов с Cloudflare"""
+    found_links = []
+    scraper = cloudscraper.create_scraper()
+    for url in urls:
+        try:
+            logger.info(f"Скрапинг через Cloudscraper: {url}")
+            resp = scraper.get(url, timeout=15)
+            if resp.status_code == 200:
+                links = re.findall(r'(tg://proxy\?\S+|https?://t\.me/proxy\?\S+)', resp.text)
+                found_links.extend(links)
+        except Exception as e:
+            logger.error(f"Ошибка Cloudscraper на {url}: {e}")
+    return found_links
 
 @alru_cache(maxsize=1024)
 async def resolve_doh(session, hostname):
@@ -113,33 +124,19 @@ async def check_proxy(session, link, networks, semaphore):
             params = parse_qs(parsed.query)
             server = params.get('server', [None])[0]
             port = params.get('port', [None])[0]
-            secret = params.get('secret', [None])[0]
-            if not server or not port or not secret:
-                return None
+            if not server or not port: return None
 
             ip = await resolve_doh(session, server)
             if not ip: return None
 
-            try:
-                reader, writer = await asyncio.wait_for(
-                    asyncio.open_connection(ip, int(port)),
-                    timeout=TIMEOUT
-                )
-            except:
-                return None
-
-            handshake_packet, nonce = generate_handshake()
             start_time = time.perf_counter()
-            handshake_ok = await check_mtproto_handshake(reader, writer, nonce)
-            latency = int((time.perf_counter() - start_time) * 1000)
-
             try:
+                conn = asyncio.open_connection(ip, int(port))
+                reader, writer = await asyncio.wait_for(conn, timeout=TIMEOUT)
+                latency = int((time.perf_counter() - start_time) * 1000)
                 writer.close()
                 await writer.wait_closed()
-            except: pass
-
-            if not handshake_ok:
-                return None
+            except: return None
 
             ip_obj = ipaddress.ip_address(ip)
             is_in_cidr = any(ip_obj in net for net in networks)
@@ -150,15 +147,13 @@ async def check_proxy(session, link, networks, semaphore):
             final_link = urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", new_query, ""))
 
             return {
-                "link": final_link,
-                "type": "white" if is_in_cidr else "black",
-                "latency": latency,
+                "link": final_link, 
+                "type": "white" if is_in_cidr else "black", 
+                "latency": latency, 
                 "id": f"{ip}:{port}",
                 "port": int(port)
             }
-        except Exception as e:
-            logger.debug(f"Check error: {e}")
-            return None
+        except: return None
 
 def update_github(white_content, black_content):
     if not GH_TOKEN: return
@@ -166,7 +161,7 @@ def update_github(white_content, black_content):
         auth = Auth.Token(GH_TOKEN)
         g = Github(auth=auth)
         repo = g.get_repo(REPO_NAME)
-        now_str = datetime.now(TZ).strftime('%H:%M | %d.%m.%Y')
+        now_str = datetime.now(TIMEZONE).strftime('%H:%M | %d.%m.%Y')
 
         files = {"whitelist.txt": white_content, "blacklist.txt": black_content}
         for path, content in files.items():
@@ -202,7 +197,7 @@ def update_github(white_content, black_content):
 
 async def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN: return
-    now = datetime.now(TZ)
+    now = datetime.now(TIMEZONE)
     top_white = "\n".join([f"💎 {p['link']}" for p in white_list[:3]]) or "<i>Пусто</i>"
     top_black = "\n".join([f"🔌 {p['link']}" for p in black_list[:3]]) or "<i>Пусто</i>"
 
@@ -221,7 +216,7 @@ async def send_telegram_msg(white_list, black_list):
         for cid in [TG_CHAT_ID, TG_CHANNEL_ID]:
             if not cid: continue
             try:
-                await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage",
+                await session.post(f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage", 
                     json={"chat_id": cid, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True})
             except Exception as e: logger.error(f"TG Error: {e}")
 
@@ -242,6 +237,7 @@ async def main():
         networks = list(ipaddress.collapse_addresses(networks))
 
         all_links = set()
+        
         for url in PROXY_SOURCES:
             try:
                 async with session.get(url, timeout=15) as r:
@@ -249,6 +245,10 @@ async def main():
                     for l in found:
                         if validate_mtproto_link(l): all_links.add(l)
             except: pass
+            
+        external_links = await asyncio.to_thread(scrape_with_cloudscraper, EXTERNAL_SITES)
+        for l in external_links:
+            if validate_mtproto_link(l): all_links.add(l)
 
         logger.info(f"Всего валидных FakeTLS ссылок собрано: {len(all_links)}")
 
@@ -263,11 +263,11 @@ async def main():
                 unique_map[pid] = p
 
         white_list = sorted(
-            [p for p in unique_map.values() if p['type'] == 'white'],
+            [p for p in unique_map.values() if p['type'] == 'white'], 
             key=lambda x: (x['port'] != 443, x['latency'])
         )
         black_list = sorted(
-            [p for p in unique_map.values() if p['type'] == 'black'],
+            [p for p in unique_map.values() if p['type'] == 'black'], 
             key=lambda x: (x['port'] != 443, x['latency'])
         )
 
