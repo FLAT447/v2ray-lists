@@ -30,7 +30,13 @@ PROXY_SOURCES = [
     "https://raw.githubusercontent.com/Grim1313/mtproto-for-telegram/refs/heads/master/all_proxies.txt",
     "https://raw.githubusercontent.com/Argh94/telegram-proxy-scraper/refs/heads/main/proxy.txt",
     "https://raw.githubusercontent.com/Surfboardv2ray/TGProto/refs/heads/main/proxies-tested.txt",
-    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt"
+    "https://raw.githubusercontent.com/LoneKingCode/free-proxy-db/refs/heads/main/proxies/mtproto.txt",
+    "https://github.com/SoliSpirit/mtproto/raw/refs/heads/master/all_proxies.txt",
+    "https://github.com/razoshi/mtproto-list/raw/refs/heads/main/proxies.txt",
+    "https://github.com/ALIILAPRO/MTProtoProxy/raw/refs/heads/main/mtproto.txt",
+    "https://raw.githubusercontent.com/kort0881/telegram-proxy-collector/main/proxy_all.txt",
+    "https://github.com/yDanterav/mtproto-for-telegram/raw/refs/heads/master/all_proxies.txt",
+    "https://github.com/LoneKingCode/free-proxy-db/raw/refs/heads/main/proxies/mtproto.txt"
 ]
 
 EXTERNAL_SITES = [
