@@ -227,7 +227,8 @@ EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
     "https://gist.github.com/DestroyST6767/50af50221ca1858ba2084efc0f524fbc.txt",
     "https://raw.githubusercontent.com/tankist939-afk/Obhod-WL/refs/heads/main/Obhod%20WL",
-    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt"
+    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
+    "https://gbr.mydan.online/configs"
 ]
 
 REMOTE_PATHS = [f"githubmirror/{i+1}.txt" for i in range(len(URLS))]
