@@ -877,28 +877,37 @@ def load_ip_whitelist(url):
 
 def is_ip_whitelisted(host, whitelist_networks):
     """
-    Проверяет, входит ли хост (IP или домен) в загруженный белый список сетей.
-    Если передан домен, пытается получить его IP через DNS (socket.gethostbyname).
+    Проверяет, входит ли хост в белый список. 
+    Добавлена защита от пустых строк и некорректных символов.
     """
-    if not whitelist_networks:
+    if not whitelist_networks or not host:
         return False
         
+    # Очистка: убираем лишние пробелы и точки по краям (решает проблему с '.38.142.152')
+    host = host.strip().strip('.')
+    
+    if not host:
+        return False
+
     target_ip = None
     try:
         # Проверяем, является ли строка напрямую IP-адресом
         ipaddress.ip_address(host)
         target_ip = host
     except ValueError:
-        # Это домен — резолвим через DNS
+        # Если это не IP, пробуем резолвить домен
         try:
+            # Предварительная проверка: домен не должен быть слишком коротким или странным
+            if '.' not in host or len(host) < 4:
+                return False
             target_ip = socket.gethostbyname(host)
-        except socket.gaierror:
+        except (socket.gaierror, UnicodeError):
+            # Перехватываем UnicodeError (ошибки кодирования IDNA) и gaierror (DNS)
             return False
 
     if target_ip:
         try:
             addr = ipaddress.ip_address(target_ip)
-            # Проверяем вхождение IP в одну из разрешенных сетей
             for net in whitelist_networks:
                 if addr in net:
                     return True
