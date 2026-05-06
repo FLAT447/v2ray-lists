@@ -6,6 +6,7 @@ from github import Github, Auth
 from datetime import datetime
 import concurrent.futures
 import urllib.parse
+import ipaddress  # Добавлено для работы с IP и CIDR
 import threading
 import socket
 import zoneinfo
@@ -596,8 +597,9 @@ def upload_to_github(local_path, remote_path):
 
     log(f"❌ Не удалось обновить {remote_path} после {max_retries} попыток")
 
-# -------------------- 26-Й ФАЙЛ (ПОЛНЫЙ СПИСОК SNI) --------------------
+# -------------------- 26-Й ФАЙЛ (ПОЛНЫЙ СПИСОК SNI и IP) --------------------
 SNI_DOMAINS_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/whitelist.txt"
+IP_WHITELIST_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/ipwhitelist.txt"
 
 def load_sni_domains_from_url(url=None):
     """
@@ -848,20 +850,80 @@ def load_sni_domains_from_url(url=None):
         log(f"⚠️ Ошибка загрузки SNI: {e}. Использую резервный список")
         return FALLBACK_SNI_DOMAINS
 
-# Загрузка списка SNI (при недоступности URL вернётся резервный список)
+def load_ip_whitelist(url):
+    """
+    Загружает список IP и CIDR сетей из удалённого источника.
+    Преобразует их в объекты ipaddress.ip_network для быстрой проверки.
+    """
+    networks = []
+    if not url:
+        return networks
+    try:
+        log(f"📥 Загрузка белого списка IP из {url}...")
+        data = fetch_data(url, timeout=15, max_attempts=2)
+        for line in data.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith('#'):
+                continue
+            try:
+                # Поддерживает как одиночные IP (будут трактоваться как /32), так и CIDR
+                networks.append(ipaddress.ip_network(stripped, strict=False))
+            except ValueError:
+                continue
+        log(f"✅ Загружено {len(networks)} IP-правил (сетей/адресов)")
+    except Exception as e:
+        log(f"⚠️ Ошибка загрузки IP-листа: {e}")
+    return networks
+
+def is_ip_whitelisted(host, whitelist_networks):
+    """
+    Проверяет, входит ли хост (IP или домен) в загруженный белый список сетей.
+    Если передан домен, пытается получить его IP через DNS (socket.gethostbyname).
+    """
+    if not whitelist_networks:
+        return False
+        
+    target_ip = None
+    try:
+        # Проверяем, является ли строка напрямую IP-адресом
+        ipaddress.ip_address(host)
+        target_ip = host
+    except ValueError:
+        # Это домен — резолвим через DNS
+        try:
+            target_ip = socket.gethostbyname(host)
+        except socket.gaierror:
+            return False
+
+    if target_ip:
+        try:
+            addr = ipaddress.ip_address(target_ip)
+            # Проверяем вхождение IP в одну из разрешенных сетей
+            for net in whitelist_networks:
+                if addr in net:
+                    return True
+        except ValueError:
+            return False
+            
+    return False
+
+# Загрузка списков (при недоступности URL SNI вернётся резервный список)
 SNI_DOMAINS = load_sni_domains_from_url(SNI_DOMAINS_URL)
 
 def create_filtered_configs():
-    """Создает 26-й файл с конфигами (только пингуемые)"""
+    """Создает 26-й файл с конфигами (пингуемые, с проверкой SNI или IP)"""
 
-    # Оптимизация доменов
+    # 1. Оптимизация доменов для регулярки
     sorted_domains = sorted(SNI_DOMAINS, key=len)
     optimized = []
     for d in sorted_domains:
         if not any(ex in d for ex in optimized):
             optimized.append(d)
 
-    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")")
+    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")") if optimized else None
+    
+    # 2. Загрузка белого списка IP/CIDR
+    ip_whitelist = load_ip_whitelist(IP_WHITELIST_URL)
 
     def extract_from_file(file_idx):
         path = f"githubmirror/{file_idx}.txt"
@@ -875,23 +937,21 @@ def create_filtered_configs():
             configs = []
             for line in content.splitlines():
                 stripped = line.strip()
-                # Пропускаем комментарии
                 if not stripped or stripped.startswith('#'):
                     continue
-                if sni_regex.search(stripped):
-                    configs.append(stripped)
+                configs.append(stripped)
             return configs
         except:
             return []
 
-    # Собираем конфиги из файлов 1-25
-    all_configs = []
+    # Собираем все конфиги из файлов 1-25
+    raw_configs = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         futures = [executor.submit(extract_from_file, i) for i in range(1, 26)]
         for future in concurrent.futures.as_completed(futures):
-            all_configs.extend(future.result())
+            raw_configs.extend(future.result())
 
-    # Загружаем доп. источники
+    # Загружаем доп. источники для 26 файла
     def load_extra(url):
         try:
             data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT, max_attempts=EXTRA_URL_MAX_ATTEMPTS, allow_http_downgrade=False)
@@ -902,16 +962,34 @@ def create_filtered_configs():
         except:
             return []
 
-    extra = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(load_extra, url) for url in EXTRA_URLS_FOR_26]
         for future in concurrent.futures.as_completed(futures):
-            extra.extend(future.result())
+            raw_configs.extend(future.result())
 
-    all_configs.extend(extra)
+    # 3. Продвинутая фильтрация: SNI ИЛИ IP Белый список
+    def advanced_filter(configs):
+        filtered = []
+        for cfg in configs:
+            host, port, _ = extract_server_info(cfg)
+            if not host:
+                continue
+            
+            # Проверка 1: Совпадение SNI
+            sni_match = sni_regex.search(cfg) if sni_regex else False
+            
+            # Проверка 2: Проверка IP-адреса через белый список (с резолвом домена при необходимости)
+            ip_match = is_ip_whitelisted(host, ip_whitelist)
+            
+            # Конфиг проходит, если совпал SNI ИЛИ IP адрес сервера есть в белом списке
+            if sni_match or ip_match:
+                filtered.append(cfg)
+        return filtered
+
+    filtered_configs = advanced_filter(raw_configs)
 
     # Дедупликация
-    unique = remove_duplicates(all_configs)
+    unique = remove_duplicates(filtered_configs)
 
     # Проверка пинга для 26-го файла
     unique = filter_by_ping(unique, 26)
