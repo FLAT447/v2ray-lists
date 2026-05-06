@@ -6,7 +6,6 @@ from github import Github, Auth
 from datetime import datetime
 import concurrent.futures
 import urllib.parse
-import ipaddress
 import threading
 import socket
 import zoneinfo
@@ -30,7 +29,7 @@ TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
 PING_TIMEOUT = 2.0
-PING_MAX_WORKERS = 200
+PING_MAX_WORKERS = 200  # Увеличено для более быстрого пинга множества серверов
 ENABLE_PING_CHECK = True
 
 # Настройки загрузки
@@ -78,8 +77,9 @@ zone = zoneinfo.ZoneInfo("Europe/Moscow")
 thistime = datetime.now(zone)
 offset = thistime.strftime("%H:%M | %d.%m.%Y")
 
-# -------------------- TELEGRAM --------------------
+# -------------------- TELEGRAM (синхронный через requests) --------------------
 def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
+    """Синхронная отправка сообщения через Telegram Bot API"""
     if not TELEGRAM_BOT_TOKEN:
         log("⚠️ Telegram не настроен: отсутствует TELEGRAM_BOT_TOKEN")
         return False
@@ -92,6 +92,7 @@ def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
         "parse_mode": "HTML"
     }
 
+    # Отправка в основной чат
     if TELEGRAM_CHAT_ID:
         try:
             payload["chat_id"] = TELEGRAM_CHAT_ID
@@ -104,6 +105,7 @@ def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
         except Exception as e:
             log(f"⚠️ Исключение при отправке в чат: {e}")
 
+    # Отправка в канал
     if send_to_channel and TELEGRAM_CHANNEL_ID:
         try:
             payload["chat_id"] = TELEGRAM_CHANNEL_ID
@@ -119,6 +121,7 @@ def send_telegram_message(message: str, send_to_channel: bool = True) -> bool:
     return success
 
 def send_update_notification():
+    """Отправляет уведомление об обновлении подписок с указанием количества конфигов"""
     if not updated_files:
         return
 
@@ -135,6 +138,7 @@ def send_update_notification():
         config_count = 0
         if os.path.exists(local_path):
             with open(local_path, "r", encoding="utf-8") as f:
+                # Считаем только строки конфигураций (не комментарии и не пустые)
                 for line in f:
                     stripped = line.strip()
                     if stripped and not stripped.startswith('#'):
@@ -152,6 +156,7 @@ def send_update_notification():
 
     full_message = "\n".join(message_parts)
 
+    # Telegram имеет лимит 4096 символов, разбиваем если нужно
     if len(full_message) > 4096:
         for i in range(0, len(full_message), 4000):
             send_telegram_message(full_message[i:i+4000], True)
@@ -204,7 +209,7 @@ URLS = [
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS.txt", #23
+    "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_SS+All_RUS.txt", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
@@ -219,7 +224,10 @@ EXTRA_URLS_FOR_26 = [
     "https://white-lists.vercel.app/api/filter?code=RU",
     "https://raw.githubusercontent.com/Hidashimora/free-vpn-anti-rkn/main/configs/31.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt",
-    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full"
+    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
+    "https://gist.github.com/DestroyST6767/50af50221ca1858ba2084efc0f524fbc.txt",
+    "https://raw.githubusercontent.com/tankist939-afk/Obhod-WL/refs/heads/main/Obhod%20WL",
+    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt"
 ]
 
 REMOTE_PATHS = [f"githubmirror/{i+1}.txt" for i in range(len(URLS))]
@@ -233,14 +241,24 @@ CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome
 BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
 
 def decode_if_base64(data: str) -> str:
+    """
+    Проверяет, является ли строка целиком закодированной в Base64.
+    Если да — декодирует её, иначе возвращает исходные данные.
+    """
+    # Удаляем пробелы и символы перевода строки
     stripped = data.strip()
+    
+    # Быстрая проверка: отсутствие переносов строк и только допустимые символы Base64
     if '\n' not in stripped and BASE64_PATTERN.match(stripped):
         try:
+            # Добавляем padding, если его нет (кратность 4)
             missing_padding = len(stripped) % 4
             if missing_padding:
                 stripped += '=' * (4 - missing_padding)
             decoded_bytes = base64.b64decode(stripped)
             decoded_str = decoded_bytes.decode('utf-8', errors='replace')
+            # Если после декодирования получилось многострочное содержимое с протоколами,
+            # считаем это валидной подпиской.
             if any(proto in decoded_str for proto in ('vmess://', 'vless://', 'trojan://', 'ss://', 'tuic://')):
                 log(f"🔓 Обнаружена и декодирована Base64 подписка (длина {len(decoded_str)} символов)")
                 return decoded_str
@@ -283,8 +301,10 @@ def fetch_data(url: str, timeout: int = 10, max_attempts: int = 3, session=None,
             raise exc
 
 def clean_existing_headers(content: str) -> str:
+    """Удаляет существующие метаданные подписок (строки вида #key: value)"""
     lines = content.splitlines()
     cleaned = []
+    # Ключевые слова, характерные для метаданных подписок
     metadata_prefixes = (
         "#profile-title:", "#profile-update-interval:", "#profile-web-page-url:",
         "#support-url:", "#announce:", "#update-url:", "#subscribe-url:"
@@ -297,10 +317,12 @@ def clean_existing_headers(content: str) -> str:
     return "\n".join(cleaned)
 
 def add_file_header(content: str, file_num: int) -> str:
+    """Добавляет заголовочные комментарии в начало файла с подстановкой номера."""
     header = HEADER_TEMPLATE.format(num=file_num)
     return header + "\n" + content
 
 def save_to_local_file(path, content, file_num):
+    """Сохраняет контент с добавленным заголовком в локальный файл."""
     content_with_header = add_file_header(content, file_num)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content_with_header)
@@ -318,6 +340,10 @@ def extract_source_name(url: str) -> str:
 
 # -------------------- ПИНГ И ПАРСИНГ --------------------
 def extract_server_info(config: str):
+    """
+    Возвращает кортеж (host, port, user_id).
+    Поддерживает VMess, VLESS, Trojan, SS, TUIC, Hysteria/Hysteria2.
+    """
     try:
         if config.startswith("vmess://"):
             payload = config[8:]
@@ -329,14 +355,16 @@ def extract_server_info(config: str):
                 j = json.loads(decoded)
                 host = j.get('add') or j.get('host') or j.get('ip')
                 port = j.get('port')
-                user_id = j.get('id')
+                user_id = j.get('id') # UUID для vmess
                 if host and port:
                     return str(host), int(port), str(user_id) if user_id else None
         else:
+            # Универсальный парсинг для остальных протоколов
             parsed = urllib.parse.urlparse(config)
             host = parsed.hostname
             port = parsed.port
-            user_id = parsed.username
+            user_id = parsed.username # Извлекает UUID или пароль до знака @
+            
             if host and port:
                 return str(host), int(port), str(user_id) if user_id else None
     except:
@@ -344,39 +372,58 @@ def extract_server_info(config: str):
     return None, None, None
 
 def ping_host(host: str, port: int, timeout: float = PING_TIMEOUT) -> bool:
+    # 1. Защита от парсинга локальных/пустых адресов напрямую в пинге
     if host.lower() in {'127.0.0.1', '0.0.0.0', 'localhost', '::1', ''}:
         return False
+
     try:
+        # 2. Проверка резолвинга DNS
+        # Отсеет нерабочие домены мгновенно, до таймаута TCP
         resolved_ip = socket.gethostbyname(host)
+        
+        # 3. TCP-пинг
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
         result = sock.connect_ex((resolved_ip, port))
         sock.close()
         return result == 0
+    except socket.gaierror:
+        # Ошибка DNS (домен не существует)
+        return False
     except:
         return False
 
 def check_config_availability(config: str) -> bool:
     if not ENABLE_PING_CHECK:
         return True
+    
     host, port, _ = extract_server_info(config)
+    
+    # Если парсер не справился (очень редкий или битый формат), 
+    # считаем условно доступным, чтобы не удалить случайно рабочий нестандартный конфиг
     if not host or not port:
-        return True
+        return True 
+        
     return ping_host(host, port, PING_TIMEOUT)
 
 def filter_by_ping(configs: list, file_num: int) -> list:
+    """Фильтрует список конфигов по пингу"""
     if not ENABLE_PING_CHECK:
         return configs
+
     log(f"🔍 Проверка пинга для {len(configs)} конфигов (файл {file_num})...")
     working = []
+
     def check_one(cfg):
         return cfg if check_config_availability(cfg) else None
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_MAX_WORKERS) as executor:
         futures = [executor.submit(check_one, cfg) for cfg in configs]
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             if result:
                 working.append(result)
+
     log(f"📊 Файл {file_num}: {len(working)}/{len(configs)} рабочих серверов")
     return working
 
@@ -389,38 +436,59 @@ INSECURE_PATTERN = re.compile(
 def filter_insecure_configs(local_path, data, log_enabled=True):
     result = []
     splitted = data.splitlines()
+
     for line in splitted:
         original_line = line
         processed = line.strip()
         processed = urllib.parse.unquote(html.unescape(processed))
+
         if INSECURE_PATTERN.search(processed):
             continue
+
         result.append(original_line)
+
     filtered_count = len(splitted) - len(result)
+
     if filtered_count > 0 and log_enabled:
         log(f"ℹ️ Отфильтровано {filtered_count} небезопасных конфигов для {local_path}")
+
     return "\n".join(result), filtered_count
 
 def remove_duplicates(configs: list) -> list:
+    """
+    Умная дедупликация:
+    - Игнорирует локальные хосты
+    - Отсеивает полные дубликаты строк
+    - Оставляет только один конфиг на связку IP:Port
+    """
     seen_full = set()
     seen_endpoints = set()
     unique = []
+    
     for cfg in configs:
         if cfg in seen_full:
             continue
+        
         host, port, user_id = extract_server_info(cfg)
+        
         if not host or not port:
             seen_full.add(cfg)
             unique.append(cfg)
             continue
+            
         if host.lower() in {'127.0.0.1', '0.0.0.0', 'localhost', '::1'}:
             continue
+            
         endpoint_key = f"{host.lower()}:{port}"
+        
+        # Если такой сервер (IP:Port) уже был добавлен, пропускаем дубль
         if endpoint_key in seen_endpoints:
-            continue
+            continue 
+            
         seen_endpoints.add(endpoint_key)
         seen_full.add(cfg)
         unique.append(cfg)
+        
     return unique
 
 # -------------------- ЗАГРУЗКА И СОХРАНЕНИЕ --------------------
@@ -428,22 +496,32 @@ def download_and_save(idx):
     url = URLS[idx]
     local_path = LOCAL_PATHS[idx]
     file_number = idx + 1
+
     try:
         data = fetch_data(url)
         data = decode_if_base64(data)
+        # Очистка существующих метаданных
         data = clean_existing_headers(data)
         data, _ = filter_insecure_configs(local_path, data, log_enabled=False)
+
         lines = [l.strip() for l in data.splitlines() if l.strip()]
+        
+        # Добавляем очистку от дублей и мусора
         lines = remove_duplicates(lines)
+
+        # Фильтруем по пингу только нужные файлы
         if file_number in PING_FILTERED_FILES:
             lines = filter_by_ping(lines, file_number)
+
         data = "\n".join(lines)
         content_with_header = add_file_header(data, file_number)
+
         if os.path.exists(local_path):
             with open(local_path, "r", encoding="utf-8") as f:
                 if f.read() == content_with_header:
                     log(f"🔄 Изменений для {local_path} нет (локально). Пропуск загрузки в GitHub.")
                     return None
+
         save_to_local_file(local_path, data, file_number)
         return local_path, REMOTE_PATHS[idx], file_number, len(lines)
     except Exception as e:
@@ -454,14 +532,19 @@ def upload_to_github(local_path, remote_path):
     if not os.path.exists(local_path):
         log(f"❌ Файл {local_path} не найден.")
         return
+
     with open(local_path, "r", encoding="utf-8") as f:
         content = f.read()
+
     max_retries = 5
+
     for attempt in range(1, max_retries + 1):
         try:
             try:
                 file_in_repo = REPO.get_contents(remote_path)
                 current_sha = file_in_repo.sha
+
+                # Безопасное получение содержимого
                 try:
                     remote_content = file_in_repo.decoded_content.decode("utf-8", errors="replace")
                 except (AssertionError, AttributeError):
@@ -469,9 +552,11 @@ def upload_to_github(local_path, remote_path):
                         remote_content = base64.b64decode(file_in_repo.content).decode("utf-8", errors="replace")
                     else:
                         remote_content = None
+
                 if remote_content == content:
                     log(f"🔄 Изменений для {remote_path} нет.")
                     return
+
             except GithubException as e_get:
                 if getattr(e_get, "status", None) == 404:
                     basename = os.path.basename(remote_path)
@@ -488,6 +573,7 @@ def upload_to_github(local_path, remote_path):
                 else:
                     log(f"⚠️ Ошибка при получении {remote_path}: {e_get.data.get('message', str(e_get))}")
                     return
+
             basename = os.path.basename(remote_path)
             REPO.update_file(
                 path=remote_path,
@@ -500,6 +586,7 @@ def upload_to_github(local_path, remote_path):
             with _UPDATED_FILES_LOCK:
                 updated_files.add(file_index)
             return
+
         except GithubException as e_upd:
             if getattr(e_upd, "status", None) == 409 and attempt < max_retries:
                 wait_time = 0.5 * (2 ** (attempt - 1))
@@ -509,13 +596,18 @@ def upload_to_github(local_path, remote_path):
             else:
                 log(f"❌ Не удалось обновить {remote_path}: {e_upd.data.get('message', str(e_upd))}")
                 return
+
     log(f"❌ Не удалось обновить {remote_path} после {max_retries} попыток")
 
-# -------------------- 26-Й ФАЙЛ (ПОЛНЫЙ СПИСОК SNI и IP) --------------------
+# -------------------- 26-Й ФАЙЛ (ПОЛНЫЙ СПИСОК SNI) --------------------
 SNI_DOMAINS_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/whitelist.txt"
-IP_WHITELIST_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/ipwhitelist.txt"
 
 def load_sni_domains_from_url(url=None):
+    """
+    Загружает список SNI доменов из удалённого источника.
+    Если URL не указан или загрузка не удалась – использует резервный статический список.
+    """
+    # Резервный список (исходные домены)
     FALLBACK_SNI_DOMAINS = [
         "00.img.avito.st", "01.img.avito.st", "02.img.avito.st", "03.img.avito.st",
         "04.img.avito.st", "05.img.avito.st", "06.img.avito.st", "07.img.avito.st",
@@ -714,18 +806,22 @@ def load_sni_domains_from_url(url=None):
         "zen-yabro-morda.mediascope.mc.yandex.ru", "zen.yandex.com", "zen.yandex.net",
         "zen.yandex.ru", "честныйзнак.рф"
     ]
-    
+
     if not url:
         log("ℹ️ URL для SNI не указан, использую статический список")
         return FALLBACK_SNI_DOMAINS
+
     try:
         log(f"📥 Загрузка SNI доменов из {url}...")
         data = fetch_data(url, timeout=15, max_attempts=2)
+
+        # Парсим строки: удаляем пустые, комментарии, пробелы
         domains = []
         for line in data.splitlines():
             stripped = line.strip()
             if not stripped or stripped.startswith('#'):
                 continue
+            # Оставляем только домены (без протоколов и портов)
             if '://' not in stripped and '/' not in stripped:
                 domains.append(stripped.lower())
             else:
@@ -735,104 +831,41 @@ def load_sni_domains_from_url(url=None):
                         domains.append(parsed.hostname.lower())
                 except:
                     pass
+
+        # Убираем дубликаты с сохранением порядка
         seen = set()
         unique_domains = []
         for d in domains:
             if d not in seen:
                 seen.add(d)
                 unique_domains.append(d)
+
         if unique_domains:
             log(f"✅ Загружено {len(unique_domains)} SNI доменов из внешнего источника")
             return unique_domains
         else:
             log("⚠️ Внешний источник не вернул доменов, использую резервный список")
             return FALLBACK_SNI_DOMAINS
+
     except Exception as e:
         log(f"⚠️ Ошибка загрузки SNI: {e}. Использую резервный список")
         return FALLBACK_SNI_DOMAINS
 
-def load_ip_whitelist(url):
-    networks = []
-    if not url:
-        return networks
-    try:
-        log(f"📥 Загрузка белого списка IP из {url}...")
-        data = fetch_data(url, timeout=15, max_attempts=2)
-        for line in data.splitlines():
-            stripped = line.strip()
-            if not stripped or stripped.startswith('#'):
-                continue
-            try:
-                networks.append(ipaddress.ip_network(stripped, strict=False))
-            except ValueError:
-                continue
-        log(f"✅ Загружено {len(networks)} IP-правил (сетей/адресов)")
-    except Exception as e:
-        log(f"⚠️ Ошибка загрузки IP-листа: {e}")
-    return networks
-
-# -------------------- DNS кэш --------------------
-_DNS_CACHE = {}
-_DNS_CACHE_LOCK = threading.Lock()
-
-def _resolve_host(host: str) -> str | None:
-    """Resolve host to IP with thread-safe cache."""
-    host = host.strip().strip('.')
-    if not host:
-        return None
-    # Check cache first (read-only, no lock needed in CPython due to GIL but we use lock for safety)
-    with _DNS_CACHE_LOCK:
-        if host in _DNS_CACHE:
-            return _DNS_CACHE[host]
-    # Not in cache, resolve
-    try:
-        if '.' not in host or len(host) < 4:
-            return None
-        ip = socket.gethostbyname(host)
-        with _DNS_CACHE_LOCK:
-            _DNS_CACHE[host] = ip
-        return ip
-    except (socket.gaierror, UnicodeError):
-        with _DNS_CACHE_LOCK:
-            _DNS_CACHE[host] = None
-        return None
-
-def is_ip_whitelisted(host, whitelist_networks):
-    if not whitelist_networks or not host:
-        return False
-    host = host.strip().strip('.')
-    if not host:
-        return False
-    target_ip = None
-    try:
-        ipaddress.ip_address(host)
-        target_ip = host
-    except ValueError:
-        target_ip = _resolve_host(host)
-    if target_ip:
-        try:
-            addr = ipaddress.ip_address(target_ip)
-            for net in whitelist_networks:
-                if addr in net:
-                    return True
-        except ValueError:
-            return False
-    return False
-
+# Загрузка списка SNI (при недоступности URL вернётся резервный список)
 SNI_DOMAINS = load_sni_domains_from_url(SNI_DOMAINS_URL)
 
 def create_filtered_configs():
-    # SNI regex
+    """Создает 26-й файл с конфигами (только пингуемые)"""
+
+    # Оптимизация доменов
     sorted_domains = sorted(SNI_DOMAINS, key=len)
     optimized = []
     for d in sorted_domains:
         if not any(ex in d for ex in optimized):
             optimized.append(d)
-    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")") if optimized else None
 
-    ip_whitelist = load_ip_whitelist(IP_WHITELIST_URL)
+    sni_regex = re.compile(r"(?:" + "|".join(re.escape(d) for d in optimized) + r")")
 
-    # Функция извлечения конфигов из файла
     def extract_from_file(file_idx):
         path = f"githubmirror/{file_idx}.txt"
         if not os.path.exists(path):
@@ -840,19 +873,28 @@ def create_filtered_configs():
         try:
             with open(path, "r") as f:
                 content = f.read()
+            # Разбиваем на протоколы
             content = re.sub(r'(vmess|vless|trojan|ss|ssr|tuic|hysteria|hysteria2)://', r'\n\1://', content)
-            return [line.strip() for line in content.splitlines() if line.strip() and not line.startswith('#')]
+            configs = []
+            for line in content.splitlines():
+                stripped = line.strip()
+                # Пропускаем комментарии
+                if not stripped or stripped.startswith('#'):
+                    continue
+                if sni_regex.search(stripped):
+                    configs.append(stripped)
+            return configs
         except:
             return []
 
-    # Сбор всех конфигов параллельно
-    raw_configs = []
+    # Собираем конфиги из файлов 1-25
+    all_configs = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         futures = [executor.submit(extract_from_file, i) for i in range(1, 26)]
         for future in concurrent.futures.as_completed(futures):
-            raw_configs.extend(future.result())
+            all_configs.extend(future.result())
 
-    # Загрузка доп. источников
+    # Загружаем доп. источники
     def load_extra(url):
         try:
             data = fetch_data(url, timeout=EXTRA_URL_TIMEOUT, max_attempts=EXTRA_URL_MAX_ATTEMPTS, allow_http_downgrade=False)
@@ -863,36 +905,18 @@ def create_filtered_configs():
         except:
             return []
 
+    extra = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(load_extra, url) for url in EXTRA_URLS_FOR_26]
         for future in concurrent.futures.as_completed(futures):
-            raw_configs.extend(future.result())
+            extra.extend(future.result())
 
-    # ============ ОПТИМИЗАЦИЯ: распараллеливание фильтрации SNI+IP ============
-    CHUNK_SIZE = 200
-    chunks = [raw_configs[i:i+CHUNK_SIZE] for i in range(0, len(raw_configs), CHUNK_SIZE)]
+    all_configs.extend(extra)
 
-    def process_chunk(chunk):
-        filtered = []
-        for cfg in chunk:
-            host, _, _ = extract_server_info(cfg)
-            if not host:
-                continue
-            sni_match = sni_regex.search(cfg) if sni_regex else False
-            ip_match = is_ip_whitelisted(host, ip_whitelist)
-            if sni_match or ip_match:
-                filtered.append(cfg)
-        return filtered
+    # Дедупликация
+    unique = remove_duplicates(all_configs)
 
-    filtered_configs = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(16, len(chunks))) as executor:
-        futures = [executor.submit(process_chunk, chunk) for chunk in chunks]
-        for future in concurrent.futures.as_completed(futures):
-            filtered_configs.extend(future.result())
-
-    # Убираем дубликаты
-    unique = remove_duplicates(filtered_configs)
-    # Пинг-проверка
+    # Проверка пинга для 26-го файла
     unique = filter_by_ping(unique, 26)
 
     path = "githubmirror/26.txt"
@@ -908,14 +932,17 @@ def update_readme_table():
         readme = REPO.get_contents("README.md")
         old = readme.decoded_content.decode("utf-8")
         time_part, date_part = offset.split(" | ")
+
         rows = []
         for i in range(1, 27):
             filename = f"{i}.txt"
             raw_url = f"https://github.com/{REPO_NAME}/raw/refs/heads/main/githubmirror/{i}.txt"
+
             if i <= 25:
                 source = f"[{extract_source_name(URLS[i-1])}]({URLS[i-1]})"
             else:
                 source = f"[Обход SNI/CIDR белых списков]({raw_url})"
+
             if i in updated_files:
                 rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {time_part} | {date_part} |")
             else:
@@ -924,8 +951,10 @@ def update_readme_table():
                     rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | {match.group(1)} | {match.group(2)} |")
                 else:
                     rows.append(f"| {i} | [`{filename}`]({raw_url}) | {source} | Никогда | Никогда |")
+
         new_table = "| № | Файл | Источник | Время | Дата |\n|--|--|--|--|--|\n" + "\n".join(rows)
         new_content = re.sub(r"\| № \| Файл \| Источник \| Время \| Дата \|[\s\S]*?\|--\|--\|--\|--\|--\|[\s\S]*?(\n\n## |$)", new_table + r"\1", old)
+
         if new_content != old:
             REPO.update_file("README.md", f"📝 Обновление таблицы в README.md по часовому поясу Европа/Москва: {offset}", new_content, readme.sha)
             log("📝 Таблица в README.md обновлена")
@@ -933,31 +962,44 @@ def update_readme_table():
         log(f"⚠️ Ошибка README: {e}")
 
 def update_stats_json(updated_info: dict):
+    """
+    Обновляет stats.json в репозитории, сохраняя время обновления и количество конфигов.
+    updated_info: словарь {номер_файла: количество_конфигов}
+    """
     if not updated_info:
         log("ℹ️ Нет обновлённых файлов для записи в stats.json")
         return
+
     try:
         try:
+            # Пытаемся получить существующий файл
             stats_file = REPO.get_contents(STATS_JSON_PATH)
             current_sha = stats_file.sha
             content = stats_file.decoded_content.decode("utf-8")
             stats = json.loads(content)
         except GithubException as e:
             if getattr(e, "status", None) == 404:
+                # Файл не существует, создадим новую структуру
                 stats = {"last_global_update": "", "files": {}}
                 current_sha = None
             else:
                 raise
+
+        # Обновляем данные
         stats["last_global_update"] = offset
         if "files" not in stats:
             stats["files"] = {}
+
         for file_num, count in updated_info.items():
             stats["files"][str(file_num)] = {
                 "count": count,
                 "updated": offset
             }
+
         new_content = json.dumps(stats, indent=2, ensure_ascii=False)
+
         if current_sha is None:
+            # Создаём файл
             REPO.create_file(
                 path=STATS_JSON_PATH,
                 message=f"📊 Создание stats.json с данными обновления",
@@ -965,6 +1007,7 @@ def update_stats_json(updated_info: dict):
             )
             log(f"🆕 Файл {STATS_JSON_PATH} создан в репозитории")
         else:
+            # Обновляем, только если есть изменения
             if new_content != content:
                 REPO.update_file(
                     path=STATS_JSON_PATH,
@@ -975,6 +1018,7 @@ def update_stats_json(updated_info: dict):
                 log(f"📊 Статистика в {STATS_JSON_PATH} обновлена")
             else:
                 log(f"ℹ️ Статистика в {STATS_JSON_PATH} не изменилась")
+
     except Exception as e:
         log(f"⚠️ Ошибка при обновлении {STATS_JSON_PATH}: {e}")
 
@@ -985,42 +1029,53 @@ def main(dry_run: bool = False):
     log(f"🔍 Проверка пинга: {'включена' if ENABLE_PING_CHECK else 'выключена'}")
     log(f"📁 Файлы с фильтрацией по пингу: {sorted(PING_FILTERED_FILES)}")
 
+    # Скачиваем файлы 1-25 и собираем информацию об обновлениях
     download_results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as download_pool, \
          concurrent.futures.ThreadPoolExecutor(max_workers=6) as upload_pool:
+
         futures = [download_pool.submit(download_and_save, i) for i in range(len(URLS))]
         uploads = []
+
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res and not dry_run:
                 download_results.append(res)
                 uploads.append(upload_pool.submit(upload_to_github, res[0], res[1]))
+
         for u in concurrent.futures.as_completed(uploads):
             try:
                 u.result()
             except Exception as e:
                 log(f"⚠️ Ошибка при загрузке: {e}")
 
+    # Создаём 26-й файл
     path_26, count_26 = create_filtered_configs()
     if not dry_run and path_26:
         upload_to_github(path_26, "githubmirror/26.txt")
         download_results.append((path_26, "githubmirror/26.txt", 26, count_26))
 
+    # Обновляем README
     if not dry_run:
         update_readme_table()
 
+    # Собираем статистику для обновлённых файлов
     updated_stats_info = {}
     for res in download_results:
+        # res = (local_path, remote_path, file_number, config_count)
         file_num = res[2]
         count = res[3]
         updated_stats_info[file_num] = count
 
+    # Обновляем stats.json (только для сухого прогона не трогаем GitHub)
     if not dry_run and updated_stats_info:
         update_stats_json(updated_stats_info)
 
+    # Отправка уведомления в Telegram, если были обновления
     if updated_files and not dry_run:
         send_update_notification()
 
+    # Вывод логов
     for k in sorted(LOGS_BY_FILE.keys()):
         if k == 0:
             print("\n----- Общие сообщения -----")
