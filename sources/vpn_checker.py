@@ -209,7 +209,7 @@ URLS = [
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
-    "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_SS+All_RUS.txt", #23
+    "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
 ]
@@ -308,7 +308,8 @@ def clean_existing_headers(content: str) -> str:
     # Ключевые слова, характерные для метаданных подписок
     metadata_prefixes = (
         "#profile-title:", "#profile-update-interval:", "#profile-web-page-url:",
-        "#support-url:", "#announce:", "#update-url:", "#subscribe-url:"
+        "#support-url:", "#announce:", "#update-url:", "#subscribe-url:",
+        "# profile-title:", "# profile-update-interval:", "# Date/Time:", "# For more info and VPN-configs"
     )
     for line in lines:
         stripped = line.strip()
