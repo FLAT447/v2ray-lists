@@ -208,7 +208,7 @@ URLS = [
     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt", #19
     "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt", #20
     "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt", #21
-    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri", #22
+    "https://subrostunnel.vercel.app/gen.txt", #22
     "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt", #23
     "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt", #24
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", #25
