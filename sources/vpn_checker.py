@@ -309,7 +309,8 @@ def clean_existing_headers(content: str) -> str:
     metadata_prefixes = (
         "#profile-title:", "#profile-update-interval:", "#profile-web-page-url:",
         "#support-url:", "#announce:", "#update-url:", "#subscribe-url:",
-        "# profile-title:", "# profile-update-interval:", "# Date/Time:", "# For more info and VPN-configs"
+        "# profile-title:", "# profile-update-interval:", "# Date/Time:", 
+        "# For more info and VPN-configs", "# Количество:"
     )
     for line in lines:
         stripped = line.strip()
