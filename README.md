@@ -52,7 +52,7 @@
 | 10  | [`10.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/10.txt)               | [mheidari98/.proxy](https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless)                                                                        |
 | 11  | [`11.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/11.txt)               | [youfoundamin/V2rayCollector](https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt)                                                      |
 | 12  | [`12.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/12.txt)               | [expressalaki/ExpressVPN](https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt)                                                     |
-| 13  | [`13.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/13.txt)               | [MahsaNetConfigTopic/config](https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt)                                             |
+| 13  | [`13.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/13.txt)               | [barry-far/V2ray-Config](https://github.com/barry-far/V2ray-Config/raw/refs/heads/main/Splitted-By-Protocol/vless.txt)                                             |
 | 14  | [`14.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/14.txt)               | [LalatinaHub/Mineral](https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes)                                                                      |
 | 15  | [`15.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/15.txt)               | [miladtahanian/Config-Collector](https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt)                                     |
 | 16  | [`16.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/16.txt)               | [Pawdroid/Free-servers](https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub)                                                                  |
@@ -61,7 +61,7 @@
 | 19  | [`19.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/19.txt)               | [whoahaow/rjsxrd](https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt)                                         |
 | 20  | [`20.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/20.txt)               | [Argh94/Proxy-List](https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt)                                                                          |
 | 21  | [`21.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/21.txt)               | [shabane/kamaji](https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt)                                                                              |
-| 22  | [`22.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/22.txt)               | [wuqb2i4f/xray-config-toolkit](https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri)                                             |
+| 22  | [`22.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/22.txt)               | [RosTunnel](https://subrostunnel.vercel.app/gen.txt)                                             |
 | 23  | [`23.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/23.txt)               | [igareck/vpn-configs-for-russia](https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS.txt)                                           |
 | 24  | [`24.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/24.txt)               | [Mr-Meshky/vify](https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt)                                                                             |
 | 25  | [`25.txt`](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/25.txt)               | [V2RayRoot/V2RayConfig](https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt)                                                     |
@@ -136,7 +136,7 @@ python proxy_checker                # генерирует файлы whitelist.
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.5/v2rayNG_2.1.5-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.7/v2rayNG_2.1.7-fdroid_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -150,7 +150,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.5/v2rayNG_2.1.5-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.7/v2rayNG_2.1.7-fdroid_universal.apk)
 
 > Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
 
