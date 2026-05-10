@@ -199,7 +199,7 @@ URLS = [
     "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", #10
     "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt", #11
     "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt", #12
-    "https://raw.githubusercontent.com/MahsaNetConfigTopic/config/refs/heads/main/xray_final.txt", #13
+    "https://github.com/barry-far/V2ray-Config/raw/refs/heads/main/Splitted-By-Protocol/vless.txt", #13
     "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", #14
     "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt", #15
     "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub", #16
