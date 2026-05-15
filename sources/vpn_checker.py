@@ -29,7 +29,7 @@ TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
 PING_TIMEOUT = 2.0
-PING_MAX_WORKERS = 200  # Увеличено для более быстрого пинга множества серверов
+PING_MAX_WORKERS = 200
 ENABLE_PING_CHECK = True
 
 # Настройки загрузки
@@ -38,7 +38,7 @@ EXTRA_URL_TIMEOUT = 6
 EXTRA_URL_MAX_ATTEMPTS = 2
 
 # Номера подписок, которые должны содержать только пингуемые сервера
-PING_FILTERED_FILES = {1, 6, 18, 22, 23, 24, 25, 26}
+PING_FILTERED_FILES = {1, 6, 22, 23, 24, 25, 26}
 
 # Шаблон заголовка для каждого файла
 HEADER_TEMPLATE = """#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.
@@ -240,33 +240,57 @@ LOCAL_PATHS.append("githubmirror/26.txt")
 # -------------------- НАСТРОЙКИ --------------------
 urllib3.disable_warnings()
 CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/143.0.0.0 Safari/537.36"
-BASE64_PATTERN = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
 
 def decode_if_base64(data: str) -> str:
     """
+    ИСПРАВЛЕННОЕ ДЕКОДИРОВАНИЕ BASE64
+    
     Проверяет, является ли строка целиком закодированной в Base64.
     Если да — декодирует её, иначе возвращает исходные данные.
-    """
-    # Удаляем пробелы и символы перевода строки
-    stripped = data.strip()
     
-    # Быстрая проверка: отсутствие переносов строк и только допустимые символы Base64
-    if '\n' not in stripped and BASE64_PATTERN.match(stripped):
-        try:
-            # Добавляем padding, если его нет (кратность 4)
-            missing_padding = len(stripped) % 4
-            if missing_padding:
-                stripped += '=' * (4 - missing_padding)
-            decoded_bytes = base64.b64decode(stripped)
-            decoded_str = decoded_bytes.decode('utf-8', errors='replace')
-            # Если после декодирования получилось многострочное содержимое с протоколами,
-            # считаем это валидной подпиской.
-            if any(proto in decoded_str for proto in ('vmess://', 'vless://', 'trojan://', 'ss://', 'tuic://')):
-                log(f"🔓 Обнаружена и декодирована Base64 подписка (длина {len(decoded_str)} символов)")
-                return decoded_str
-        except Exception as e:
-            log(f"⚠️ Ошибка при декодировании Base64: {e}")
-    return data
+    ИСПРАВЛЕНИЯ:
+    - Удаляет пробелы И переносы строк перед проверкой
+    - Позволяет переносы строк в регулярном выражении для проверки
+    - Добавляет проверку на минимальную длину
+    - Использует validate=True для надежной проверки
+    """
+    original = data
+    
+    # Удаляем пробелы и переносы строк для проверки и декодирования
+    cleaned = ''.join(data.split())
+    
+    # Быстрая проверка на минимальную длину
+    if len(cleaned) < 4:
+        return original
+    
+    # Проверяем, что строка содержит только валидные Base64 символы
+    # Позволяем +, /, и = (для padding)
+    if not re.match(r'^[A-Za-z0-9+/]*={0,2}$', cleaned):
+        return original
+    
+    try:
+        # Добавляем padding, если его нет (кратность 4)
+        missing_padding = len(cleaned) % 4
+        if missing_padding:
+            cleaned += '=' * (4 - missing_padding)
+        
+        # Пытаемся декодировать с проверкой валидности
+        decoded_bytes = base64.b64decode(cleaned, validate=True)
+        decoded_str = decoded_bytes.decode('utf-8', errors='replace')
+        
+        # Если декодирование успешно, проверяем наличие протоколов VPN
+        protocols = ('vmess://', 'vless://', 'trojan://', 'ss://', 'ssr://', 'tuic://', 'hysteria://', 'hysteria2://')
+        if any(proto in decoded_str for proto in protocols):
+            log(f"🔓 Обнаружена и декодирована Base64 подписка (длина {len(decoded_str)} символов)")
+            return decoded_str
+        
+        # Если протоколов не найдено, возвращаем оригинал
+        return original
+        
+    except Exception as e:
+        # Если что-то не так, возвращаем оригинал
+        log(f"⚠️ Ошибка при декодировании Base64: {type(e).__name__}")
+        return original
 
 def _build_session(max_pool_size: int) -> requests.Session:
     session = requests.Session()
@@ -359,7 +383,7 @@ def extract_server_info(config: str):
                 j = json.loads(decoded)
                 host = j.get('add') or j.get('host') or j.get('ip')
                 port = j.get('port')
-                user_id = j.get('id') # UUID для vmess
+                user_id = j.get('id')
                 if host and port:
                     return str(host), int(port), str(user_id) if user_id else None
         else:
@@ -367,7 +391,7 @@ def extract_server_info(config: str):
             parsed = urllib.parse.urlparse(config)
             host = parsed.hostname
             port = parsed.port
-            user_id = parsed.username # Извлекает UUID или пароль до знака @
+            user_id = parsed.username
             
             if host and port:
                 return str(host), int(port), str(user_id) if user_id else None
@@ -382,7 +406,6 @@ def ping_host(host: str, port: int, timeout: float = PING_TIMEOUT) -> bool:
 
     try:
         # 2. Проверка резолвинга DNS
-        # Отсеет нерабочие домены мгновенно, до таймаута TCP
         resolved_ip = socket.gethostbyname(host)
         
         # 3. TCP-пинг
@@ -392,7 +415,6 @@ def ping_host(host: str, port: int, timeout: float = PING_TIMEOUT) -> bool:
         sock.close()
         return result == 0
     except socket.gaierror:
-        # Ошибка DNS (домен не существует)
         return False
     except:
         return False
@@ -403,8 +425,6 @@ def check_config_availability(config: str) -> bool:
     
     host, port, _ = extract_server_info(config)
     
-    # Если парсер не справился (очень редкий или битый формат), 
-    # считаем условно доступным, чтобы не удалить случайно рабочий нестандартный конфиг
     if not host or not port:
         return True 
         
@@ -485,7 +505,6 @@ def remove_duplicates(configs: list) -> list:
             
         endpoint_key = f"{host.lower()}:{port}"
         
-        # Если такой сервер (IP:Port) уже был добавлен, пропускаем дубль
         if endpoint_key in seen_endpoints:
             continue 
             
@@ -651,7 +670,7 @@ def load_sni_domains_from_url(url=None):
         "api-maps.yandex.ru", "api.2gis.ru", "api.a.mts.ru", "api.apteka.ru", "api.avito.ru",
         "api.browser.yandex.com", "api.browser.yandex.ru", "api.cs7777.vk.ru",
         "api.events.plus.yandex.net", "api.expf.ru", "api.max.ru", "api.mindbox.ru", "api.ok.ru",
-        "api.photo.2gis.com", "api.plus.kinopoisk.ru", "api.predict.mail.ru",
+        "api.photo.2gis.com", "api.predict.mail.ru",
         "api.reviews.2gis.com", "api.s3.yandex.net", "api.tau.vk.ru", "api.uxfeedback.yandex.net",
         "api.vk.ru", "api2.ivi.ru", "apps.research.mail.ru", "authdl.mail.ru", "auto.mail.ru",
         "auto.ru", "autodiscover.corp.mail.ru", "autodiscover.ord.ozon.ru", "av.mail.ru",
