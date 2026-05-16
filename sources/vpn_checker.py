@@ -216,16 +216,10 @@ URLS = [
 
 EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
     "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
     "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
     "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
-    "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/wl.txt",
-    "https://white-lists.vercel.app/api/filter?code=RU",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt",
     "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
-    "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
-    "https://gbr.mydan.online/configs",
     "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
     "https://etoneya.a9fm.site/1"
 ]
@@ -240,18 +234,6 @@ urllib3.disable_warnings()
 CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/143.0.0.0 Safari/537.36"
 
 def decode_if_base64(data: str) -> str:
-    """
-    ИСПРАВЛЕННОЕ ДЕКОДИРОВАНИЕ BASE64
-    
-    Проверяет, является ли строка целиком закодированной в Base64.
-    Если да — декодирует её, иначе возвращает исходные данные.
-    
-    ИСПРАВЛЕНИЯ:
-    - Удаляет пробелы И переносы строк перед проверкой
-    - Позволяет переносы строк в регулярном выражении для проверки
-    - Добавляет проверку на минимальную длину
-    - Использует validate=True для надежной проверки
-    """
     original = data
     
     # Удаляем пробелы и переносы строк для проверки и декодирования
