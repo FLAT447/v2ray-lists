@@ -28,7 +28,7 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 
 # Настройки пинга
-PING_TIMEOUT = 2.0
+PING_TIMEOUT = 1.5
 PING_MAX_WORKERS = 200
 ENABLE_PING_CHECK = True
 
@@ -216,20 +216,18 @@ URLS = [
 
 EXTRA_URLS_FOR_26 = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
     "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
     "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
     "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
     "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/wl.txt",
-    "https://ety.twinkvibe.gay/whitelist",
     "https://white-lists.vercel.app/api/filter?code=RU",
-    "https://raw.githubusercontent.com/Hidashimora/free-vpn-anti-rkn/main/configs/31.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt",
     "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
-    "https://gist.github.com/DestroyST6767/50af50221ca1858ba2084efc0f524fbc.txt",
-    "https://raw.githubusercontent.com/tankist939-afk/Obhod-WL/refs/heads/main/Obhod%20WL",
     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
     "https://gbr.mydan.online/configs",
-    "https://subrostunnel.vercel.app/gen.txt"
+    "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
+    "https://etoneya.a9fm.site/1"
 ]
 
 REMOTE_PATHS = [f"githubmirror/{i+1}.txt" for i in range(len(URLS))]
