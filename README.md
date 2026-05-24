@@ -136,7 +136,7 @@ python proxy_checker                # генерирует файлы whitelist.
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.7/v2rayNG_2.1.7-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.0/v2rayNG_2.2.0-fdroid_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -150,13 +150,13 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.1.7/v2rayNG_2.1.7-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.0/v2rayNG_2.2.0-fdroid_universal.apk)
 
 > Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
 
 > Обход SNI/CIDR белых списков: **[26](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/26.png)**
 
-**2.** Скачиваем **«QR-коды»** вечно актуальных конфигов — [Ссылка](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes)
+**2.** Скачиваем **«QR-коды»** — [Ссылка](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes)
 
 **3**. Заходим в приложение **«v2rayNG»** и в правом верхнем углу нажимаем на ➕, а затем выбираем **«Импорт из QR-кода»**, выбираем картинку нажав на иконку фото в правом верхнем углу.
 
@@ -181,7 +181,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Windows, Linux</summary>
 
-**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.2/Throne-1.1.2-windows64-installer.exe) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.2/Throne-1.1.2-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.2/Throne-1.1.2-linux-amd64.zip)
+**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-windows64.zip) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-linux-amd64.zip)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -234,7 +234,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для MacOS</summary>
 
-**1.** Скачиваем **«Hiddify»** — [Ссылка](https://github.com/hiddify/hiddify-app/releases/download/v4.1.1/Hiddify-MacOS.dmg)
+**1.** Скачиваем **«Hiddify»** — [Ссылка](https://github.com/hiddify/hiddify-app/releases/download/latest/Hiddify-MacOS.dmg)
 
 **2.** Нажимаем **«Новый профиль»**.
 
