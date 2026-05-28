@@ -25,9 +25,9 @@
 2. Импортируйте её в ваш **VPN-клиент** (смотрите инструкции ниже)
 3. Выберите сервер с наименьшим пингом и подключайтесь
 ## MTProxy:
-1. Заходим на сайт [V2Ray Lists](https://flat447.github.io/v2ray-lists-site/)
-2. В фильтрах выбираем **MTProxy(MTP)** и жмём **10 рандомных** из **27 конфига**
-3. На мобилках идём по пути `Настройки > Данные и память > Настройки прокси > Три точки > Импорт из буфера обмена`. И включаем автопереключение прокси если клиент позволяет 
+1. Заходим на [сайт V2Ray Lists](https://flat447.github.io/v2ray-lists-site/mtproxy/)
+2. Жмём __10 случайных__ из __WhiteList__ и заходим в Telegram
+3. На мобилках идём по пути `Настройки > Данные и память > Настройки прокси > Три точки > Импорт из буфера обмена` 
 4. На ПК идём по пути `Настройки > Продвинутые настройки > Тип соединения > Три точки > Добавить прокси из буфера обмена`
 
 
@@ -136,7 +136,7 @@ python proxy_checker                # генерирует файлы whitelist.
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.0/v2rayNG_2.2.0-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.1/v2rayNG_2.2.1-fdroid_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -150,7 +150,7 @@ python proxy_checker                # генерирует файлы whitelist.
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.0/v2rayNG_2.2.0-fdroid_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.1/v2rayNG_2.2.1-fdroid_universal.apk)
 
 > Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
 
