@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+VPN Config Collector - Автоматический сборщик, тестер и фильтр VPN конфигураций.
+Всё в одном файле для удобного запуска в GitHub Actions.
+"""
 
 import asyncio
 import json
@@ -27,18 +31,19 @@ class TelegramNotifier:
     """Отправка уведомлений и статусов работы в Telegram"""
     def __init__(self, token: str, chat_id: str, channel_id: str = None):
         self.token = token
-        self.chat_id = chat_id
-        self.channel_id = channel_id
+        self.chat_id = chat_id          # ID чата для логов/админа
+        self.channel_id = channel_id    # ID Telegram-канала (например, -100xxxxxxxxxx или @channel)
         self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage"
 
-    def send_message(self, text: str):
+    def send_message(self, text: str, target_chat_id: str = None):
+        """Отправка обычного markdown-сообщения"""
+        cid = target_chat_id or self.chat_id
         payload = {
-            "chat_id": self.chat_id,
+            "chat_id": cid,
             "text": text,
-            "parse_mode": "Markdown"
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
         }
-        if self.channel_id:
-            payload["message_thread_id"] = self.channel_id
 
         try:
             response = requests.post(self.api_url, json=payload, timeout=10)
@@ -47,6 +52,46 @@ class TelegramNotifier:
         except Exception as e:
             logger.error(f"Не удалось отправить уведомление в Telegram: {e}")
 
+    def send_channel_update(self, updated_files: List[str], total_configs: int):
+        """Отправка красивого отчета в канал (как на скриншоте)"""
+        if not self.channel_id:
+            logger.warning("ID канала не настроен. Пропуск отправки отчета.")
+            return
+
+        # Получаем текущее время по МСК (UTC+3)
+        tz_msk = timezone(timedelta(hours=3))
+        now = datetime.now(tz_msk)
+        time_str = now.strftime("%H:%M | %d.%m.%Y")
+
+        # Форматируем список файлов через запятую
+        files_str = ", ".join(updated_files)
+
+        # Строим текст сообщения (используем HTML для стабильного отображения ссылок-кнопок)
+        text = (
+            f"<b>V2Ray Updates CH</b>\n"
+            f"🔄 V2Ray подписки обновлены!\n"
+            f"📅 Время: {time_str}\n"
+            f"📁 Обновлены файлы: {files_str}\n"
+            f"📊 Всего конфигураций: {total_configs}\n\n"
+            f"📦 <a href=\"https://github.com/FLAT447/v2ray-lists\">Репозиторий проекта</a>\n"
+            f"⚡ <a href=\"https://flat447.github.io/v2ray-lists-site\">Сайт проекта</a>"
+        )
+
+        payload = {
+            "chat_id": self.channel_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+
+        try:
+            response = requests.post(self.api_url, json=payload, timeout=10)
+            if response.status_code != 200:
+                logger.error(f"Ошибка публикации в канал: {response.text}")
+            else:
+                logger.info("Сообщение успешно опубликовано в канал.")
+        except Exception as e:
+            logger.error(f"Не удалось отправить публикацию в канал: {e}")
 
 class GithubManager:
     """Коммит и пуш файлов напрямую в репозиторий GitHub через API"""
