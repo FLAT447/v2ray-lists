@@ -78,36 +78,12 @@ python proxy_checker                # генерирует файлы whitelist.
 
 # 🗂️ Основные подписки
 
-> Рекомендованные списки: **[1](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/1.txt)**, **[6](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/6.txt)**, **[22](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/22.txt)**, **[23](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/23.txt)**, **[24](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/24.txt)** и **[25](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/25.txt)**.
+> Обход Белых Списков: **[WHITE_FULL](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/WHITE_FULL.txt)**, **[WHITE_LITE](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/WHITE_LITE.txt)**
 
-> Обход SNI/CIDR белых списков: **[26](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt)** 
-
-1. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/1.txt`
-2. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/2.txt`
-3. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/3.txt`
-4. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/4.txt`
-5. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/5.txt`
-6. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/6.txt`
-7. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/7.txt`
-8. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/8.txt`
-9. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/9.txt`
-10. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/10.txt`
-11. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/11.txt`
-12. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/12.txt`
-13. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/13.txt`
-14. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/14.txt`
-15. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/15.txt`
-16. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/16.txt`
-17. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/17.txt`
-18. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/18.txt`
-19. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/19.txt`
-20. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/20.txt`
-21. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/21.txt`
-22. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/22.txt`
-23. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/23.txt`
-24. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/24.txt`
-25. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/25.txt`
-26. `https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/githubmirror/26.txt`
+[WHITE_LITE](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/WHITE_LITE.txt)
+[BLACK_LTE](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/BLACK_LTE.txt)
+[WHITE_FULL](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/WHITE_FULL.txt)
+[BLACK_FULL](https://github.com/FLAT447/v2ray-lists/raw/refs/heads/main/BLACK_FULL.txt)
 
 ---
 # 🗂️ Общее меню гайдов репозитория
