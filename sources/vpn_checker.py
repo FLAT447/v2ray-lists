@@ -235,7 +235,7 @@ class ConfigFetcher:
 
 class ConfigPinger:
     """Асинхронная проверка доступности TCP-портов прокси-серверов"""
-    async def _check_config(self, config: str, timeout: float = 5.0) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 2.0) -> str | None:
         try:
             parsed = urlparse(config)
             host_port = parsed.netloc.split('@')[-1]
