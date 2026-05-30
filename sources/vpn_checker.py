@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import asyncio
 import json
 import logging
@@ -280,7 +281,7 @@ class VPNConfigCollector:
         telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
         telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
         
-        if telegram_channel_id telegram_chat_id:
+        if telegram_channel_id and telegram_chat_id:
             self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_topic_id)
         else:
             self.notifier = None
