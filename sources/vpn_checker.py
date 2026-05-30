@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 
 class TelegramNotifier:
     """Отправка уведомлений и статусов работы в Telegram"""
-    def __init__(self, token: str, chat_id: str, topic_id: str = None):
+    def __init__(self, token: str, chat_id: str, channel_id: str = None):
         self.token = token
         self.chat_id = chat_id
-        self.topic_id = topic_id
+        self.channel_id = channel_id
         self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage"
 
     def send_message(self, text: str):
@@ -37,8 +37,8 @@ class TelegramNotifier:
             "text": text,
             "parse_mode": "Markdown"
         }
-        if self.topic_id:
-            payload["message_thread_id"] = self.topic_id
+        if self.channel_id:
+            payload["message_thread_id"] = self.channel_id
 
         try:
             response = requests.post(self.api_url, json=payload, timeout=10)
@@ -282,7 +282,7 @@ class VPNConfigCollector:
         telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
         
         if telegram_channel_id and telegram_chat_id:
-            self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_topic_id)
+            self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_channel_id)
         else:
             self.notifier = None
             logger.warning("Telegram не настроен — уведомления отправляться не будут")
