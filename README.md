@@ -109,9 +109,9 @@ python proxy_checker.py                # генерирует файлы whiteli
 
 **1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.1/v2rayNG_2.2.1_universal.apk)
 
-> Рекомендованные **«QR-коды»**: **[1](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/1.png)**, **[6](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/6.png)**, **[22](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/22.png)**, **[23](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/23.png)**, **[24](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/24.png)** и **[25](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/25.png)**.
+> Чёрные Списки: [BLACK_LTE](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/BLACK_LTE.png), [BLACK_FULL](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/BLACK_FULL.png)
 
-> Обход SNI/CIDR белых списков: **[26](https://github.com/FLAT447/v2ray-lists/blob/main/qr-codes/26.png)**
+> Обход Белых Списков: [WHITE_LITE](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/WHITE_LITE.png), [WHITE_FULL](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/WHITE_FULL.png)
 
 **2.** Скачиваем **«QR-коды»** — [Ссылка](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes)
 
