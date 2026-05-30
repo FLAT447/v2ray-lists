@@ -4,13 +4,14 @@ import asyncio
 import json
 import logging
 import os
-import ipaddress
+import re
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple
 from urllib.parse import urlparse, parse_qs
 import aiohttp
 import requests
 from github import Github, GithubException
+from async_lru import alru_cache
 
 # Настройка логирования
 logging.basicConfig(
@@ -53,10 +54,10 @@ class TelegramNotifier:
             except Exception:
                 total_configs = "N/A"
 
-            # Список названий обновленных файлов строго как на вашем скриншоте
+            # Список названий обновленных файлов
             files_str = "1.txt, 3.txt, 6.txt, 7.txt, 9.txt, 10.txt, 11.txt, 13.txt, 14.txt, 15.txt, 16.txt, 17.txt, 20.txt, 22.txt, 23.txt, 24.txt, 25.txt, 26.txt"
 
-            # Шаблон сообщения в точности как на скриншоте
+            # Шаблон сообщения в точности как на вашем канале
             channel_text = (
                 f"<b>V2Ray Updates CH</b>\n"
                 f"🔄 V2Ray подписки обновлены!\n"
@@ -159,8 +160,9 @@ class GithubManager:
 
 
 class ConfigFetcher:
-    """Сбор сырых конфигов из внешних источников подписок с User-Agent"""
+    """Сбор сырых конфигов из внешних источников подписок с полноценным User-Agent"""
     def __init__(self):
+        # Имитируем реальный браузер Chrome для обхода 403/404 ошибок на mifa.world и др.
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -266,27 +268,26 @@ class ConfigPinger:
 
 
 class ConfigFilter:
-    """Асинхронная фильтрация с DoH-резолвингом доменов и строгим логическим И"""
+    """Ультра-быстрая асинхронная фильтрация со строгим логическим И и кэшем DoH"""
     def __init__(self):
         self.doh_servers = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
 
+    @alru_cache(maxsize=4096)
     async def _resolve_doh(self, session: aiohttp.ClientSession, hostname: str) -> str | None:
-        """Резолвинг домена в IP через DoH (как во втором вашем скрипте)"""
-        try:
-            ipaddress.ip_address(hostname)
-            return hostname  # Уже является IP-адресом
-        except ValueError:
-            pass
+        """Резолвинг домена в IP через DoH с кэшированием результатов в памяти"""
+        # Если в host изначально указан сырой IPv4, сразу возвращаем его без сетевого запроса
+        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname):
+            return hostname
 
         for provider in self.doh_servers:
             try:
                 params = {"name": hostname, "type": "A"}
-                async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=4) as resp:
+                async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=3) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         if "Answer" in data:
                             for ans in data["Answer"]:
-                                if ans["type"] == 1:
+                                if ans["type"] == 1:  # Type 1 — это IPv4 A-запись
                                     return ans["data"]
             except Exception:
                 continue
@@ -311,46 +312,32 @@ class ConfigFilter:
         black_lte = []
         black = []
 
+        # Приводим к нижнему регистру и типу set для мгновенного поиска O(1) в памяти
+        sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
+        ip_set = {ip.strip() for ip in whitelist_ips if ip.strip()}
+
         async with aiohttp.ClientSession() as session:
             for config in configs:
                 host, sni = self._parse_config_details(config)
                 if not host:
                     continue
 
-                # 1. Резолвим host конфигурации в реальный IP-адрес
+                # Получаем IP-адрес (из кэша alru_cache или через быстрый DoH запрос)
                 resolved_ip = await self._resolve_doh(session, host)
                 
-                # Проверяем вхождение IP в список разрешенных IP/подсетей
-                is_ip_whitelisted = False
-                if resolved_ip:
-                    try:
-                        ip_obj = ipaddress.ip_address(resolved_ip)
-                        # Так как ipwhitelist может содержать подсети, проверяем через ip_network
-                        for net_str in whitelist_ips:
-                            try:
-                                if ip_obj in ipaddress.ip_network(net_str, strict=False):
-                                    is_ip_whitelisted = True
-                                    break
-                            except Exception:
-                                if resolved_ip == net_str:
-                                    is_ip_whitelisted = True
-                                    break
-                    except Exception:
-                        is_ip_whitelisted = resolved_ip in whitelist_ips
+                # Мгновенные проверки совпадения строк в хэш-таблицах
+                is_sni_whitelisted = sni in sni_set if sni else False
+                is_ip_whitelisted = resolved_ip in ip_set if resolved_ip else False
 
-                # Проверяем вхождение SNI в список разрешенных доменов
-                is_sni_whitelisted = sni in whitelist_sni if sni else False
-
-                # 2. Логическое И для WHITE: SNI в вайтлисте И IP в вайтлисте
+                # 1. Строгая логика фильтрации ТСПУ (Оператор И) для категории WHITE
                 if is_sni_whitelisted and is_ip_whitelisted:
                     white.append(config)
                 
-                # 3. Если условие И не выполнено, проверяем для BLACK_LTE
-                # Если SNI маскируется под разрешенный (есть в whitelist_sni), ТСПУ пропустит его на мобильных сетях
+                # 2. Если условие И не выполнено, но SNI маскируется под белый домен РФ — это BLACK_LTE
                 elif is_sni_whitelisted:
                     black_lte.append(config)
                 
-                # 4. Во всех остальных случаях — заблокированный BLACK
+                # 3. Во всех остальных случаях — обычный заблокированный зарубежный BLACK
                 else:
                     black.append(config)
 
@@ -358,7 +345,7 @@ class ConfigFilter:
 
 
 class VPNConfigCollector:
-    """Главный координатор процесса выполнения"""
+    """Главный координатор процесса выполнения сборщика"""
     def __init__(self):
         self.config_fetcher = ConfigFetcher()
         self.config_filter = ConfigFilter()
@@ -415,11 +402,14 @@ class VPNConfigCollector:
     async def load_filter_lists(self) -> bool:
         try:
             logger.info("Загрузка списков ТСПУ...")
-            headers = {"User-Agent": "Mozilla/5.0"}
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            
+            # Скачиваем список доменов-исключений (для проверки SNI)
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
             sni_res.raise_for_status()
             self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
             
+            # Скачиваем список одиночных IP-исключений (для проверки хостов)
             ip_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/ipwhitelist.txt', headers=headers, timeout=20)
             ip_res.raise_for_status()
             self.whitelist_ips = {line.strip() for line in ip_res.text.splitlines() if line.strip() and not line.startswith('#')}
@@ -431,6 +421,10 @@ class VPNConfigCollector:
     async def run(self):
         tz_msk = timezone(timedelta(hours=3))
         start_time = datetime.now(tz_msk)
+        
+        # 1. Отправка сообщения о запуске сборщика (уйдёт админу как обычный лог)
+        if self.notifier:
+            self.notifier.send_message("🚀 *Запуск сборщика VPN конфигураций...*")
 
         try:
             await self.load_filter_lists()
@@ -447,7 +441,7 @@ class VPNConfigCollector:
             alive_configs = await self.config_pinger.ping_configs(all_configs)
             self.alive_configs = len(alive_configs)
             
-            # Асинхронная фильтрация с резолвингом
+            # Асинхронная молниеносная фильтрация на базе сетов и DoH
             white_full, black_lte, black = await self.config_filter.filter_configs(
                 alive_configs, self.whitelist_sni, self.whitelist_ips
             )
@@ -474,6 +468,8 @@ class VPNConfigCollector:
             
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
             
+            # 2. Финальный отчет. Внутри send_message сработает перехватчик, 
+            # и эта строка превратится в красивый HTML-пост для вашего канала.
             if self.notifier:
                 msg = (
                     f"✅ *Сбор завершен успешно!*\n\n"
