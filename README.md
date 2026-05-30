@@ -69,9 +69,9 @@ README.md            — этот файл
 git clone https://github.com/FLAT447/v2ray-lists
 cd v2ray-lists/sources
 python -m pip install -r requirements.txt
-export MY_TOKEN=<GITHUB_TOKEN>   # токен с правом repo, чтобы пушить изменения
-python main.py                  # конфиги появятся в ../githubmirror
-python proxy_checker                # генерирует файлы whitelist.txt и blacklist.txt
+export GITHUB_TOKEN=<GITHUB_TOKEN>   # токен с правом repo, чтобы пушить изменения
+python vpn_checker.py                  # генерирует WHITE_FULL, BLACK_FULL, WHITE_LITE и BLACK_LTE
+python proxy_checker.py                # генерирует файлы whitelist.txt и blacklist.txt
 ```
 
 ---
