@@ -52,14 +52,10 @@ class TelegramNotifier:
             except Exception:
                 total_configs = "N/A"
 
-            # Названия обновляемых файлов по вашему шаблону
-            files_str = "1.txt, 3.txt, 6.txt, 7.txt, 9.txt, 10.txt, 11.txt, 13.txt, 14.txt, 15.txt, 16.txt, 17.txt, 20.txt, 22.txt, 23.txt, 24.txt, 25.txt, 26.txt"
-
             channel_text = (
                 f"<b>V2Ray Updates CH</b>\n"
                 f"🔄 V2Ray подписки обновлены!\n"
                 f"📅 Время: {time_str}\n"
-                f"📁 Обновлены файлы: {files_str}\n"
                 f"📊 Всего конфигураций: {total_configs}\n\n"
                 f"📦 <a href=\"https://github.com/FLAT447/v2ray-lists\">Репозиторий проекта</a>\n"
                 f"⚡ <a href=\"https://flat447.github.io/v2ray-lists-site\">Сайт проекта</a>"
@@ -235,7 +231,7 @@ class ConfigFetcher:
 
 class ConfigPinger:
     """Асинхронная проверка доступности TCP-портов прокси-серверов"""
-    async def _check_config(self, config: str, timeout: float = 5.0) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 2.0) -> str | None:
         try:
             parsed = urlparse(config)
             host_port = parsed.netloc.split('@')[-1]
@@ -430,9 +426,6 @@ class VPNConfigCollector:
     async def run(self):
         tz_msk = timezone(timedelta(hours=3))
         start_time = datetime.now(tz_msk)
-        
-        if self.notifier:
-            self.notifier.send_message("🚀 *Запуск сборщика VPN конфигураций...*")
 
         try:
             await self.load_filter_lists()
@@ -442,8 +435,6 @@ class VPNConfigCollector:
             
             if not all_configs:
                 logger.warning("Конфиги не собраны.")
-                if self.notifier:
-                    self.notifier.send_message("⚠️ Сборщик завершился: списки конфигураций пусты.")
                 return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
