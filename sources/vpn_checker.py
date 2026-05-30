@@ -196,8 +196,8 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
             "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
-            "https://etoneya.best/1",
-            "https://etoneya.best/whitelist"
+            "https://etoneya.su/1",
+            "https://etoneya.su/whitelist"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
