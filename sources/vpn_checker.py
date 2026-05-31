@@ -689,10 +689,19 @@ class VPNConfigCollector:
         return value_str
 
     def _to_hex_escape(self, s: str) -> str:
-        """Превращает строку в шестнадцатеричные escape-последовательности внутри кавычек (\\x6c\\x6f...)"""
+        """Правильная hex-маскировка для YAML (\\x.., \\u...., \\U........)"""
         if not s:
             return '""'
-        return '"' + "".join(f"\\x{ord(c):02x}" for c in s) + '"'
+        escaped = ""
+        for c in s:
+            code = ord(c)
+            if code <= 0xFF:
+                escaped += f"\\x{code:02x}"
+            elif code <= 0xFFFF:
+                escaped += f"\\u{code:04x}"
+            else:
+                escaped += f"\\U{code:08x}"
+        return '"' + escaped + '"'
 
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
         """Генерирует правильную Clash YAML конфигурацию с полной маскировкой параметров (включая Host и Path)"""
