@@ -555,10 +555,10 @@ class ConfigFetcher:
 
 class ConfigPinger:
     """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
-    def __init__(self, max_concurrent: int = 200):
+    def __init__(self, max_concurrent: int = 100):
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def _check_config(self, config: str, timeout: float = 2.0) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
@@ -796,24 +796,28 @@ class VPNConfigCollector:
                 if short_id:
                     proxy['reality-opts']['short-id'] = short_id.lower()
             
-            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS (включая REALITY)
-            if details.get('sni'):
+            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS (ВСЕГДА требуется для TLS)
+            # Используется для SNI в TLS handshake (неважно REALITY это или обычное TLS)
+            if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
             
-            # ✅ ИСПРАВЛЕНИЕ 4: Правильно обрабатывать network параметры
-            if details.get('network') == 'ws' and details.get('ws-opts'):
-                proxy['network'] = 'ws'
-                ws_opts = details['ws-opts']
-                proxy['ws-opts'] = {}
-                if ws_opts.get('path'):
-                    proxy['ws-opts']['path'] = ws_opts['path']
-                if ws_opts.get('headers'):
-                    proxy['ws-opts']['headers'] = ws_opts['headers']
-            elif details.get('network') == 'grpc' and details.get('grpc-opts'):
-                proxy['network'] = 'grpc'
-                proxy['grpc-opts'] = {}
-                if details['grpc-opts'].get('grpc-service-name'):
-                    proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
+            # ✅ ИСПРАВЛЕНИЕ 4: Network параметры (ws/grpc)
+            # ВАЖНО: network параметры НЕ совместимы с REALITY!
+            # Добавляем только если НЕТ REALITY параметров
+            if not details.get('reality-opts'):
+                if details.get('network') == 'ws' and details.get('ws-opts'):
+                    proxy['network'] = 'ws'
+                    ws_opts = details['ws-opts']
+                    proxy['ws-opts'] = {}
+                    if ws_opts.get('path'):
+                        proxy['ws-opts']['path'] = ws_opts['path']
+                    if ws_opts.get('headers'):
+                        proxy['ws-opts']['headers'] = ws_opts['headers']
+                elif details.get('network') == 'grpc' and details.get('grpc-opts'):
+                    proxy['network'] = 'grpc'
+                    proxy['grpc-opts'] = {}
+                    if details['grpc-opts'].get('grpc-service-name'):
+                        proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
 
         elif ptype == 'vmess':
             if not details.get('uuid'):
