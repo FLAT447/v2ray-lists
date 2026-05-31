@@ -64,8 +64,7 @@ def _is_valid_host(host: str) -> bool:
 
 def parse_config(config: str) -> Tuple[str, int, str]:
     """
-    Универсальный и безопасный парсер конфигураций с поддержкой
-    как Base64 JSON VMess, так и URI-like VMess/VLESS/Trojan/SS/Hysteria2/Tuic.
+    Базовый парсер для валидации (оставлен для обратной совместимости).
     Возвращает: (host, port, sni)
     """
     host, port, sni = '', 0, ''
@@ -74,11 +73,8 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         if not config:
             return host, port, sni
 
-        # Обработка VMESS
         if config.startswith('vmess://'):
             rem = config[8:].split('#')[0].strip()
-            
-            # Проверяем, лежит ли IP/Хост прямо в строке (формат URI-like вместо классического Base64)
             if '?' in rem or '@' in rem or (':' in rem and not rem.replace(':', '').isalnum()):
                 parsed = urlparse(config)
                 netloc = parsed.netloc
@@ -100,7 +96,6 @@ def parse_config(config: str) -> Tuple[str, int, str]:
                 sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0] or query_params.get('host', [''])[0]
                 return host.lower(), port, sni.lower()
             else:
-                # Классический VMess: внутри Base64 закодированный JSON-объект
                 b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
                 data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
                 host = str(data.get('add', ''))
@@ -108,7 +103,6 @@ def parse_config(config: str) -> Tuple[str, int, str]:
                 sni = str(data.get('sni', '') or data.get('host', ''))
                 return host.lower(), port, sni.lower()
 
-        # Обработка остальных протоколов (vless, trojan, ss, hysteria2, tuic)
         parsed = urlparse(config)
         netloc = parsed.netloc
         host_port = netloc.rsplit('@', 1)[1] if '@' in netloc else netloc
@@ -133,6 +127,159 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         return host.lower(), port, sni.lower()
     except Exception:
         return '', 0, ''
+
+
+def parse_config_detailed(config: str) -> dict:
+    """
+    Глубокий парсер конфигурации. Извлекает абсолютно все параметры
+    для формирования валидного Clash/Mihomo прокси-узла.
+    """
+    result = {'type': 'unknown', 'server': '', 'port': 0, 'sni': '', 'udp': True}
+    try:
+        config = config.strip()
+        if not config:
+            return result
+
+        if config.startswith('vmess://'):
+            rem = config[8:].split('#')[0].strip()
+            if '?' in rem or '@' in rem or (':' in rem and not rem.replace(':', '').isalnum()):
+                parsed = urlparse(config)
+                result['type'] = 'vmess'
+                netloc = parsed.netloc
+                auth_part, _, host_port = netloc.rpartition('@')
+                
+                if host_port.startswith('['):
+                    end_bracket = host_port.find(']')
+                    if end_bracket != -1:
+                        result['server'] = host_port[1:end_bracket]
+                        port_part = host_port[end_bracket + 1:]
+                        if port_part.startswith(':'):
+                            result['port'] = int(port_part.split(':')[1].split('?')[0])
+                else:
+                    if ':' in host_port:
+                        result['server'], port_str = host_port.split(':', 1)
+                        result['port'] = int(port_str.split('?')[0])
+                    else:
+                        result['server'] = host_port
+
+                result['uuid'] = auth_part
+                query = parse_qs(parsed.query)
+                result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0] or query.get('host', [''])[0]
+                result['tls'] = query.get('security', [''])[0] == 'tls' or 'tls' in query
+                
+                net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
+                if net_type:
+                    result['network'] = net_type
+                    if net_type == 'ws':
+                        result['ws-opts'] = {'path': query.get('path', ['/'])[0], 'headers': {'Host': result['sni'] or result['server']}}
+                    elif net_type == 'grpc':
+                        result['grpc-opts'] = {'grpc-service-name': query.get('serviceName', [''])[0]}
+            else:
+                b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
+                data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
+                result['type'] = 'vmess'
+                result['server'] = str(data.get('add', ''))
+                result['port'] = int(data.get('port', 0))
+                result['uuid'] = str(data.get('id', ''))
+                result['alterId'] = int(data.get('aid', 0))
+                result['cipher'] = 'auto'
+                result['sni'] = str(data.get('sni', '') or data.get('host', ''))
+                result['tls'] = str(data.get('tls', '')).lower() in ['tls', 'true', '1']
+                
+                net_type = str(data.get('net', ''))
+                if net_type in ['ws', 'grpc']:
+                    result['network'] = net_type
+                    if net_type == 'ws':
+                        result['ws-opts'] = {'path': str(data.get('path', '/')), 'headers': {'Host': result['sni'] or result['server']}}
+                    elif net_type == 'grpc':
+                        result['grpc-opts'] = {'grpc-service-name': str(data.get('path', ''))}
+            return result
+
+        parsed = urlparse(config)
+        scheme = parsed.scheme.lower()
+        if scheme == 'hysteria':
+            scheme = 'hysteria2'
+        result['type'] = scheme
+
+        netloc = parsed.netloc
+        auth_part, _, host_port = netloc.rpartition('@')
+        if not auth_part:
+            host_port = netloc
+
+        if host_port.startswith('['):
+            end_bracket = host_port.find(']')
+            if end_bracket != -1:
+                result['server'] = host_port[1:end_bracket]
+                port_part = host_port[end_bracket + 1:]
+                if port_part.startswith(':'):
+                    result['port'] = int(port_part.split(':')[1].split('?')[0])
+        else:
+            if ':' in host_port:
+                result['server'], port_str = host_port.split(':', 1)
+                result['port'] = int(port_str.split('?')[0])
+            else:
+                result['server'] = host_port
+
+        query = parse_qs(parsed.query)
+        result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0]
+
+        if scheme == 'vless':
+            result['uuid'] = auth_part
+            result['cipher'] = 'none'
+            security = query.get('security', [''])[0]
+            if security in ['tls', 'reality']:
+                result['tls'] = True
+            if security == 'reality':
+                result['reality-opts'] = {
+                    'public-key': query.get('pbk', [''])[0],
+                    'short-id': query.get('sid', [''])[0]
+                }
+            fp = query.get('fp', [''])[0]
+            if fp:
+                result['client-fingerprint'] = fp
+
+            net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
+            if net_type:
+                result['network'] = net_type
+                if net_type == 'ws':
+                    result['ws-opts'] = {'path': query.get('path', ['/'])[0], 'headers': {'Host': query.get('host', [''])[0] or result['sni'] or result['server']}}
+                elif net_type == 'grpc':
+                    result['grpc-opts'] = {'grpc-service-name': query.get('serviceName', [''])[0]}
+
+        elif scheme == 'trojan':
+            result['password'] = auth_part
+            result['tls'] = True
+            if query.get('insecure', [''])[0] in ['1', 'true']:
+                result['skip-cert-verify'] = True
+
+        elif scheme in ['hysteria2', 'hysteria']:
+            result['type'] = 'hysteria2'
+            result['password'] = auth_part
+            if query.get('insecure', [''])[0] in ['1', 'true']:
+                result['skip-cert-verify'] = True
+
+        elif scheme == 'tuic':
+            if ':' in auth_part:
+                result['uuid'], result['password'] = auth_part.split(':', 1)
+            else:
+                result['uuid'] = auth_part
+            result['alpn'] = query.get('alpn', [['h3']])[0].split(',')
+
+        elif scheme == 'ss':
+            try:
+                if ':' in auth_part:
+                    result['cipher'], result['password'] = auth_part.split(':', 1)
+                else:
+                    padded = auth_part + "=" * ((4 - len(auth_part) % 4) % 4)
+                    decoded = base64.b64decode(padded).decode('utf-8', errors='ignore')
+                    if ':' in decoded:
+                        result['cipher'], result['password'] = decoded.split(':', 1)
+            except Exception:
+                pass
+
+        return result
+    except Exception:
+        return result
 
 
 def validate_config(config: str, host: str, port: int, sni: str) -> bool:
@@ -325,7 +472,6 @@ class ConfigFetcher:
                     text = await response.text()
                     text_stripped = text.strip()
                     
-                    # Декодирование Base64 только если подписка вернула сырую закодированную строку
                     if text_stripped and not any(text_stripped.startswith(p) for p in ['vless://', 'vmess://', 'ss://', 'trojan://', 'hysteria', 'tuic://', '#']):
                         try:
                             cleaned_b64 = "".join(text_stripped.split())
@@ -357,7 +503,6 @@ class ConfigFetcher:
             for config_list in results:
                 all_configs.extend(config_list)
         
-        # Полная дедупликация по телу конфигурации (игнорируя имя/комментарий после знака #)
         unique_configs = {}
         for cfg in all_configs:
             cfg_stripped = cfg.strip()
@@ -446,20 +591,20 @@ class ConfigFilter:
                 return None
 
             resolved_ip = await self._resolve_doh(session, host)
-            is_ip_in_whitelist = False
+            is_ip_whitelisted = False  # Исправлено имя переменной
             
             if resolved_ip:
                 try:
                     ip_obj = ipaddress.ip_address(resolved_ip)
                     for net in networks:
                         if ip_obj in net:
-                            is_ip_in_whitelist = True
+                            is_ip_whitelisted = True  # Исправлено имя переменной
                             break
                 except Exception:
                     pass
 
             is_sni_whitelisted = bool(sni) and sni in sni_set
-            return config, is_ip_in_whitelist, is_sni_whitelisted
+            return config, is_ip_whitelisted, is_sni_whitelisted
 
         async with aiohttp.ClientSession() as session:
             tasks = [process_single(cfg, session) for cfg in configs]
@@ -479,7 +624,6 @@ class ConfigFilter:
 
         logger.info(f"Фильтрация завершена: white={len(white)}, black_lte={len(black_lte)}, black={len(black)}")
         return white, black_lte, black
-
 
 class VPNConfigCollector:
     """Главный координатор процесса выполнения сборщика"""
@@ -516,6 +660,7 @@ class VPNConfigCollector:
         return config.strip()
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
+        """Генерирует текстовую подписку в формате V2Ray"""
         meta = [
             f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
@@ -533,7 +678,186 @@ class VPNConfigCollector:
 
         return '\n'.join(meta + cleaned_configs)
 
-    async def load_filter_lists(self) -> bool:
+    def _escape_yaml_value(self, value: str) -> str:
+        """Экранирует значение для YAML"""
+        if not value:
+            return '""'
+        value_str = str(value)
+        if any(c in value_str for c in ['"', "'", ':', '{', '}', '[', ']', ',', '&', '*', '#', '?', '|', '-', '%', '@', '!']) or value_str.lower() in ['true', 'false', 'yes', 'no', 'null']:
+            escaped = value_str.replace('"', '\\"')
+            return f'"{escaped}"'
+        return value_str
+
+    def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
+        """Генерирует правильную и полную Clash YAML конфигурацию"""
+        proxy_name = title.replace('V2Ray Lists - ', '').strip()
+        proxies = []
+        
+        for index, cfg in enumerate(configs, start=1):
+            cleaned = self._clean_config(cfg)
+            if not cleaned:
+                continue
+            
+            # Используем улучшенный глубокий парсер вместо базового
+            details = parse_config_detailed(cleaned)
+            if not details['server'] or details['port'] <= 0 or details['port'] > 65535 or details['type'] == 'unknown':
+                continue
+            
+            entry = {
+                'name': f'{proxy_name} [{index}]',
+                'type': details['type'],
+                'server': details['server'],
+                'port': details['port'],
+                'udp': details.get('udp', True)
+            }
+            
+            ptype = details['type']
+            
+            # Наполнение специфичными параметрами протоколов
+            if ptype == 'vless':
+                entry['uuid'] = details.get('uuid', '')
+                entry['cipher'] = 'none'
+                if details.get('tls'): entry['tls'] = True
+                if details.get('sni'): entry['servername'] = details['sni']
+                if details.get('client-fingerprint'): entry['client-fingerprint'] = details['client-fingerprint']
+                if details.get('reality-opts'):
+                    ropts = details['reality-opts']
+                    if ropts.get('public-key') or ropts.get('short-id'):
+                        entry['reality-opts'] = {}
+                        if ropts.get('public-key'): entry['reality-opts']['public-key'] = ropts['public-key']
+                        if ropts.get('short-id'): entry['reality-opts']['short-id'] = ropts['short-id']
+                if details.get('network'):
+                    entry['network'] = details['network']
+                    if details['network'] == 'ws' and 'ws-opts' in details:
+                        entry['ws-opts'] = details['ws-opts']
+                    elif details['network'] == 'grpc' and 'grpc-opts' in details:
+                        entry['grpc-opts'] = details['grpc-opts']
+
+            elif ptype == 'vmess':
+                entry['uuid'] = details.get('uuid', '')
+                entry['alterId'] = details.get('alterId', 0)
+                entry['cipher'] = details.get('cipher', 'auto')
+                if details.get('tls'): entry['tls'] = True
+                if details.get('sni'): entry['servername'] = details['sni']
+                if details.get('network'):
+                    entry['network'] = details['network']
+                    if details['network'] == 'ws' and 'ws-opts' in details:
+                        entry['ws-opts'] = details['ws-opts']
+                    elif details['network'] == 'grpc' and 'grpc-opts' in details:
+                        entry['grpc-opts'] = details['grpc-opts']
+
+            elif ptype in ['trojan', 'hysteria2']:
+                if 'password' in details: entry['password'] = details['password']
+                if details.get('sni'): entry['sni'] = details['sni']
+                if details.get('skip-cert-verify'): entry['skip-cert-verify'] = True
+
+            elif ptype == 'tuic':
+                entry['uuid'] = details.get('uuid', '')
+                if details.get('password'): entry['password'] = details['password']
+                if details.get('alpn'): entry['alpn'] = details['alpn']
+
+            elif ptype == 'ss':
+                entry['cipher'] = details.get('cipher', '')
+                entry['password'] = details.get('password', '')
+
+            proxies.append(entry)
+
+        # Сборка финального YAML-документа
+        yaml_content = "# 🔰 V2Ray Clash Subscription\n"
+        yaml_content += f"# Profile: {title}\n"
+        yaml_content += f"# Support: https://t.me/flat447\n"
+        yaml_content += f"# Update interval: 1 hour\n\n"
+        yaml_content += "proxies:\n"
+        
+        for p in proxies:
+            yaml_content += f"  - name: {self._escape_yaml_value(p['name'])}\n"
+            yaml_content += f"    type: {p['type']}\n"
+            yaml_content += f"    server: {self._escape_yaml_value(p['server'])}\n"
+            yaml_content += f"    port: {p['port']}\n"
+            yaml_content += f"    udp: {str(p['udp']).lower()}\n"
+            
+            t = p['type']
+            if t == 'vless':
+                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
+                yaml_content += f"    cipher: {p.get('cipher', 'none')}\n"
+                if p.get('tls'): yaml_content += f"    tls: true\n"
+                if p.get('servername'): yaml_content += f"    servername: {self._escape_yaml_value(p['servername'])}\n"
+                if p.get('client-fingerprint'): yaml_content += f"    client-fingerprint: {self._escape_yaml_value(p['client-fingerprint'])}\n"
+                if p.get('reality-opts'):
+                    yaml_content += f"    reality-opts:\n"
+                    if 'public-key' in p['reality-opts']: yaml_content += f"      public-key: {self._escape_yaml_value(p['reality-opts']['public-key'])}\n"
+                    if 'short-id' in p['reality-opts']: yaml_content += f"      short-id: {self._escape_yaml_value(p['reality-opts']['short-id'])}\n"
+                if p.get('network'):
+                    yaml_content += f"    network: {p['network']}\n"
+                    if p['network'] == 'ws' and 'ws-opts' in p:
+                        yaml_content += f"    ws-opts:\n"
+                        yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
+                        yaml_content += f"      headers:\n"
+                        yaml_content += f"        Host: {self._escape_yaml_value(p['ws-opts']['headers'].get('Host', ''))}\n"
+                    elif p['network'] == 'grpc' and 'grpc-opts' in p:
+                        yaml_content += f"    grpc-opts:\n"
+                        yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
+                        
+            elif t == 'vmess':
+                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
+                yaml_content += f"    alterId: {p.get('alterId', 0)}\n"
+                yaml_content += f"    cipher: {p.get('cipher', 'auto')}\n"
+                if p.get('tls'): yaml_content += f"    tls: true\n"
+                if p.get('servername'): yaml_content += f"    servername: {self._escape_yaml_value(p['servername'])}\n"
+                if p.get('network'):
+                    yaml_content += f"    network: {p['network']}\n"
+                    if p['network'] == 'ws' and 'ws-opts' in p:
+                        yaml_content += f"    ws-opts:\n"
+                        yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
+                        yaml_content += f"      headers:\n"
+                        yaml_content += f"        Host: {self._escape_yaml_value(p['ws-opts']['headers'].get('Host', ''))}\n"
+                    elif p['network'] == 'grpc' and 'grpc-opts' in p:
+                        yaml_content += f"    grpc-opts:\n"
+                        yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
+                        
+            elif t in ['trojan', 'hysteria2']:
+                if 'password' in p: yaml_content += f"    password: {self._escape_yaml_value(p['password'])}\n"
+                if p.get('sni'): yaml_content += f"    sni: {self._escape_yaml_value(p['sni'])}\n"
+                if p.get('skip-cert-verify'): yaml_content += f"    skip-cert-verify: true\n"
+                
+            elif t == 'tuic':
+                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
+                if p.get('password'): yaml_content += f"    password: {self._escape_yaml_value(p['password'])}\n"
+                if p.get('alpn'):
+                    yaml_content += f"    alpn:\n"
+                    for a_v in p['alpn']:
+                        yaml_content += f"      - {self._escape_yaml_value(a_v)}\n"
+                        
+            elif t == 'ss':
+                yaml_content += f"    cipher: {self._escape_yaml_value(p.get('cipher', ''))}\n"
+                yaml_content += f"    password: {self._escape_yaml_value(p.get('password', ''))}\n"
+        
+        # Группы прокси
+        yaml_content += "\nproxy-groups:\n"
+        yaml_content += f"  - name: 'Selector'\n"
+        yaml_content += f"    type: select\n"
+        yaml_content += f"    proxies:\n"
+        for p in proxies:
+            yaml_content += f"      - {self._escape_yaml_value(p['name'])}\n"
+        
+        yaml_content += f"\n  - name: 'Auto Fallback'\n"
+        yaml_content += f"    type: fallback\n"
+        yaml_content += f"    url: http://www.gstatic.com/generate_204\n"
+        yaml_content += f"    interval: 300\n"
+        yaml_content += f"    proxies:\n"
+        for p in proxies:
+            yaml_content += f"      - {self._escape_yaml_value(p['name'])}\n"
+        
+        # Правила
+        yaml_content += "\nrules:\n"
+        yaml_content += "  - MATCH,Selector\n"
+        
+        return yaml_content
+
+    async def run(self):
+        tz_msk = timezone(timedelta(hours=3))
+        start_time = datetime.now(tz_msk)
+
         try:
             logger.info("Загрузка списков ТСПУ...")
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -547,17 +871,6 @@ class VPNConfigCollector:
             cidr_res.raise_for_status()
             self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
             logger.info(f"Загружено {len(self.whitelist_cidr)} CIDR сетей в whitelist")
-            return True
-        except Exception as e:
-            logger.error(f"Не удалось обновить списки фильтрации: {e}")
-            return False
-
-    async def run(self):
-        tz_msk = timezone(timedelta(hours=3))
-        start_time = datetime.now(tz_msk)
-
-        try:
-            await self.load_filter_lists()
             
             all_configs = await self.config_fetcher.fetch_all_configs()
             logger.info(f"Всего уникальных сырых конфигураций собрано: {len(all_configs)}")
@@ -588,6 +901,12 @@ class VPNConfigCollector:
                 'BLACK_LTE.txt': self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte),
                 'WHITE_FULL.txt': self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full),
                 'WHITE_LITE.txt': self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite),
+                
+                'CLASH/BLACK_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK FULL', black),
+                'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
+                'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
+                'CLASH/WHITE_LITE.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE LITE', white_lite),
+                
                 'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
             }
             
@@ -611,9 +930,14 @@ class VPNConfigCollector:
                     f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
                     f"├ `white_full`: {self.stats['white_full']['count']}\n"
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
+                    f"📦 *Форматы подписок:*\n"
+                    f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
+                    f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
                 self.notifier.send_message(msg_admin, is_report=False)
+                
+            logger.info("✅ Сбор завершен успешно!")
                 
         except Exception as e:
             logger.critical(f"Критический сбой: {e}")
@@ -622,7 +946,7 @@ class VPNConfigCollector:
 
 
 # ============================================================================
-# ВСТРОЕННЫЕ ТЕСТЫ (БЫВШИЙ test_validation.py)
+# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ
 # ============================================================================
 
 class TestResults:
@@ -703,9 +1027,7 @@ def run_validation_tests():
 # ============================================================================
 
 if __name__ == '__main__':
-    # Если передан флаг --test, запускаем только юнит-тесты валидации
     if len(sys.argv) > 1 and sys.argv[1] == '--test':
         run_validation_tests()
     else:
-        # Иначе запускаем основной цикл асинхронного коллектора
         asyncio.run(VPNConfigCollector().run())
