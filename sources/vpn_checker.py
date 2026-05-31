@@ -427,10 +427,17 @@ class ConfigFilter:
         return None
 
     async def filter_configs(
-        self, configs: List[str], whitelist_sni: Set[str], whitelist_ip: Set[str]
+        self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]
     ) -> Tuple[List[str], List[str], List[str]]:
         white, black_lte, black = [], [], []
         sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
+        
+        networks = []
+        for net_str in whitelist_cidr:
+            try:
+                networks.append(ipaddress.ip_network(net_str.strip(), strict=False))
+            except Exception:
+                continue
 
         async def process_single(config: str, session: aiohttp.ClientSession):
             host, port, sni = parse_config(config)
@@ -443,12 +450,11 @@ class ConfigFilter:
             
             if resolved_ip:
                 try:
-                    # Нормализуем полученный от DoH адрес перед сверкой со множеством
-                    normalized_resolved = str(ipaddress.ip_address(resolved_ip))
-                    
-                    # Мгновенный поиск O(1) по хэш-сету точных IP
-                    if normalized_resolved in whitelist_ip:
-                        is_ip_in_whitelist = True
+                    ip_obj = ipaddress.ip_address(resolved_ip)
+                    for net in networks:
+                        if ip_obj in net:
+                            is_ip_in_whitelist = True
+                            break
                 except Exception:
                     pass
 
@@ -498,7 +504,7 @@ class VPNConfigCollector:
             logger.warning("Telegram не настроен")
         
         self.whitelist_sni: Set[str] = set()
-        self.whitelist_ip: Set[str] = set()  # Хранилище точных IP вместо подсетей
+        self.whitelist_cidr: List[str] = []
 
     def _clean_config(self, config: str) -> str:
         if not config:
@@ -532,28 +538,15 @@ class VPNConfigCollector:
             logger.info("Загрузка списков ТСПУ...")
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
             
-            # Загрузка белого списка SNI
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
             sni_res.raise_for_status()
-            self.whitelist_sni = {line.strip().lower() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
+            self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
             logger.info(f"Загружено {len(self.whitelist_sni)} SNI в whitelist")
             
-            # Загрузка белого списка точных IP (ipwhitelist.txt)
-            ip_res = requests.get('https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/ipwhitelist.txt', headers=headers, timeout=20)
-            ip_res.raise_for_status()
-            
-            self.whitelist_ip = set()
-            for line in ip_res.text.splitlines():
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    try:
-                        # Нормализация IP для корректного сравнения хэшей
-                        normalized_ip = str(ipaddress.ip_address(line))
-                        self.whitelist_ip.add(normalized_ip)
-                    except ValueError:
-                        continue
-                        
-            logger.info(f"Загружено {len(self.whitelist_ip)} точных IP в whitelist")
+            cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
+            cidr_res.raise_for_status()
+            self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
+            logger.info(f"Загружено {len(self.whitelist_cidr)} CIDR сетей в whitelist")
             return True
         except Exception as e:
             logger.error(f"Не удалось обновить списки фильтрации: {e}")
@@ -576,9 +569,8 @@ class VPNConfigCollector:
             alive_configs = await self.config_pinger.ping_configs(all_configs)
             logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
-            # Фильтрация по точному совпадению IP
             white_full, black_lte, black = await self.config_filter.filter_configs(
-                alive_configs, self.whitelist_sni, self.whitelist_ip
+                alive_configs, self.whitelist_sni, self.whitelist_cidr
             )
             
             white_lite = white_full[:500]
