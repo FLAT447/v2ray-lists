@@ -37,7 +37,6 @@ def _is_valid_domain(domain: str) -> bool:
     if not domain or len(domain) > 253:
         return False
 
-    # Исключаем строки, похожие на IP адреса (только цифры и точки)
     if re.match(r'^[\d.]+$', domain):
         return False
 
@@ -64,7 +63,7 @@ def _is_valid_host(host: str) -> bool:
 
 def parse_config(config: str) -> Tuple[str, int, str]:
     """
-    Базовый парсер для валидации (оставлен для обратной совместимости).
+    Базовый парсер для валидации.
     Возвращает: (host, port, sni)
     """
     host, port, sni = '', 0, ''
@@ -591,14 +590,14 @@ class ConfigFilter:
                 return None
 
             resolved_ip = await self._resolve_doh(session, host)
-            is_ip_whitelisted = False  # Исправлено имя переменной
+            is_ip_whitelisted = False
             
             if resolved_ip:
                 try:
                     ip_obj = ipaddress.ip_address(resolved_ip)
                     for net in networks:
                         if ip_obj in net:
-                            is_ip_whitelisted = True  # Исправлено имя переменной
+                            is_ip_whitelisted = True
                             break
                 except Exception:
                     pass
@@ -624,6 +623,7 @@ class ConfigFilter:
 
         logger.info(f"Фильтрация завершена: white={len(white)}, black_lte={len(black_lte)}, black={len(black)}")
         return white, black_lte, black
+
 
 class VPNConfigCollector:
     """Главный координатор процесса выполнения сборщика"""
@@ -679,7 +679,7 @@ class VPNConfigCollector:
         return '\n'.join(meta + cleaned_configs)
 
     def _escape_yaml_value(self, value: str) -> str:
-        """Экранирует значение для YAML"""
+        """Экранирует стандартные текстовые значения YAML"""
         if not value:
             return '""'
         value_str = str(value)
@@ -688,8 +688,14 @@ class VPNConfigCollector:
             return f'"{escaped}"'
         return value_str
 
+    def _to_hex_escape(self, s: str) -> str:
+        """Превращает строку в шестнадцатеричные escape-последовательности внутри кавычек (\\x6c\\x6f...)"""
+        if not s:
+            return '""'
+        return '"' + "".join(f"\\x{ord(c):02x}" for c in s) + '"'
+
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует правильную и полную Clash YAML конфигурацию"""
+        """Генерирует правильную и полную Clash YAML конфигурацию с маскировкой параметров"""
         proxy_name = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
         
@@ -698,7 +704,6 @@ class VPNConfigCollector:
             if not cleaned:
                 continue
             
-            # Используем улучшенный глубокий парсер вместо базового
             details = parse_config_detailed(cleaned)
             if not details['server'] or details['port'] <= 0 or details['port'] > 65535 or details['type'] == 'unknown':
                 continue
@@ -713,10 +718,8 @@ class VPNConfigCollector:
             
             ptype = details['type']
             
-            # Наполнение специфичными параметрами протоколов
             if ptype == 'vless':
                 entry['uuid'] = details.get('uuid', '')
-                entry['cipher'] = 'none'
                 if details.get('tls'): entry['tls'] = True
                 if details.get('sni'): entry['servername'] = details['sni']
                 if details.get('client-fingerprint'): entry['client-fingerprint'] = details['client-fingerprint']
@@ -762,7 +765,7 @@ class VPNConfigCollector:
 
             proxies.append(entry)
 
-        # Сборка финального YAML-документа
+        # Сборка YAML документа с Hex Escape
         yaml_content = "# 🔰 V2Ray Clash Subscription\n"
         yaml_content += f"# Profile: {title}\n"
         yaml_content += f"# Support: https://t.me/flat447\n"
@@ -772,16 +775,16 @@ class VPNConfigCollector:
         for p in proxies:
             yaml_content += f"  - name: {self._escape_yaml_value(p['name'])}\n"
             yaml_content += f"    type: {p['type']}\n"
-            yaml_content += f"    server: {self._escape_yaml_value(p['server'])}\n"
+            yaml_content += f"    server: {self._to_hex_escape(p['server'])}\n"
             yaml_content += f"    port: {p['port']}\n"
             yaml_content += f"    udp: {str(p['udp']).lower()}\n"
             
             t = p['type']
             if t == 'vless':
-                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
-                yaml_content += f"    cipher: {p.get('cipher', 'none')}\n"
+                yaml_content += f"    uuid: {self._to_hex_escape(p.get('uuid', ''))}\n"
+                yaml_content += f"    encryption: none\n"
                 if p.get('tls'): yaml_content += f"    tls: true\n"
-                if p.get('servername'): yaml_content += f"    servername: {self._escape_yaml_value(p['servername'])}\n"
+                if p.get('servername'): yaml_content += f"    servername: {self._to_hex_escape(p['servername'])}\n"
                 if p.get('client-fingerprint'): yaml_content += f"    client-fingerprint: {self._escape_yaml_value(p['client-fingerprint'])}\n"
                 if p.get('reality-opts'):
                     yaml_content += f"    reality-opts:\n"
@@ -793,36 +796,36 @@ class VPNConfigCollector:
                         yaml_content += f"    ws-opts:\n"
                         yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
                         yaml_content += f"      headers:\n"
-                        yaml_content += f"        Host: {self._escape_yaml_value(p['ws-opts']['headers'].get('Host', ''))}\n"
+                        yaml_content += f"        Host: {self._to_hex_escape(p['ws-opts']['headers'].get('Host', ''))}\n"
                     elif p['network'] == 'grpc' and 'grpc-opts' in p:
                         yaml_content += f"    grpc-opts:\n"
                         yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
                         
             elif t == 'vmess':
-                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
+                yaml_content += f"    uuid: {self._to_hex_escape(p.get('uuid', ''))}\n"
                 yaml_content += f"    alterId: {p.get('alterId', 0)}\n"
                 yaml_content += f"    cipher: {p.get('cipher', 'auto')}\n"
                 if p.get('tls'): yaml_content += f"    tls: true\n"
-                if p.get('servername'): yaml_content += f"    servername: {self._escape_yaml_value(p['servername'])}\n"
+                if p.get('servername'): yaml_content += f"    servername: {self._to_hex_escape(p['servername'])}\n"
                 if p.get('network'):
                     yaml_content += f"    network: {p['network']}\n"
                     if p['network'] == 'ws' and 'ws-opts' in p:
                         yaml_content += f"    ws-opts:\n"
                         yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
                         yaml_content += f"      headers:\n"
-                        yaml_content += f"        Host: {self._escape_yaml_value(p['ws-opts']['headers'].get('Host', ''))}\n"
+                        yaml_content += f"        Host: {self._to_hex_escape(p['ws-opts']['headers'].get('Host', ''))}\n"
                     elif p['network'] == 'grpc' and 'grpc-opts' in p:
                         yaml_content += f"    grpc-opts:\n"
                         yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
                         
             elif t in ['trojan', 'hysteria2']:
-                if 'password' in p: yaml_content += f"    password: {self._escape_yaml_value(p['password'])}\n"
-                if p.get('sni'): yaml_content += f"    sni: {self._escape_yaml_value(p['sni'])}\n"
+                if 'password' in p: yaml_content += f"    password: {self._to_hex_escape(p['password'])}\n"
+                if p.get('sni'): yaml_content += f"    sni: {self._to_hex_escape(p['sni'])}\n"
                 if p.get('skip-cert-verify'): yaml_content += f"    skip-cert-verify: true\n"
                 
             elif t == 'tuic':
-                yaml_content += f"    uuid: {self._escape_yaml_value(p.get('uuid', ''))}\n"
-                if p.get('password'): yaml_content += f"    password: {self._escape_yaml_value(p['password'])}\n"
+                yaml_content += f"    uuid: {self._to_hex_escape(p.get('uuid', ''))}\n"
+                if p.get('password'): yaml_content += f"    password: {self._to_hex_escape(p['password'])}\n"
                 if p.get('alpn'):
                     yaml_content += f"    alpn:\n"
                     for a_v in p['alpn']:
@@ -830,9 +833,8 @@ class VPNConfigCollector:
                         
             elif t == 'ss':
                 yaml_content += f"    cipher: {self._escape_yaml_value(p.get('cipher', ''))}\n"
-                yaml_content += f"    password: {self._escape_yaml_value(p.get('password', ''))}\n"
+                yaml_content += f"    password: {self._to_hex_escape(p.get('password', ''))}\n"
         
-        # Группы прокси
         yaml_content += "\nproxy-groups:\n"
         yaml_content += f"  - name: 'Selector'\n"
         yaml_content += f"    type: select\n"
@@ -848,7 +850,6 @@ class VPNConfigCollector:
         for p in proxies:
             yaml_content += f"      - {self._escape_yaml_value(p['name'])}\n"
         
-        # Правила
         yaml_content += "\nrules:\n"
         yaml_content += "  - MATCH,Selector\n"
         
