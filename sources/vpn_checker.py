@@ -797,8 +797,24 @@ class VPNConfigCollector:
                 return None
             proxy['uuid'] = details['uuid']
             proxy['encryption'] = 'none'
+            
+            # ✅ ИСПРАВЛЕНИЕ: flow XTLS-RprxVision ТОЛЬКО с REALITY!
+            # flow + TLS + WebSocket = конфликт и ошибка!
+            has_reality = bool(details.get('reality-opts'))
+            has_network = bool(details.get('network'))
+            
             if details.get('flow'):
-                proxy['flow'] = details['flow']
+                # flow требует REALITY и НЕСОВМЕСТИМ с network
+                if not has_reality:
+                    logger.debug(f"Flow without REALITY - skipping flow parameter")
+                    # Не добавляем flow без REALITY
+                elif has_network:
+                    logger.debug(f"Flow + network incompatible - skipping flow")
+                    # Не добавляем flow с network параметрами
+                else:
+                    # ✅ Добавляем flow только если есть REALITY и НЕТ network
+                    proxy['flow'] = details['flow']
+            
             if details.get('tls'):
                 proxy['tls'] = True
             if details.get('client-fingerprint'):
