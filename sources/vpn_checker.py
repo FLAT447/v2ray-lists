@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import ipaddress
+import base64
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple
 from urllib.parse import urlparse, parse_qs
@@ -24,20 +25,65 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def parse_config(config: str) -> Tuple[str, int, str]:
+    """
+    Универсальный и безопасный парсер конфигураций.
+    Возвращает: (host, port, sni)
+    """
+    host, port, sni = '', 0, ''
+    try:
+        config = config.strip()
+        if not config:
+            return host, port, sni
+
+        # Обработка VMESS (декодирование JSON из Base64)
+        if config.startswith('vmess://'):
+            b64_str = config[8:].split('#')[0].strip()
+            b64_str += "=" * ((4 - len(b64_str) % 4) % 4)
+            data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
+            host = str(data.get('add', ''))
+            port = int(data.get('port', 0))
+            sni = str(data.get('sni', '') or data.get('host', ''))
+            return host.lower(), port, sni.lower()
+
+        # Обработка остальных протоколов (vless, trojan, ss, hysteria2, tuic)
+        parsed = urlparse(config)
+        netloc = parsed.netloc
+        host_port = netloc.rsplit('@', 1)[1] if '@' in netloc else netloc
+
+        # Проверка на IPv6 поддомены/адреса в квадратных скобках [2001:db8::1]
+        if host_port.startswith('['):
+            end_bracket = host_port.find(']')
+            if end_bracket != -1:
+                host = host_port[1:end_bracket]
+                port_part = host_port[end_bracket + 1:]
+                if port_part.startswith(':'):
+                    port = int(port_part.split(':')[1].split('?')[0])
+        else:
+            if ':' in host_port:
+                host, port_str = host_port.split(':', 1)
+                port = int(port_str.split('?')[0])
+            else:
+                host = host_port
+
+        # Извлечение SNI / Peer
+        query_params = parse_qs(parsed.query)
+        sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0]
+
+        return host.lower(), port, sni.lower()
+    except Exception:
+        return '', 0, ''
+
+
 class TelegramNotifier:
     """Отправка уведомлений и статусов работы в Telegram"""
     def __init__(self, token: str, chat_id: str, channel_id: str = None):
         self.token = token
-        self.chat_id = chat_id          # ID чата для логов запуска/ошибок
-        self.channel_id = channel_id    # ID канала для финального отчета
+        self.chat_id = chat_id          
+        self.channel_id = channel_id    
         self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage"
 
     def send_message(self, text: str, is_report: bool = False):
-        """
-        Отправка сообщений в Telegram.
-        Если это отчет (is_report=True) и задан channel_id, красиво форматируем под канал.
-        Иначе шлем обычный системный лог админу.
-        """
         if is_report and self.channel_id:
             tz_msk = timezone(timedelta(hours=3))
             time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
@@ -53,7 +99,6 @@ class TelegramNotifier:
                 total_configs = "N/A"
 
             channel_text = (
-                f"<b>V2Ray Updates CH</b>\n"
                 f"🔄 V2Ray подписки обновлены!\n"
                 f"📅 Время: {time_str}\n"
                 f"📊 Всего конфигураций: {total_configs}\n\n"
@@ -69,7 +114,6 @@ class TelegramNotifier:
             }
             logger.info("Отправка итогового отчета в Telegram-канал...")
         else:
-            # Для технических логов админу отправляем в Markdown
             payload = {
                 "chat_id": self.chat_id,
                 "text": text,
@@ -152,12 +196,11 @@ class GithubManager:
 
 
 class ConfigFetcher:
-    """Сбор сырых конфигов из внешних источников подписок"""
+    """Сбор и Base64-декодирование сырых конфигов"""
     def __init__(self):
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
         self.sources: List[str] = [
             "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt",
@@ -202,9 +245,22 @@ class ConfigFetcher:
             async with session.get(url, headers=self.headers, timeout=15) as response:
                 if response.status == 200:
                     text = await response.text()
+                    
+                    # Проверка на Base64-строку подписки
+                    lines = text.splitlines()
+                    if lines and not any(any(lines[0].startswith(p) for p in ['vless://', 'vmess://', 'ss://', 'trojan://', 'hysteria', 'tuic://']) for line in lines[:2]):
+                        try:
+                            cleaned_b64 = "".join(text.split())
+                            cleaned_b64 += "=" * ((4 - len(cleaned_b64) % 4) % 4)
+                            decoded = base64.b64decode(cleaned_b64).decode('utf-8', errors='ignore')
+                            if '://' in decoded:
+                                text = decoded
+                        except Exception:
+                            pass
+
                     configs = [
                         line.strip() for line in text.splitlines()
-                        if line.strip() and not line.strip().startswith('#')
+                        if line.strip() and not line.strip().startswith('#') and '://' in line
                     ]
                     return configs
                 logger.warning(f"Источник {url} вернул статус {response.status}")
@@ -215,41 +271,38 @@ class ConfigFetcher:
 
     async def fetch_all_configs(self) -> List[str]:
         if not self.sources:
-            logger.warning("Список источников пуст.")
             return []
-        
         all_configs = []
         async with aiohttp.ClientSession() as session:
             tasks = [self.fetch_source(session, url) for url in self.sources]
             results = await asyncio.gather(*tasks)
             for config_list in results:
                 all_configs.extend(config_list)
-                
-        unique_configs = list(set(all_configs))
-        return unique_configs
+        return list(set(all_configs))
 
 
 class ConfigPinger:
-    """Асинхронная проверка доступности TCP-портов прокси-серверов"""
-    async def _check_config(self, config: str, timeout: float = 2.0) -> str | None:
-        try:
-            parsed = urlparse(config)
-            host_port = parsed.netloc.split('@')[-1]
-            if ':' in host_port:
-                host, port = host_port.split(':')
-                port = int(port.split('?')[0])
-            else:
-                return None
+    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
+    def __init__(self, max_concurrent: int = 100):
+        # Ограничиваем количество одновременных TCP-пинов до 100 сессий
+        self.semaphore = asyncio.Semaphore(max_concurrent)
 
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host, port),
-                timeout=timeout
-            )
-            writer.close()
-            await writer.wait_closed()
-            return config
-        except Exception:
+    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
+        host, port, _ = parse_config(config)
+        if not host or not port:
             return None
+
+        async with self.semaphore:
+            try:
+                reader, writer = await asyncio.wait_for(
+                    asyncio.open_connection(host, port),
+                    timeout=timeout
+                )
+                writer.close()
+                await writer.wait_closed()
+                return config
+            except Exception:
+                return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
         logger.info(f"Проверяем доступность {len(configs)} конфигов...")
@@ -259,13 +312,12 @@ class ConfigPinger:
 
 
 class ConfigFilter:
-    """Асинхронная фильтрация на базе CIDR-подсетей РФ и белого списка SNI"""
+    """Асинхронная фильтрация по спискам ТСПУ на базе параллельного DoH"""
     def __init__(self):
         self.doh_servers = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
 
-    @alru_cache(maxsize=4096)
+    @alru_cache(maxsize=8192)
     async def _resolve_doh(self, session: aiohttp.ClientSession, hostname: str) -> str | None:
-        """Резолвинг домена в IP через DoH с кэшированием результатов в памяти"""
         if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname):
             return hostname
 
@@ -283,28 +335,12 @@ class ConfigFilter:
                 continue
         return None
 
-    def _parse_config_details(self, config: str) -> Tuple[str, str]:
-        try:
-            parsed = urlparse(config)
-            host_port = parsed.netloc.split('@')[-1]
-            host = host_port.split(':')[0] if ':' in host_port else host_port
-            
-            query_params = parse_qs(parsed.query)
-            sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0]
-            return host.lower(), sni.lower()
-        except Exception:
-            return '', ''
-
     async def filter_configs(
         self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]
     ) -> Tuple[List[str], List[str], List[str]]:
-        white = []
-        black_lte = []
-        black = []
-
+        white, black_lte, black = [], [], []
         sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
         
-        # Предварительная компиляция объектов CIDR-подсетей для ускорения проверок
         networks = []
         for net_str in whitelist_cidr:
             try:
@@ -312,39 +348,40 @@ class ConfigFilter:
             except Exception:
                 continue
 
+        async def process_single(config: str, session: aiohttp.ClientSession):
+            host, _, sni = parse_config(config)
+            if not host:
+                return None
+
+            resolved_ip = await self._resolve_doh(session, host)
+            is_ip_in_russia = False
+            if resolved_ip:
+                try:
+                    ip_obj = ipaddress.ip_address(resolved_ip)
+                    for net in networks:
+                        if ip_obj in net:
+                            is_ip_in_russia = True
+                            break
+                except Exception:
+                    pass
+
+            is_sni_whitelisted = sni in sni_set if sni else False
+            return config, is_ip_in_russia, is_sni_whitelisted
+
         async with aiohttp.ClientSession() as session:
-            for config in configs:
-                host, sni = self._parse_config_details(config)
-                if not host:
+            tasks = [process_single(cfg, session) for cfg in configs]
+            results = await asyncio.gather(*tasks)
+
+            for res in results:
+                if not res:
                     continue
-
-                resolved_ip = await self._resolve_doh(session, host)
-                
-                # Проверяем, находится ли IP-хоста в российских CIDR-подсетях
-                is_ip_in_russia = False
-                if resolved_ip:
-                    try:
-                        ip_obj = ipaddress.ip_address(resolved_ip)
-                        for net in networks:
-                            if ip_obj in net:
-                                is_ip_in_russia = True
-                                break
-                    except Exception:
-                        pass
-
-                is_sni_whitelisted = sni in sni_set if sni else False
-
-                # 1. WHITE: Сервер физически находится в РФ (в CIDR-подсетях хостингов)
-                if is_ip_in_russia:
-                    white.append(config)
-                
-                # 2. BLACK_LTE: Сервер зарубежный, но его SNI маскируется под разрешенные сайты РФ (Авито, ВК, и др.)
-                elif is_sni_whitelisted:
-                    black_lte.append(config)
-                
-                # 3. BLACK: Обычные зарубежные сервера
+                cfg, is_ru, is_sni = res
+                if is_ru:
+                    white.append(cfg)
+                elif is_sni:
+                    black_lte.append(cfg)
                 else:
-                    black.append(config)
+                    black.append(cfg)
 
         return white, black_lte, black
 
@@ -354,7 +391,7 @@ class VPNConfigCollector:
     def __init__(self):
         self.config_fetcher = ConfigFetcher()
         self.config_filter = ConfigFilter()
-        self.config_pinger = ConfigPinger()
+        self.config_pinger = ConfigPinger(max_concurrent=120)
         
         github_token = os.getenv('GITHUB_TOKEN')
         if not github_token:
@@ -369,13 +406,10 @@ class VPNConfigCollector:
             self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_channel_id)
         else:
             self.notifier = None
-            logger.warning("Telegram не настроен — уведомления отправляться не будут")
+            logger.warning("Telegram не настроен")
         
         self.whitelist_sni: Set[str] = set()
         self.whitelist_cidr: List[str] = []
-        self.total_configs = 0
-        self.alive_configs = 0
-        self.stats: Dict[str, dict] = {}
 
     def _clean_config(self, config: str) -> str:
         if not config:
@@ -407,14 +441,12 @@ class VPNConfigCollector:
     async def load_filter_lists(self) -> bool:
         try:
             logger.info("Загрузка списков ТСПУ...")
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
             
-            # Домены для проверки SNI (маскировка под РФ сервисы)
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
             sni_res.raise_for_status()
             self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
             
-            # Подсети РФ хостингов для точного определения категории WHITE
             cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
             cidr_res.raise_for_status()
             self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
@@ -431,16 +463,15 @@ class VPNConfigCollector:
             await self.load_filter_lists()
             
             all_configs = await self.config_fetcher.fetch_all_configs()
-            self.total_configs = len(all_configs)
+            logger.info(f"Всего сырых конфигураций собрано: {len(all_configs)}")
             
             if not all_configs:
                 logger.warning("Конфиги не собраны.")
                 return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
-            self.alive_configs = len(alive_configs)
+            logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
-            # Фильтрация по CIDR подсетям
             white_full, black_lte, black = await self.config_filter.filter_configs(
                 alive_configs, self.whitelist_sni, self.whitelist_cidr
             )
@@ -468,7 +499,6 @@ class VPNConfigCollector:
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
             
             if self.notifier:
-                # 1. Отправляем красивый HTML отчет в Telegram-канал
                 msg_channel = (
                     f"black: {self.stats['black']['count']}\n"
                     f"black_lte: {self.stats['black_lte']['count']}\n"
@@ -477,7 +507,6 @@ class VPNConfigCollector:
                 )
                 self.notifier.send_message(msg_channel, is_report=True)
                 
-                # 2. Дублируем технический лог успешного завершения админу в чат
                 msg_admin = (
                     f"✅ *Сбор завершен успешно!*\n\n"
                     f"📊 *Статистика подписок:*\n"
