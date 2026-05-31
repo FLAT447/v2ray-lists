@@ -220,8 +220,13 @@ def parse_config_detailed(config: str) -> dict:
 
         parsed = urlparse(config)
         scheme = parsed.scheme.lower()
-        if scheme == 'hysteria':
-            scheme = 'hysteria2'
+        
+        # ✅ Нормализация типов протоколов (hy2 → hysteria2, hysteria → hysteria2)
+        PROTOCOL_MAP = {
+            'hy2': 'hysteria2',
+            'hysteria': 'hysteria2',
+        }
+        scheme = PROTOCOL_MAP.get(scheme, scheme)
         result['type'] = scheme
 
         netloc = parsed.netloc
