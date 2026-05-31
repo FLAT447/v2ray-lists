@@ -499,9 +499,7 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
             "https://etoneya.su/1",
-            "https://etoneya.su/whitelist",
-            "https://mifa.world/vless",
-            "https://mifa.world/trojan"
+            "https://etoneya.su/whitelist"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
@@ -557,10 +555,10 @@ class ConfigFetcher:
 
 class ConfigPinger:
     """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
-    def __init__(self, max_concurrent: int = 100):
+    def __init__(self, max_concurrent: int = 200):
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 2.0) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
@@ -723,6 +721,26 @@ class VPNConfigCollector:
     # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
     # ========================================================================
     
+    def _validate_reality_opts(self, reality_opts: dict) -> bool:
+        """Валидирует REALITY параметры перед добавлением в конфиг"""
+        public_key = reality_opts.get('public-key', '').strip()
+        short_id = reality_opts.get('short-id', '').strip()
+        
+        # Проверяем public-key (должен быть не менее 40 символов)
+        if not public_key or len(public_key) < 40:
+            return False
+        
+        # Проверяем short-id если он есть
+        if short_id:
+            # Должен быть hex формат (только 0-9, a-f, A-F)
+            if not all(c in '0123456789abcdefABCDEF' for c in short_id):
+                return False
+            # Не больше 16 символов
+            if len(short_id) > 16:
+                return False
+        
+        return True
+
     def _build_clash_proxy(self, details: dict, index: int, proxy_name_prefix: str) -> Optional[dict]:
         """Строит словарь прокси для Clash на основе распарсенных данных"""
         ptype = details['type']
@@ -741,7 +759,7 @@ class VPNConfigCollector:
         if ptype in ['hysteria2', 'tuic']:
             proxy['udp'] = details.get('udp', True)
 
-        if details.get('sni'):
+        if details.get('sni') and ptype not in ['vless']:  # sni для не-VLESS типов
             proxy['sni'] = details['sni']
         if details.get('skip-cert-verify'):
             proxy['skip-cert-verify'] = True
@@ -758,18 +776,28 @@ class VPNConfigCollector:
             if details.get('client-fingerprint'):
                 proxy['client-fingerprint'] = details['client-fingerprint']
             
-            # ✅ ИСПРАВЛЕНИЕ 2: Правильно обрабатывать reality-opts
+            # ✅ ИСПРАВЛЕНИЕ 2: Правильно обрабатывать reality-opts с валидацией
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
-                if reality_opts.get('public-key') or reality_opts.get('short-id'):
-                    proxy['reality-opts'] = {}
-                    if reality_opts.get('public-key'):
-                        proxy['reality-opts']['public-key'] = reality_opts['public-key']
-                    if reality_opts.get('short-id'):
-                        proxy['reality-opts']['short-id'] = str(reality_opts['short-id']).lower()
+                
+                # Валидируем REALITY параметры
+                if not self._validate_reality_opts(reality_opts):
+                    logger.debug(f"Invalid REALITY opts for {details.get('server')}")
+                    return None
+                
+                # Добавляем валидированные параметры
+                public_key = reality_opts.get('public-key', '').strip()
+                short_id = reality_opts.get('short-id', '').strip()
+                
+                proxy['reality-opts'] = {}
+                proxy['reality-opts']['public-key'] = public_key
+                
+                # Добавляем short-id только если он есть и валидно
+                if short_id:
+                    proxy['reality-opts']['short-id'] = short_id.lower()
             
-            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS с TLS
-            if details.get('sni') and details.get('tls'):
+            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS (включая REALITY)
+            if details.get('sni'):
                 proxy['servername'] = details['sni']
             
             # ✅ ИСПРАВЛЕНИЕ 4: Правильно обрабатывать network параметры
