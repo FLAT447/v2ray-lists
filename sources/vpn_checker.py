@@ -695,7 +695,7 @@ class VPNConfigCollector:
         return '"' + "".join(f"\\x{ord(c):02x}" for c in s) + '"'
 
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует правильную Clash YAML конфигурацию с полной маскировкой параметров, включая WebSocket"""
+        """Генерирует правильную Clash YAML конфигурацию с полной маскировкой параметров (включая Host и Path)"""
         proxy_name = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
         
@@ -794,12 +794,12 @@ class VPNConfigCollector:
                     yaml_content += f"    network: {p['network']}\n"
                     if p['network'] == 'ws' and 'ws-opts' in p:
                         yaml_content += f"    ws-opts:\n"
-                        yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
+                        yaml_content += f"      path: {self._to_hex_escape(p['ws-opts'].get('path', '/'))}\n"
                         yaml_content += f"      headers:\n"
                         yaml_content += f"        Host: {self._to_hex_escape(p['ws-opts']['headers'].get('Host', ''))}\n"
                     elif p['network'] == 'grpc' and 'grpc-opts' in p:
                         yaml_content += f"    grpc-opts:\n"
-                        yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
+                        yaml_content += f"      grpc-service-name: {self._to_hex_escape(p['grpc-opts'].get('grpc-service-name', ''))}\n"
                         
             elif t == 'vmess':
                 yaml_content += f"    uuid: {self._to_hex_escape(p.get('uuid', ''))}\n"
@@ -811,12 +811,12 @@ class VPNConfigCollector:
                     yaml_content += f"    network: {p['network']}\n"
                     if p['network'] == 'ws' and 'ws-opts' in p:
                         yaml_content += f"    ws-opts:\n"
-                        yaml_content += f"      path: {self._escape_yaml_value(p['ws-opts'].get('path', '/'))}\n"
+                        yaml_content += f"      path: {self._to_hex_escape(p['ws-opts'].get('path', '/'))}\n"
                         yaml_content += f"      headers:\n"
                         yaml_content += f"        Host: {self._to_hex_escape(p['ws-opts']['headers'].get('Host', ''))}\n"
                     elif p['network'] == 'grpc' and 'grpc-opts' in p:
                         yaml_content += f"    grpc-opts:\n"
-                        yaml_content += f"      grpc-service-name: {self._escape_yaml_value(p['grpc-opts'].get('grpc-service-name', ''))}\n"
+                        yaml_content += f"      grpc-service-name: {self._to_hex_escape(p['grpc-opts'].get('grpc-service-name', ''))}\n"
                         
             elif t in ['trojan', 'hysteria2']:
                 if 'password' in p: yaml_content += f"    password: {self._to_hex_escape(p['password'])}\n"
@@ -1011,8 +1011,8 @@ def run_validation_tests():
     )
     results.add_test(
         "Конфиг с IPv4 и без SNI",
-        validate_config("trojan://pass@192.168.1.1:443", "192.168.1.1", 443, ""),
-        "host=192.168.1.1, port=443, sni=''"
+        validate_config("trojan://pass@111.111.111.111:443", "111.111.111.111", 443, ""),
+        "host=111.111.111.111, port=443, sni=''"
     )
     results.add_test(
         "Конфиг с IPv6 и SNI",
@@ -1036,7 +1036,7 @@ def run_validation_tests():
 
     print("\n📋 Тестирование функций _is_valid_domain и _is_valid_host...")
     results.add_test("_is_valid_domain('example.com')", _is_valid_domain("example.com"), "Должен быть True")
-    results.add_test("_is_valid_host('192.168.1.1')", _is_valid_host("192.168.1.1"), "IPv4 адрес должен быть валиден")
+    results.add_test("_is_valid_host('111.111.111.111')", _is_valid_host("111.111.111.111"), "IPv4 адрес должен быть валиден")
     results.add_test("_is_valid_host('999.999.999.999')", not _is_valid_host("999.999.999.999"), "Невалидный IPv4")
 
     success = results.print_results()
