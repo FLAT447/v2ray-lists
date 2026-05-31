@@ -1,326 +1,711 @@
-import asyncio
-import aiohttp
-import ipaddress
+import sys
+import os
+import re
 import json
-import logging
 import base64
-from async_lru import alru_cache
+import logging
+import asyncio
+import ipaddress
+from datetime import datetime, timezone, timedelta
+from typing import List, Set, Dict, Tuple
 from urllib.parse import urlparse, parse_qs
+import aiohttp
+import requests
+from github import Github, GithubException
+from async_lru import alru_cache
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - [%(levelname)s] - %(message)s')
+# ============================================================================
+# НАСТРОЙКА ЛОГИРОВАНИЯ
+# ============================================================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('vpn_collector.log'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 
-class AsyncDNSResolver:
+# ============================================================================
+# ФУНКЦИИ ВАЛИДАЦИИ И ПАРСИНГА
+# ============================================================================
+
+def _is_valid_domain(domain: str) -> bool:
+    """Проверяет валидность доменного имени"""
+    if not domain or len(domain) > 253:
+        return False
+
+    # Исключаем строки, похожие на IP адреса (только цифры и точки)
+    if re.match(r'^[\d.]+$', domain):
+        return False
+
+    domain_pattern = r'^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+    return re.match(domain_pattern, domain.lower()) is not None
+
+
+def _is_valid_host(host: str) -> bool:
+    """Проверяет является ли host IP-адресом или доменом"""
+    if not host:
+        return False
+
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        pass
+
+    if _is_valid_domain(host):
+        return True
+
+    return False
+
+
+def parse_config(config: str) -> Tuple[str, int, str]:
     """
-    Класс для асинхронного DoH-резолва доменов с кэшированием результатов.
+    Универсальный и безопасный парсер конфигураций с поддержкой
+    как Base64 JSON VMess, так и URI-like VMess/VLESS/Trojan/SS/Hysteria2/Tuic.
+    Возвращает: (host, port, sni)
     """
-    def __init__(self, session: aiohttp.ClientSession):
-        self.session = session
-        # Привязываем кэш к методу конкретной сессии, защищаясь от ошибок хэширования self
-        self.resolve = alru_cache(maxsize=2048)(self._resolve_impl)
+    host, port, sni = '', 0, ''
+    try:
+        config = config.strip()
+        if not config:
+            return host, port, sni
 
-    async def _resolve_impl(self, domain: str) -> str | None:
-        try:
-            ipaddress.ip_address(domain)
-            return domain
-        except ValueError:
-            pass
-
-        url = f"https://1.1.1.1/dns-query?name={domain}&type=A"
-        headers = {"accept": "application/dns-json"}
-        
-        try:
-            async with self.session.get(url, headers=headers, timeout=2.0) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if "Answer" in data:
-                        for answer in data["Answer"]:
-                            if answer["type"] == 1:  # IPv4 Type A
-                                return answer["data"]
-        except Exception:
-            pass
-        return None
-
-
-class TelegramManager:
-    """
-    Класс для асинхронной отправки отчетов в Telegram.
-    """
-    def __init__(self, session: aiohttp.ClientSession, token: str, chat_id: str):
-        self.session = session
-        self.token = token
-        self.chat_id = chat_id
-        self.api_url = f"https://api.telegram.org/bot{token}/sendMessage"
-
-    async def send_summary(self, whitelist_count: int, blacklist_count: int):
-        text = (
-            f"📊 *Результаты проверки конфигураций*\n\n"
-            f"✅ *Режим Белого Списка (Whitelist):* `{whitelist_count}`\n"
-            f"❌ *Стандартный обход (Blacklist):* `{blacklist_count}`\n\n"
-            f"🔄 _Списки в репозитории успешно обновлены!_"
-        )
-        payload = {
-            "chat_id": self.chat_id,
-            "text": text,
-            "parse_mode": "Markdown"
-        }
-        try:
-            async with self.session.post(self.api_url, json=payload, timeout=5.0) as resp:
-                if resp.status == 200:
-                    logger.info("Отчет успешно доставлен в Telegram.")
+        # Обработка VMESS
+        if config.startswith('vmess://'):
+            rem = config[8:].split('#')[0].strip()
+            
+            # Проверяем, лежит ли IP/Хост прямо в строке (формат URI-like вместо классического Base64)
+            if '?' in rem or '@' in rem or (':' in rem and not rem.replace(':', '').isalnum()):
+                parsed = urlparse(config)
+                netloc = parsed.netloc
+                host_port = netloc.rsplit('@', 1)[1] if '@' in netloc else netloc
+                if host_port.startswith('['):
+                    end_bracket = host_port.find(']')
+                    if end_bracket != -1:
+                        host = host_port[1:end_bracket]
+                        port_part = host_port[end_bracket + 1:]
+                        if port_part.startswith(':'):
+                            port = int(port_part.split(':')[1].split('?')[0])
                 else:
-                    err_txt = await resp.text()
-                    logger.error(f"Telegram API вернул ошибку: {resp.status} - {err_txt}")
+                    if ':' in host_port:
+                        host, port_str = host_port.split(':', 1)
+                        port = int(port_str.split('?')[0])
+                    else:
+                        host = host_port
+                query_params = parse_qs(parsed.query)
+                sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0] or query_params.get('host', [''])[0]
+                return host.lower(), port, sni.lower()
+            else:
+                # Классический VMess: внутри Base64 закодированный JSON-объект
+                b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
+                data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
+                host = str(data.get('add', ''))
+                port = int(data.get('port', 0))
+                sni = str(data.get('sni', '') or data.get('host', ''))
+                return host.lower(), port, sni.lower()
+
+        # Обработка остальных протоколов (vless, trojan, ss, hysteria2, tuic)
+        parsed = urlparse(config)
+        netloc = parsed.netloc
+        host_port = netloc.rsplit('@', 1)[1] if '@' in netloc else netloc
+
+        if host_port.startswith('['):
+            end_bracket = host_port.find(']')
+            if end_bracket != -1:
+                host = host_port[1:end_bracket]
+                port_part = host_port[end_bracket + 1:]
+                if port_part.startswith(':'):
+                    port = int(port_part.split(':')[1].split('?')[0])
+        else:
+            if ':' in host_port:
+                host, port_str = host_port.split(':', 1)
+                port = int(port_str.split('?')[0])
+            else:
+                host = host_port
+
+        query_params = parse_qs(parsed.query)
+        sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0]
+
+        return host.lower(), port, sni.lower()
+    except Exception:
+        return '', 0, ''
+
+
+def validate_config(config: str, host: str, port: int, sni: str) -> bool:
+    """Валидирует распарсенную конфигурацию."""
+    if not host or port <= 0 or port > 65535:
+        return False
+
+    if not _is_valid_host(host):
+        return False
+
+    if sni and not _is_valid_domain(sni):
+        return False
+
+    return True
+
+
+# ============================================================================
+# КЛАССЫ СБОРЩИКА И МОДУЛИ КЛИЕНТОВ
+# ============================================================================
+
+class TelegramNotifier:
+    """Отправка уведомлений и статусов работы в Telegram"""
+    def __init__(self, token: str, chat_id: str, channel_id: str = None):
+        self.token = token
+        self.chat_id = chat_id          
+        self.channel_id = channel_id    
+        self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage"
+
+    def send_message(self, text: str, is_report: bool = False):
+        if is_report and self.channel_id:
+            tz_msk = timezone(timedelta(hours=3))
+            time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
+            
+            total_configs = 0
+            try:
+                for line in text.split('\n'):
+                    if any(k in line for k in ['black', 'white_full', 'white_lite']):
+                        digits = ''.join(filter(str.isdigit, line))
+                        if digits:
+                            total_configs += int(digits)
+            except Exception:
+                total_configs = "N/A"
+
+            channel_text = (
+                f"🔄 V2Ray подписки обновлены!\n"
+                f"📅 Время: {time_str}\n"
+                f"📊 Всего конфигураций: {total_configs}\n\n"
+                f"📦 <a href=\"https://github.com/FLAT447/v2ray-lists\">Репозиторий проекта</a>\n"
+                f"⚡ <a href=\"https://flat447.github.io/v2ray-lists-site\">Сайт проекта</a>"
+            )
+
+            payload = {
+                "chat_id": self.channel_id,
+                "text": channel_text,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True
+            }
+            logger.info("Отправка итогового отчета в Telegram-канал...")
+        else:
+            payload = {
+                "chat_id": self.chat_id,
+                "text": text,
+                "parse_mode": "Markdown",
+                "disable_web_page_preview": True
+            }
+            logger.info("Отправка системного уведомления в чат...")
+
+        try:
+            response = requests.post(self.api_url, json=payload, timeout=10)
+            if response.status_code != 200:
+                logger.error(f"Telegram API вернул ошибку: {response.text}")
         except Exception as e:
             logger.error(f"Не удалось отправить уведомление в Telegram: {e}")
 
 
 class GithubManager:
-    """
-    Класс для асинхронного деплоя результатов через GitHub API.
-    """
-    def __init__(self, session: aiohttp.ClientSession, token: str, repo: str, branch: str = "main"):
-        self.session = session
-        self.repo = repo
-        self.branch = branch
+    """Коммит и пуш файлов напрямую в репозиторий GitHub через API"""
+    def __init__(self, token: str):
+        self.gh = Github(token)
+        self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
+
+    def _push_sync(self, files: Dict[str, str]) -> bool:
+        try:
+            repo = self.gh.get_repo(self.repo_name)
+            tz_msk = timezone(timedelta(hours=3))
+            time_str_msk = datetime.now(tz_msk).strftime("%d.%m.%Y %H:%M:%S MSK")
+
+            for file_path, content in files.items():
+                commit_content = content
+                try:
+                    contents = repo.get_contents(file_path)
+                    sha = contents.sha
+
+                    if file_path == 'stats.json':
+                        try:
+                            existing_text = contents.decoded_content.decode('utf-8')
+                            data = json.loads(existing_text)
+                        except Exception:
+                            data = {}
+                        
+                        try:
+                            data['configs'] = json.loads(content)
+                        except Exception:
+                            data['configs'] = content
+                        
+                        commit_content = json.dumps(data, indent=2, ensure_ascii=False)
+
+                    repo.update_file(
+                        path=file_path,
+                        message=f"🔄 Обновление {file_path} по времени МСК [{time_str_msk}]",
+                        content=commit_content,
+                        sha=sha
+                    )
+                    logger.info(f"Файл {file_path} успешно обновлен в репозитории.")
+                except GithubException as e:
+                    if e.status == 404:
+                        if file_path == 'stats.json':
+                            try:
+                                data = {'configs': json.loads(content)}
+                            except Exception:
+                                data = {'configs': content}
+                            commit_content = json.dumps(data, indent=2, ensure_ascii=False)
+
+                        repo.create_file(
+                            path=file_path,
+                            message=f"✨ Create {file_path} via API [{time_str_msk}]",
+                            content=commit_content
+                        )
+                        logger.info(f"Файл {file_path} успешно создан в репозитории.")
+                    else:
+                        raise e
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при работе с GitHub API: {e}")
+            return False
+
+    async def push_files(self, files: Dict[str, str]) -> bool:
+        return await asyncio.to_thread(self._push_sync, files)
+
+
+class ConfigFetcher:
+    """Сбор и Base64-декодирование сырых конфигов"""
+    def __init__(self):
         self.headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github.v3+json"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
-        self.api_url = f"https://api.github.com/repos/{repo}/contents"
+        self.sources: List[str] = [
+            "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt",
+            "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt",
+            "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt",
+            "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt",
+            "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt",
+            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
+            "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt",
+            "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
+            "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
+            "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
+            "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
+            "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt",
+            "https://github.com/barry-far/V2ray-Config/raw/refs/heads/main/Splitted-By-Protocol/vless.txt",
+            "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
+            "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt",
+            "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub",
+            "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt",
+            "https://mifa.world/hysteria",
+            "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt",
+            "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt",
+            "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt",
+            "https://subrostunnel.vercel.app/gen.txt",
+            "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+            "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt",
+            "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
+            "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
+            "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
+            "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
+            "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
+            "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
+            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
+            "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
+            "https://etoneya.su/1",
+            "https://etoneya.su/whitelist"
+        ]
 
-    async def upload_file(self, file_path: str, content: str, commit_message: str):
-        url = f"{self.api_url}/{file_path}"
-        params = {"ref": self.branch}
-        sha = None
-
+    async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
         try:
-            async with self.session.get(url, headers=self.headers, params=params) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    sha = data.get("sha")
-        except Exception as e:
-            logger.error(f"Не удалось получить SHA для {file_path}: {e}")
+            logger.info(f"Запрос к источнику: {url}")
+            async with session.get(url, headers=self.headers, timeout=15) as response:
+                if response.status == 200:
+                    text = await response.text()
+                    text_stripped = text.strip()
+                    
+                    # Декодирование Base64 только если подписка вернула сырую закодированную строку
+                    if text_stripped and not any(text_stripped.startswith(p) for p in ['vless://', 'vmess://', 'ss://', 'trojan://', 'hysteria', 'tuic://', '#']):
+                        try:
+                            cleaned_b64 = "".join(text_stripped.split())
+                            cleaned_b64 += "=" * ((4 - len(cleaned_b64) % 4) % 4)
+                            decoded = base64.b64decode(cleaned_b64).decode('utf-8', errors='ignore')
+                            if any(p in decoded for p in ['://', 'vless://', 'vmess://', 'ss://', 'trojan://']):
+                                text = decoded
+                        except Exception:
+                            pass
 
-        b64_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
+                    configs = [
+                        line.strip() for line in text.splitlines()
+                        if line.strip() and not line.strip().startswith('#') and '://' in line
+                    ]
+                    return configs
+                logger.warning(f"Источник {url} вернул статус {response.status}")
+                return []
+        except Exception as e:
+            logger.error(f"Ошибка при скачивании из {url}: {e}")
+            return []
+
+    async def fetch_all_configs(self) -> List[str]:
+        if not self.sources:
+            return []
+        all_configs = []
+        async with aiohttp.ClientSession() as session:
+            tasks = [self.fetch_source(session, url) for url in self.sources]
+            results = await asyncio.gather(*tasks)
+            for config_list in results:
+                all_configs.extend(config_list)
         
-        payload = {
-            "message": commit_message,
-            "content": b64_content,
-            "branch": self.branch
-        }
-        if sha:
-            payload["sha"] = sha
+        # Полная дедупликация по телу конфигурации (игнорируя имя/комментарий после знака #)
+        unique_configs = {}
+        for cfg in all_configs:
+            cfg_stripped = cfg.strip()
+            if not cfg_stripped:
+                continue
+            core_part = cfg_stripped.split('#')[0].strip()
+            if core_part and core_part not in unique_configs:
+                unique_configs[core_part] = cfg_stripped
 
-        try:
-            async with self.session.put(url, headers=self.headers, json=payload) as resp:
-                if resp.status in [200, 201]:
-                    logger.info(f"Файл {file_path} успешно запушен на GitHub.")
-                else:
-                    err_txt = await resp.text()
-                    logger.error(f"Ошибка пуша {file_path}: {resp.status} - {err_txt}")
-        except Exception as e:
-            logger.error(f"Сетевой сбой при деплое {file_path}: {e}")
+        return list(unique_configs.values())
 
 
 class ConfigPinger:
-    def __init__(self, resolver: AsyncDNSResolver, max_concurrent: int = 300, timeout: float = 1.5):
-        self.resolver = resolver
+    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
+    def __init__(self, max_concurrent: int = 100):
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.timeout = timeout
 
-    async def _check_single_config(self, config: str) -> tuple[str, str, str | None] | None:
+    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
+        host, port, sni = parse_config(config)
+        
+        if not validate_config(config, host, port, sni):
+            return None
+
         async with self.semaphore:
             try:
-                parsed = urlparse(config)
-                host = parsed.hostname
-                port = parsed.port
-                
-                # Быстрый TCP-пинг порта
-                fut = asyncio.open_connection(host, port)
-                reader, writer = await asyncio.wait_for(fut, timeout=self.timeout)
+                reader, writer = await asyncio.wait_for(
+                    asyncio.open_connection(host, port),
+                    timeout=timeout
+                )
                 writer.close()
                 await writer.wait_closed()
-                
-                # Получаем IP из кэшируемого DoH
-                ip = await self.resolver.resolve(host)
-                return config, host, ip
+                return config
             except Exception:
                 return None
 
-    async def check_configs(self, configs: list[str]) -> list[tuple[str, str, str | None]]:
-        tasks = [self._check_single_config(conf) for conf in configs]
+    async def ping_configs(self, configs: List[str]) -> List[str]:
+        logger.info(f"Проверяем доступность {len(configs)} конфигов...")
+        tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
-        return [r for r in results if r is not None]
+        valid_configs = [res for res in results if res is not None]
+        logger.info(f"Валидных конфигов после пинга: {len(valid_configs)}")
+        return valid_configs
+
+
+class ConfigFilter:
+    """Асинхронная фильтрация по спискам ТСПУ на базе параллельного DoH"""
+    def __init__(self):
+        self.doh_servers = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
+
+    @alru_cache(maxsize=8192)
+    async def _resolve_doh(self, session: aiohttp.ClientSession, hostname: str) -> str | None:
+        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname):
+            return hostname
+
+        for provider in self.doh_servers:
+            try:
+                params = {"name": hostname, "type": "A"}
+                async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=3) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if "Answer" in data:
+                            for ans in data["Answer"]:
+                                if ans["type"] == 1:
+                                    return ans["data"]
+            except Exception:
+                continue
+        return None
+
+    async def filter_configs(
+        self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]
+    ) -> Tuple[List[str], List[str], List[str]]:
+        white, black_lte, black = [], [], []
+        sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
+        
+        networks = []
+        for net_str in whitelist_cidr:
+            try:
+                networks.append(ipaddress.ip_network(net_str.strip(), strict=False))
+            except Exception:
+                continue
+
+        async def process_single(config: str, session: aiohttp.ClientSession):
+            host, port, sni = parse_config(config)
+            
+            if not validate_config(config, host, port, sni):
+                return None
+
+            resolved_ip = await self._resolve_doh(session, host)
+            is_ip_in_whitelist = False
+            
+            if resolved_ip:
+                try:
+                    ip_obj = ipaddress.ip_address(resolved_ip)
+                    for net in networks:
+                        if ip_obj in net:
+                            is_ip_in_whitelist = True
+                            break
+                except Exception:
+                    pass
+
+            is_sni_whitelisted = bool(sni) and sni in sni_set
+            return config, is_ip_in_whitelist, is_sni_whitelisted
+
+        async with aiohttp.ClientSession() as session:
+            tasks = [process_single(cfg, session) for cfg in configs]
+            results = await asyncio.gather(*tasks)
+
+            for res in results:
+                if not res:
+                    continue
+                cfg, is_ip_whitelisted, is_sni_whitelisted = res
+                
+                if is_ip_whitelisted:
+                    white.append(cfg)
+                elif is_sni_whitelisted:
+                    black_lte.append(cfg)
+                else:
+                    black.append(cfg)
+
+        logger.info(f"Фильтрация завершена: white={len(white)}, black_lte={len(black_lte)}, black={len(black)}")
+        return white, black_lte, black
 
 
 class VPNConfigCollector:
-    def __init__(self, timeout: float = 1.5, max_concurrent: int = 300):
-        self.timeout = timeout
-        self.max_concurrent = max_concurrent
-        self.cidr_whitelist = []
-        self.domain_whitelist = set()
-
-    async def fetch_external_lists(self, session: aiohttp.ClientSession, cidr_url: str, whitelist_url: str):
-        """
-        Параллельно выкачивает cidrwhitelist и whitelist из удаленных источников напрямую в память.
-        """
-        async def fetch_cidr():
-            try:
-                async with session.get(cidr_url, timeout=10.0) as resp:
-                    if resp.status == 200:
-                        text = await resp.text()
-                        for line in text.splitlines():
-                            line = line.strip()
-                            if line and not line.startswith("#"):
-                                try:
-                                    net = ipaddress.ip_network(line, strict=False)
-                                    if isinstance(net, ipaddress.IPv4Network):
-                                        self.cidr_whitelist.append(net)
-                                except ValueError:
-                                    pass
-                        logger.info(f"Загружено {len(self.cidr_whitelist)} подсетей в cidrwhitelist.")
-            except Exception as e:
-                logger.error(f"Ошибка загрузки cidrwhitelist: {e}")
-
-        async def fetch_domains():
-            try:
-                async with session.get(whitelist_url, timeout=10.0) as resp:
-                    if resp.status == 200:
-                        text = await resp.text()
-                        self.domain_whitelist = {line.strip() for line in text.splitlines() if line.strip() and not line.strip().startswith("#")}
-                        logger.info(f"Загружено {len(self.domain_whitelist)} объектов в доменный whitelist.")
-            except Exception as e:
-                logger.error(f"Ошибка загрузки доменного whitelist: {e}")
-
-        logger.info("Старт скачивания внешних баз фильтрации...")
-        await asyncio.gather(fetch_cidr(), fetch_domains())
-
-    def is_whitelisted(self, host: str, ip_str: str | None) -> bool:
-        """
-        Проверяет, входит ли конфигурация в условия 'Белого Списка'.
-        """
-        # 1. Проверка по доменному листу
-        if host in self.domain_whitelist:
-            return True
-            
-        # 2. Проверка IP по подсетям CIDR
-        if not ip_str:
-            return False
-        try:
-            ip_addr = ipaddress.ip_address(ip_str)
-            if ip_addr.version == 6:
-                return False  # IPv6 не чекаем по IPv4-базе
-            return any(ip_addr in subnet for subnet in self.cidr_whitelist)
-        except ValueError:
-            return False
-
-    def is_valid_config(self, config_url: str) -> bool:
-        try:
-            config_url = config_url.strip()
-            if not config_url:
-                return False
-            parsed = urlparse(config_url)
-            if parsed.scheme not in {'vless', 'vmess', 'ss', 'trojan', 'hysteria2', 'tuic'}:
-                return False
-            if not parsed.hostname or not parsed.port:
-                return False
-                
-            query_params = parse_qs(parsed.query)
-            sni = query_params.get('sni')
-            peer = query_params.get('peer')
-            
-            if (not sni or not sni[0].strip()) and (not peer or not peer[0].strip()):
-                return False
-            return True
-        except Exception:
-            return False
-
-    async def process(self, raw_configs_pool: list[str], cidr_url: str, whitelist_url: str, 
-                      gh_token: str = None, gh_repo: str = None, tg_token: str = None, tg_chat_id: str = None):
+    """Главный координатор процесса выполнения сборщика"""
+    def __init__(self):
+        self.config_fetcher = ConfigFetcher()
+        self.config_filter = ConfigFilter()
+        self.config_pinger = ConfigPinger(max_concurrent=120)
         
-        unique_raw = list(set(raw_configs_pool))
-        valid_configs = [conf for conf in unique_raw if self.is_valid_config(conf)]
-        logger.info(f"Валидация: к проверке допущено {len(valid_configs)} из {len(unique_raw)} строк.")
+        github_token = os.getenv('GITHUB_TOKEN')
+        if not github_token:
+            raise ValueError("Переменная окружения GITHUB_TOKEN не задана")
+        self.github_manager = GithubManager(github_token)
+        
+        telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+        telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
+        
+        if telegram_token and telegram_chat_id:
+            self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_channel_id)
+        else:
+            self.notifier = None
+            logger.warning("Telegram не настроен")
+        
+        self.whitelist_sni: Set[str] = set()
+        self.whitelist_cidr: List[str] = []
 
-        if not valid_configs:
-            logger.warning("Нет валидных конфигураций для обработки.")
-            return
+    def _clean_config(self, config: str) -> str:
+        if not config:
+            return ""
+        if "#" in config:
+            parts = config.split('#')
+            if '://' in parts[0]:
+                return parts[0].strip()
+        return config.strip()
 
-        async with aiohttp.ClientSession() as session:
-            # 1. Скачиваем обе базы параллельно
-            await self.fetch_external_lists(session, cidr_url, whitelist_url)
+    def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
+        meta = [
+            f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
+            f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
+            f"#profile-title: {title}",
+            f"#support-url: https://t.me/flat447",
+            f"#profile-update-interval: 1\n"
+        ]
+    
+        cleaned_configs = []
+        for index, cfg in enumerate(configs, start=1):
+            cleaned = self._clean_config(cfg)
+            if cleaned:
+                named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
+                cleaned_configs.append(named_config)
 
-            # 2. Массовый асинхронный пинг
-            resolver = AsyncDNSResolver(session)
-            pinger = ConfigPinger(resolver, max_concurrent=self.max_concurrent, timeout=self.timeout)
+        return '\n'.join(meta + cleaned_configs)
+
+    async def load_filter_lists(self) -> bool:
+        try:
+            logger.info("Загрузка списков ТСПУ...")
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
             
-            logger.info("Запуск параллельной проверки портов...")
-            alive_results = await pinger.check_configs(valid_configs)
-            logger.info(f"Доступные живые серверы: {len(alive_results)}")
+            sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
+            sni_res.raise_for_status()
+            self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
+            logger.info(f"Загружено {len(self.whitelist_sni)} SNI в whitelist")
+            
+            cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
+            cidr_res.raise_for_status()
+            self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
+            logger.info(f"Загружено {len(self.whitelist_cidr)} CIDR сетей в whitelist")
+            return True
+        except Exception as e:
+            logger.error(f"Не удалось обновить списки фильтрации: {e}")
+            return False
 
-            # 3. Разделение по спискам на основе скачанных баз
-            whitelist = []
-            blacklist = []
+    async def run(self):
+        tz_msk = timezone(timedelta(hours=3))
+        start_time = datetime.now(tz_msk)
 
-            for config, host, ip in alive_results:
-                if self.is_whitelisted(host, ip):
-                    whitelist.append(config)
-                else:
-                    blacklist.append(config)
+        try:
+            await self.load_filter_lists()
+            
+            all_configs = await self.config_fetcher.fetch_all_configs()
+            logger.info(f"Всего уникальных сырых конфигураций собрано: {len(all_configs)}")
+            
+            if not all_configs:
+                logger.warning("Конфиги не собраны.")
+                return
 
-            # Форматируем текстовые блоки
-            whitelist_content = "\n".join(whitelist) + ("\n" if whitelist else "")
-            blacklist_content = "\n".join(blacklist) + ("\n" if blacklist else "")
-            stats_content = json.dumps({
-                "total_whitelist": len(whitelist), 
-                "total_blacklist": len(blacklist)
-            }, indent=4, ensure_ascii=False)
+            alive_configs = await self.config_pinger.ping_configs(all_configs)
+            logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
+            
+            white_full, black_lte, black = await self.config_filter.filter_configs(
+                alive_configs, self.whitelist_sni, self.whitelist_cidr
+            )
+            
+            white_lite = white_full[:500]
+            current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
+            
+            self.stats = {
+                "black": {"count": len(black), "updated": current_time_str},
+                "black_lte": {"count": len(black_lte), "updated": current_time_str},
+                "white_full": {"count": len(white_full), "updated": current_time_str},
+                "white_lite": {"count": len(white_lite), "updated": current_time_str}
+            }
+            
+            files_to_push = {
+                'BLACK_FULL.txt': self._generate_subscription_content('V2Ray Lists - BLACK FULL', black),
+                'BLACK_LTE.txt': self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte),
+                'WHITE_FULL.txt': self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full),
+                'WHITE_LITE.txt': self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite),
+                'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
+            }
+            
+            await self.github_manager.push_files(files_to_push)
+            
+            duration = (datetime.now(tz_msk) - start_time).total_seconds()
+            
+            if self.notifier:
+                msg_channel = (
+                    f"black: {self.stats['black']['count']}\n"
+                    f"black_lte: {self.stats['black_lte']['count']}\n"
+                    f"white_full: {self.stats['white_full']['count']}\n"
+                    f"white_lite: {self.stats['white_lite']['count']}"
+                )
+                self.notifier.send_message(msg_channel, is_report=True)
+                
+                msg_admin = (
+                    f"✅ *Сбор завершен успешно!*\n\n"
+                    f"📊 *Статистика подписок:*\n"
+                    f"├ `black`: {self.stats['black']['count']}\n"
+                    f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
+                    f"├ `white_full`: {self.stats['white_full']['count']}\n"
+                    f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
+                    f"⏱ Время выполнения: {duration:.1f} сек"
+                )
+                self.notifier.send_message(msg_admin, is_report=False)
+                
+        except Exception as e:
+            logger.critical(f"Критический сбой: {e}")
+            if self.notifier:
+                self.notifier.send_message(f"❌ *Критическая ошибка скрипта:* `{e}`", is_report=False)
 
-            # 4. Асинхронный деплой результатов (GitHub + Telegram)
-            tasks = []
 
-            if gh_token and gh_repo:
-                logger.info("Добавляем задачи пуша в GitHub...")
-                gh = GithubManager(session, gh_token, gh_repo)
-                tasks.append(gh.upload_file("whitelist.txt", whitelist_content, "Update whitelist.txt [CI]"))
-                tasks.append(gh.upload_file("blacklist.txt", blacklist_content, "Update blacklist.txt [CI]"))
-                tasks.append(gh.upload_file("stats.json", stats_content, "Update stats.json [CI]"))
+# ============================================================================
+# ВСТРОЕННЫЕ ТЕСТЫ (БЫВШИЙ test_validation.py)
+# ============================================================================
 
-            if tg_token and tg_chat_id:
-                logger.info("Добавляем задачу отправки уведомления в Telegram...")
-                tg = TelegramManager(session, tg_token, tg_chat_id)
-                tasks.append(tg.send_summary(len(whitelist), len(blacklist)))
+class TestResults:
+    def __init__(self):
+        self.passed = 0
+        self.failed = 0
+        self.tests = []
 
-            if tasks:
-                await asyncio.gather(*tasks)
-            else:
-                with open("whitelist.txt", "w", encoding="utf-8") as f: f.write(whitelist_content)
-                with open("blacklist.txt", "w", encoding="utf-8") as f: f.write(blacklist_content)
-                with open("stats.json", "w", encoding="utf-8") as f: f.write(stats_content)
-                logger.info("Конфигурации сохранены локально на диск.")
+    def add_test(self, test_name: str, result: bool, details: str = ""):
+        status = "✅ PASS" if result else "❌ FAIL"
+        self.tests.append(f"{status} | {test_name}")
+        if details:
+            self.tests.append(f"         {details}")
+        
+        if result:
+            self.passed += 1
+        else:
+            self.failed += 1
+
+    def print_results(self):
+        print("\n" + "=" * 80)
+        print("РЕЗУЛЬТАТЫ ТЕСТОВ ВАЛИДАЦИИ")
+        print("=" * 80)
+        for test in self.tests:
+            print(test)
+        print("=" * 80)
+        print(f"Всего: {self.passed + self.failed} | Успешно: {self.passed} ✅ | Ошибок: {self.failed} ❌")
+        print("=" * 80)
+        return self.failed == 0
 
 
-if __name__ == "__main__":
-    # Тестовый пул прокси-строк
-    test_pool = [
-        "vless://uuid@1.2.3.4:443?type=tcp&security=reality&sni=google.com",
-    ]
-    
-    # Ссылки на внешние списки
-    CIDR_LIST_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/cidrwhitelist.txt"
-    DOMAINS_LIST_URL = "https://github.com/hxehex/russia-mobile-internet-whitelist/raw/refs/heads/main/whitelist.txt"
-    
-    collector = VPNConfigCollector(timeout=1.5, max_concurrent=300)
-    
-    asyncio.run(collector.process(
-        raw_configs_pool=test_pool,
-        cidr_url=CIDR_LIST_URL,
-        whitelist_url=DOMAINS_LIST_URL,
-        gh_token=None,       
-        gh_repo=None,        
-        tg_token=None,       
-        tg_chat_id=None      
-    ))
+def run_validation_tests():
+    results = TestResults()
+
+    print("\n📋 Тестирование ВАЛИДНЫХ конфигов...")
+    results.add_test(
+        "Конфиг с доменом и SNI",
+        validate_config("vless://uuid@example.com:443?sni=example.com", "example.com", 443, "example.com"),
+        "host=example.com, port=443, sni=example.com"
+    )
+    results.add_test(
+        "Конфиг с IPv4 и без SNI",
+        validate_config("trojan://pass@192.168.1.1:443", "192.168.1.1", 443, ""),
+        "host=192.168.1.1, port=443, sni=''"
+    )
+    results.add_test(
+        "Конфиг с IPv6 и SNI",
+        validate_config("vless://uuid@[2001:db8::1]:443?sni=example.com", "2001:db8::1", 443, "example.com"),
+        "host=2001:db8::1, port=443, sni=example.com"
+    )
+    results.add_test(
+        "Конфиг с поддоменом",
+        validate_config("vless://uuid@api.example.com:443?sni=api.example.com", "api.example.com", 443, "api.example.com"),
+        "host=api.example.com, port=443, sni=api.example.com"
+    )
+
+    print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с HOST)...")
+    results.add_test("Конфиг с пустым host", not validate_config("vless://uuid", "", 443, ""), "host=''")
+    results.add_test("Конфиг с пробелами", not validate_config("vless://uuid@not valid domain:443", "not valid domain", 443, ""), "host='not valid domain'")
+    results.add_test("Конфиг со спецсимволами", not validate_config("vless://uuid@invalid!@#$:443", "invalid!@#$", 443, ""), "host='invalid!@#$'")
+
+    print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с PORT)...")
+    results.add_test("Конфиг с port=0", not validate_config("vless://uuid@example.com:0", "example.com", 0, ""), "port=0")
+    results.add_test("Конфиг с port > 65535", not validate_config("vless://uuid@example.com:99999", "example.com", 99999, ""), "port=99999")
+
+    print("\n📋 Тестирование функций _is_valid_domain и _is_valid_host...")
+    results.add_test("_is_valid_domain('example.com')", _is_valid_domain("example.com"), "Должен быть True")
+    results.add_test("_is_valid_host('192.168.1.1')", _is_valid_host("192.168.1.1"), "IPv4 адрес должен быть валиден")
+    results.add_test("_is_valid_host('999.999.999.999')", not _is_valid_host("999.999.999.999"), "Невалидный IPv4")
+
+    success = results.print_results()
+    if not success:
+        sys.exit(1)
+
+
+# ============================================================================
+# ТОЧКА ВХОДА
+# ============================================================================
+
+if __name__ == '__main__':
+    # Если передан флаг --test, запускаем только юнит-тесты валидации
+    if len(sys.argv) > 1 and sys.argv[1] == '--test':
+        run_validation_tests()
+    else:
+        # Иначе запускаем основной цикл асинхронного коллектора
+        asyncio.run(VPNConfigCollector().run())
