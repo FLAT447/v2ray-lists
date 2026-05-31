@@ -130,8 +130,8 @@ def parse_config(config: str) -> Tuple[str, int, str]:
 
 def parse_config_detailed(config: str) -> dict:
     """
-    Глубокий парсер конфигурации. Извлекает абсолютно все параметры
-    для формирования валидного Clash/Mihomo прокси-узла.
+    Глубокий парсер конфигурации. Извлекает параметры для всех поддерживаемых
+    протоколов (vless, vmess, trojan, hysteria2, tuic, ss).
     """
     result = {'type': 'unknown', 'server': '', 'port': 0, 'sni': '', 'udp': True}
     try:
@@ -695,7 +695,7 @@ class VPNConfigCollector:
         return '"' + "".join(f"\\x{ord(c):02x}" for c in s) + '"'
 
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует правильную и полную Clash YAML конфигурацию с маскировкой параметров"""
+        """Генерирует правильную Clash YAML конфигурацию с полной маскировкой параметров, включая WebSocket"""
         proxy_name = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
         
@@ -897,32 +897,32 @@ class VPNConfigCollector:
                 "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
             
-            # Генерация стандартного текстового контента
+            # Генерация контента подписок
             black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
             black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte)
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
             white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
 
-            # Генерация закодированного контента Base64
+            # Перевод контента подписок в Base64 формат
             black_b64 = base64.b64encode(black_txt.encode('utf-8')).decode('utf-8')
             black_lte_b64 = base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8')
             white_full_b64 = base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8')
             white_lite_b64 = base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8')
             
             files_to_push = {
-                # Стандартный текст подписок
+                # Текстовые подписки в корень репозитория
                 'BLACK_FULL.txt': black_txt,
                 'BLACK_LTE.txt': black_lte_txt,
                 'WHITE_FULL.txt': white_full_txt,
                 'WHITE_LITE.txt': white_lite_txt,
                 
-                # Подписки в формате Base64 в отдельную директорию BASE64
+                # Подписки в формате Base64 в папку BASE64
                 'BASE64/BLACK_FULL.txt': black_b64,
                 'BASE64/BLACK_LTE.txt': black_lte_b64,
                 'BASE64/WHITE_FULL.txt': white_full_b64,
                 'BASE64/WHITE_LITE.txt': white_lite_b64,
                 
-                # Конфигурации для Clash YAML
+                # Подписки в Clash YAML формате
                 'CLASH/BLACK_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK FULL', black),
                 'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
                 'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
@@ -953,7 +953,7 @@ class VPNConfigCollector:
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
                     f"📦 *Форматы подписок:*\n"
                     f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
-                    f"├ Закодированные Base64 (.txt): Папка `BASE64/` (BLACK_FULL, BLACK_LTE, и др.)\n"
+                    f"├ Закодированные Base64 (.txt): Директория `BASE64/` (BLACK_FULL, BLACK_LTE...)\n"
                     f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
