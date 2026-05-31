@@ -499,7 +499,9 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
             "https://etoneya.su/1",
-            "https://etoneya.su/whitelist"
+            "https://etoneya.su/whitelist",
+            "https://mifa.world/vless",
+            "https://mifa.world/trojan"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
@@ -717,19 +719,10 @@ class VPNConfigCollector:
 
         return '\n'.join(meta + cleaned_configs)
 
-    # ------------------------------------------------------------------------
-    # ФУНКЦИИ ДЛЯ КОРРЕКТНОЙ ГЕНЕРАЦИИ YAML
-    # ------------------------------------------------------------------------
-    @staticmethod
-    def _escape_yaml_string(s: str) -> str:
-        """Экранирует строку для YAML (без hex-маскировки)"""
-        if not s:
-            return '""'
-        s = s.replace('\\', '\\\\').replace('"', '\\"')
-        if any(c in s for c in ':#{}[]&*?|-%@!,\n\r\t'):
-            return f'"{s}"'
-        return s
-
+    # ========================================================================
+    # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
+    # ========================================================================
+    
     def _build_clash_proxy(self, details: dict, index: int, proxy_name_prefix: str) -> Optional[dict]:
         """Строит словарь прокси для Clash на основе распарсенных данных"""
         ptype = details['type']
@@ -741,8 +734,12 @@ class VPNConfigCollector:
             'type': ptype,
             'server': details['server'],
             'port': int(details['port']),
-            'udp': details.get('udp', True)
         }
+
+        # ✅ ИСПРАВЛЕНИЕ 1: Убрать 'udp' если он не поддерживается типом прокси
+        # UDP поддерживается только некоторыми типами
+        if ptype in ['hysteria2', 'tuic']:
+            proxy['udp'] = details.get('udp', True)
 
         if details.get('sni'):
             proxy['sni'] = details['sni']
@@ -750,7 +747,9 @@ class VPNConfigCollector:
             proxy['skip-cert-verify'] = True
 
         if ptype == 'vless':
-            proxy['uuid'] = details.get('uuid', '')
+            if not details.get('uuid'):
+                return None
+            proxy['uuid'] = details['uuid']
             proxy['encryption'] = 'none'
             if details.get('flow'):
                 proxy['flow'] = details['flow']
@@ -759,80 +758,134 @@ class VPNConfigCollector:
             if details.get('client-fingerprint'):
                 proxy['client-fingerprint'] = details['client-fingerprint']
             
+            # ✅ ИСПРАВЛЕНИЕ 2: Правильно обрабатывать reality-opts
             if details.get('reality-opts'):
-                proxy['reality-opts'] = {}
-                ropts = details['reality-opts']
-                if ropts.get('public-key'):
-                    proxy['reality-opts']['public-key'] = ropts['public-key']
-                short_id = ropts.get('short-id', '')
-                if short_id:
-                    proxy['reality-opts']['short-id'] = str(short_id).lower()
-                if details.get('sni'):
-                    proxy['servername'] = details['sni']
-            elif details.get('sni') and details.get('tls'):
+                reality_opts = details['reality-opts']
+                if reality_opts.get('public-key') or reality_opts.get('short-id'):
+                    proxy['reality-opts'] = {}
+                    if reality_opts.get('public-key'):
+                        proxy['reality-opts']['public-key'] = reality_opts['public-key']
+                    if reality_opts.get('short-id'):
+                        proxy['reality-opts']['short-id'] = str(reality_opts['short-id']).lower()
+            
+            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS с TLS
+            if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
             
-            if details.get('network'):
-                proxy['network'] = details['network']
-                if details['network'] == 'ws' and 'ws-opts' in details:
-                    proxy['ws-opts'] = details['ws-opts']
-                elif details['network'] == 'grpc' and 'grpc-opts' in details:
-                    proxy['grpc-opts'] = details['grpc-opts']
+            # ✅ ИСПРАВЛЕНИЕ 4: Правильно обрабатывать network параметры
+            if details.get('network') == 'ws' and details.get('ws-opts'):
+                proxy['network'] = 'ws'
+                ws_opts = details['ws-opts']
+                proxy['ws-opts'] = {}
+                if ws_opts.get('path'):
+                    proxy['ws-opts']['path'] = ws_opts['path']
+                if ws_opts.get('headers'):
+                    proxy['ws-opts']['headers'] = ws_opts['headers']
+            elif details.get('network') == 'grpc' and details.get('grpc-opts'):
+                proxy['network'] = 'grpc'
+                proxy['grpc-opts'] = {}
+                if details['grpc-opts'].get('grpc-service-name'):
+                    proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
 
         elif ptype == 'vmess':
-            proxy['uuid'] = details.get('uuid', '')
-            proxy['alterId'] = details.get('alterId', 0)
+            if not details.get('uuid'):
+                return None
+            proxy['uuid'] = details['uuid']
+            proxy['alterId'] = int(details.get('alterId', 0))
             proxy['cipher'] = details.get('cipher', 'auto')
             if details.get('tls'):
                 proxy['tls'] = True
             if details.get('sni'):
                 proxy['servername'] = details['sni']
-            if details.get('network'):
-                proxy['network'] = details['network']
-                if details['network'] == 'ws' and 'ws-opts' in details:
-                    proxy['ws-opts'] = details['ws-opts']
-                elif details['network'] == 'grpc' and 'grpc-opts' in details:
-                    proxy['grpc-opts'] = details['grpc-opts']
+            
+            # ✅ ИСПРАВЛЕНИЕ 5: Правильно обрабатывать network для VMess
+            if details.get('network') == 'ws' and details.get('ws-opts'):
+                proxy['network'] = 'ws'
+                ws_opts = details['ws-opts']
+                proxy['ws-opts'] = {}
+                if ws_opts.get('path'):
+                    proxy['ws-opts']['path'] = ws_opts['path']
+                if ws_opts.get('headers'):
+                    proxy['ws-opts']['headers'] = ws_opts['headers']
+            elif details.get('network') == 'grpc' and details.get('grpc-opts'):
+                proxy['network'] = 'grpc'
+                proxy['grpc-opts'] = {}
+                if details['grpc-opts'].get('grpc-service-name'):
+                    proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
 
-        elif ptype in ('trojan', 'hysteria2'):
-            if 'password' in details:
-                proxy['password'] = details['password']
-            if ptype == 'hysteria2':
-                proxy['up'] = details.get('up', '30 Mbps')
-                proxy['down'] = details.get('down', '100 Mbps')
+        elif ptype == 'trojan':
+            if not details.get('password'):
+                return None
+            proxy['password'] = details['password']
+            proxy['sni'] = details.get('sni', '')
+            if details.get('skip-cert-verify'):
+                proxy['skip-cert-verify'] = True
+
+        elif ptype == 'hysteria2':
+            if not details.get('password'):
+                return None
+            proxy['password'] = details['password']
+            proxy['obfs'] = 'salamander'
+            proxy['obfs-password'] = details.get('password', '')
+            proxy['up'] = details.get('up', '30 Mbps')
+            proxy['down'] = details.get('down', '100 Mbps')
+            if details.get('sni'):
+                proxy['sni'] = details['sni']
 
         elif ptype == 'tuic':
-            proxy['uuid'] = details.get('uuid', '')
+            if not details.get('uuid'):
+                return None
+            proxy['uuid'] = details['uuid']
             if details.get('password'):
                 proxy['password'] = details['password']
             if details.get('alpn'):
-                proxy['alpn'] = details['alpn']
+                alpn = details['alpn']
+                if isinstance(alpn, list):
+                    proxy['alpn'] = alpn
+                elif isinstance(alpn, str):
+                    proxy['alpn'] = [alpn]
             proxy['congestion-control'] = details.get('congestion_control', 'bbr')
             proxy['udp-relay-mode'] = details.get('udp_relay_mode', 'native')
+            if details.get('sni'):
+                proxy['sni'] = details['sni']
 
         elif ptype == 'ss':
-            proxy['cipher'] = details.get('cipher', '')
-            proxy['password'] = details.get('password', '')
+            if not details.get('cipher') or not details.get('password'):
+                return None
+            proxy['cipher'] = details['cipher']
+            proxy['password'] = details['password']
 
         return proxy
 
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует корректный Clash YAML с использованием библиотеки PyYAML"""
+        """Генерирует корректный Clash YAML"""
         proxy_name_prefix = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
+        invalid_count = 0
 
         for idx, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if not cleaned:
                 continue
-            details = parse_config_detailed(cleaned)
-            proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
-            if proxy:
-                proxies.append(proxy)
+            
+            try:
+                details = parse_config_detailed(cleaned)
+                proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
+                if proxy:
+                    proxies.append(proxy)
+                else:
+                    invalid_count += 1
+            except Exception as e:
+                logger.debug(f"Ошибка при обработке конфига {idx}: {e}")
+                invalid_count += 1
 
         if not proxies:
+            logger.warning(f"Никаких валидных проксей для {title}")
             return "# No valid proxies found"
 
+        logger.info(f"Сгенерировано {len(proxies)} проксей для {title} (пропущено {invalid_count})")
+
+        # ✅ ИСПРАВЛЕНИЕ 6: Правильная структура YAML с пустыми полями
         clash_config = {
             'proxies': proxies,
             'proxy-groups': [
@@ -856,16 +909,26 @@ class VPNConfigCollector:
             f"# 🔰 V2Ray Clash Subscription\n"
             f"# Profile: {title}\n"
             f"# Support: https://t.me/flat447\n"
-            f"# Update interval: 1 hour\n\n"
+            f"# Update interval: 1 hour\n"
+            f"# Valid proxies: {len(proxies)}\n\n"
         )
 
-        yaml_str = yaml.dump(
-            clash_config,
-            allow_unicode=True,
-            sort_keys=False,
-            default_flow_style=False,
-            indent=2
-        )
+        # ✅ ИСПРАВЛЕНИЕ 7: Правильные параметры PyYAML
+        try:
+            yaml_str = yaml.dump(
+                clash_config,
+                allow_unicode=True,
+                sort_keys=False,
+                default_flow_style=False,
+                default_style=None,
+                indent=2,
+                explicit_start=False,
+                explicit_end=False
+            )
+        except Exception as e:
+            logger.error(f"Ошибка YAML сериализации: {e}")
+            return comments + "# Error generating YAML"
+
         return comments + yaml_str
 
     async def run(self):
