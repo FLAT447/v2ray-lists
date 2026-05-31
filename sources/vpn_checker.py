@@ -11,7 +11,7 @@ from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs
 import aiohttp
 import requests
-import yaml  # PyYAML для корректной генерации Clash-конфигов
+import yaml
 from github import Github, GithubException
 from async_lru import alru_cache
 
@@ -140,7 +140,6 @@ def parse_config_detailed(config: str) -> dict:
         'port': 0,
         'sni': '',
         'udp': True,
-        # Дополнительные поля, которые могут понадобиться Clash
         'flow': '',
         'client-fingerprint': '',
         'up': '30 Mbps',
@@ -285,7 +284,6 @@ def parse_config_detailed(config: str) -> dict:
         elif scheme in ['hysteria2', 'hysteria']:
             result['type'] = 'hysteria2'
             result['password'] = auth_part
-            # Извлекаем up/down из параметров, если есть
             up_str = query.get('up', [''])[0]
             down_str = query.get('down', [''])[0]
             if up_str:
@@ -301,7 +299,6 @@ def parse_config_detailed(config: str) -> dict:
             else:
                 result['uuid'] = auth_part
             result['alpn'] = query.get('alpn', [['h3']])[0].split(',')
-            # Добавляем параметры tuic
             result['congestion_control'] = query.get('congestion_control', ['bbr'])[0]
             result['udp_relay_mode'] = query.get('udp_relay_mode', ['native'])[0]
 
@@ -721,16 +718,14 @@ class VPNConfigCollector:
         return '\n'.join(meta + cleaned_configs)
 
     # ------------------------------------------------------------------------
-    # НОВЫЕ ФУНКЦИИ ДЛЯ КОРРЕКТНОЙ ГЕНЕРАЦИИ YAML
+    # ФУНКЦИИ ДЛЯ КОРРЕКТНОЙ ГЕНЕРАЦИИ YAML
     # ------------------------------------------------------------------------
     @staticmethod
     def _escape_yaml_string(s: str) -> str:
         """Экранирует строку для YAML (без hex-маскировки)"""
         if not s:
             return '""'
-        # Экранируем обратные слеши и двойные кавычки
         s = s.replace('\\', '\\\\').replace('"', '\\"')
-        # Если строка содержит потенциально опасные символы, оборачиваем в двойные кавычки
         if any(c in s for c in ':#{}[]&*?|-%@!,\n\r\t'):
             return f'"{s}"'
         return s
@@ -749,7 +744,6 @@ class VPNConfigCollector:
             'udp': details.get('udp', True)
         }
 
-        # Общие поля
         if details.get('sni'):
             proxy['sni'] = details['sni']
         if details.get('skip-cert-verify'):
@@ -764,8 +758,20 @@ class VPNConfigCollector:
                 proxy['tls'] = True
             if details.get('client-fingerprint'):
                 proxy['client-fingerprint'] = details['client-fingerprint']
+            
             if details.get('reality-opts'):
-                proxy['reality-opts'] = details['reality-opts']
+                proxy['reality-opts'] = {}
+                ropts = details['reality-opts']
+                if ropts.get('public-key'):
+                    proxy['reality-opts']['public-key'] = ropts['public-key']
+                short_id = ropts.get('short-id', '')
+                if short_id:
+                    proxy['reality-opts']['short-id'] = str(short_id).lower()
+                if details.get('sni'):
+                    proxy['servername'] = details['sni']
+            elif details.get('sni') and details.get('tls'):
+                proxy['servername'] = details['sni']
+            
             if details.get('network'):
                 proxy['network'] = details['network']
                 if details['network'] == 'ws' and 'ws-opts' in details:
@@ -779,6 +785,8 @@ class VPNConfigCollector:
             proxy['cipher'] = details.get('cipher', 'auto')
             if details.get('tls'):
                 proxy['tls'] = True
+            if details.get('sni'):
+                proxy['servername'] = details['sni']
             if details.get('network'):
                 proxy['network'] = details['network']
                 if details['network'] == 'ws' and 'ws-opts' in details:
@@ -790,12 +798,8 @@ class VPNConfigCollector:
             if 'password' in details:
                 proxy['password'] = details['password']
             if ptype == 'hysteria2':
-                # Обязательные поля для hysteria2
                 proxy['up'] = details.get('up', '30 Mbps')
                 proxy['down'] = details.get('down', '100 Mbps')
-                # Если есть obfs, добавить
-                if 'obfs' in details:
-                    proxy['obfs'] = details['obfs']
 
         elif ptype == 'tuic':
             proxy['uuid'] = details.get('uuid', '')
@@ -829,7 +833,6 @@ class VPNConfigCollector:
         if not proxies:
             return "# No valid proxies found"
 
-        # Формируем структуру данных для YAML
         clash_config = {
             'proxies': proxies,
             'proxy-groups': [
@@ -849,7 +852,6 @@ class VPNConfigCollector:
             'rules': ['MATCH,Selector']
         }
 
-        # Добавляем комментарии в начало файла
         comments = (
             f"# 🔰 V2Ray Clash Subscription\n"
             f"# Profile: {title}\n"
@@ -857,7 +859,6 @@ class VPNConfigCollector:
             f"# Update interval: 1 hour\n\n"
         )
 
-        # Сериализуем в YAML
         yaml_str = yaml.dump(
             clash_config,
             allow_unicode=True,
@@ -915,31 +916,24 @@ class VPNConfigCollector:
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
             white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
 
-            # Перевод контента подписок в Base64 формат
             black_b64 = base64.b64encode(black_txt.encode('utf-8')).decode('utf-8')
             black_lte_b64 = base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8')
             white_full_b64 = base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8')
             white_lite_b64 = base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8')
             
             files_to_push = {
-                # Текстовые подписки в корень репозитория
                 'BLACK_FULL.txt': black_txt,
                 'BLACK_LTE.txt': black_lte_txt,
                 'WHITE_FULL.txt': white_full_txt,
                 'WHITE_LITE.txt': white_lite_txt,
-                
-                # Подписки в формате Base64 в папку BASE64
                 'BASE64/BLACK_FULL.txt': black_b64,
                 'BASE64/BLACK_LTE.txt': black_lte_b64,
                 'BASE64/WHITE_FULL.txt': white_full_b64,
                 'BASE64/WHITE_LITE.txt': white_lite_b64,
-                
-                # Подписки в Clash YAML формате (исправленные)
                 'CLASH/BLACK_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK FULL', black),
                 'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
                 'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
                 'CLASH/WHITE_LITE.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE LITE', white_lite),
-                
                 'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
             }
             
@@ -965,7 +959,7 @@ class VPNConfigCollector:
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
                     f"📦 *Форматы подписок:*\n"
                     f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
-                    f"├ Закодированные Base64 (.txt): Директория `BASE64/` (BLACK_FULL, BLACK_LTE...)\n"
+                    f"├ Закодированные Base64 (.txt): Директория `BASE64/`\n"
                     f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
