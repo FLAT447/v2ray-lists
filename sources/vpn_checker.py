@@ -897,12 +897,32 @@ class VPNConfigCollector:
                 "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
             
+            # Генерация стандартного текстового контента
+            black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
+            black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte)
+            white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
+            white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
+
+            # Генерация закодированного контента Base64
+            black_b64 = base64.b64encode(black_txt.encode('utf-8')).decode('utf-8')
+            black_lte_b64 = base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8')
+            white_full_b64 = base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8')
+            white_lite_b64 = base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8')
+            
             files_to_push = {
-                'BLACK_FULL.txt': self._generate_subscription_content('V2Ray Lists - BLACK FULL', black),
-                'BLACK_LTE.txt': self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte),
-                'WHITE_FULL.txt': self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full),
-                'WHITE_LITE.txt': self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite),
+                # Стандартный текст подписок
+                'BLACK_FULL.txt': black_txt,
+                'BLACK_LTE.txt': black_lte_txt,
+                'WHITE_FULL.txt': white_full_txt,
+                'WHITE_LITE.txt': white_lite_txt,
                 
+                # Подписки в формате Base64 в отдельную директорию BASE64
+                'BASE64/BLACK_FULL.txt': black_b64,
+                'BASE64/BLACK_LTE.txt': black_lte_b64,
+                'BASE64/WHITE_FULL.txt': white_full_b64,
+                'BASE64/WHITE_LITE.txt': white_lite_b64,
+                
+                # Конфигурации для Clash YAML
                 'CLASH/BLACK_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK FULL', black),
                 'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
                 'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
@@ -933,6 +953,7 @@ class VPNConfigCollector:
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
                     f"📦 *Форматы подписок:*\n"
                     f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
+                    f"├ Закодированные Base64 (.txt): Папка `BASE64/` (BLACK_FULL, BLACK_LTE, и др.)\n"
                     f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
