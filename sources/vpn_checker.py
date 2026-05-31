@@ -721,6 +721,29 @@ class VPNConfigCollector:
     # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
     # ========================================================================
     
+    # SS cipher mapping для нормализации
+    SS_CIPHER_MAP = {
+        'chacha20-poly1305': 'chacha20-ietf-poly1305',
+        'chacha20-ietf': 'chacha20-ietf-poly1305',
+        'aes-128-ctr': 'aes-128-gcm',
+        'aes-192-ctr': 'aes-192-gcm',
+        'aes-256-ctr': 'aes-256-gcm',
+    }
+    
+    # Допустимые SS cipher в Clash
+    VALID_SS_CIPHERS = {
+        'aes-128-gcm',
+        'aes-192-gcm',
+        'aes-256-gcm',
+        'chacha20-ietf-poly1305',
+        'xchacha20-ietf-poly1305',
+    }
+
+    def _normalize_ss_cipher(self, cipher: str) -> str:
+        """Нормализует Shadowsocks cipher на правильный формат"""
+        cipher_lower = cipher.lower().strip()
+        return self.SS_CIPHER_MAP.get(cipher_lower, cipher_lower)
+
     def _validate_reality_opts(self, reality_opts: dict) -> bool:
         """Валидирует REALITY параметры перед добавлением в конфиг"""
         public_key = reality_opts.get('public-key', '').strip()
@@ -884,7 +907,16 @@ class VPNConfigCollector:
         elif ptype == 'ss':
             if not details.get('cipher') or not details.get('password'):
                 return None
-            proxy['cipher'] = details['cipher']
+            
+            # ✅ Нормализуем cipher (исправляем неправильные форматы)
+            cipher = self._normalize_ss_cipher(details['cipher'])
+            
+            # ✅ Валидируем что cipher поддерживается в Clash
+            if cipher not in self.VALID_SS_CIPHERS:
+                logger.debug(f"Unsupported SS cipher: {cipher}")
+                return None
+            
+            proxy['cipher'] = cipher
             proxy['password'] = details['password']
 
         return proxy
