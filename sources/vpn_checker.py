@@ -750,22 +750,46 @@ class VPNConfigCollector:
         return self.SS_CIPHER_MAP.get(cipher_lower, cipher_lower)
 
     def _validate_reality_opts(self, reality_opts: dict) -> bool:
-        """Валидирует REALITY параметры перед добавлением в конфиг"""
+        """Валидирует REALITY параметры с полной проверкой public-key"""
         public_key = reality_opts.get('public-key', '').strip()
         short_id = reality_opts.get('short-id', '').strip()
         
-        # Проверяем public-key (должен быть не менее 40 символов)
-        if not public_key or len(public_key) < 40:
+        # ✅ ПРОВЕРКА 1: public-key не пусто
+        if not public_key:
+            logger.debug("Invalid public-key: empty")
             return False
         
-        # Проверяем short-id если он есть
+        # ✅ ПРОВЕРКА 2: Длина public-key (43-44 символа для валидного base64)
+        if len(public_key) < 43 or len(public_key) > 44:
+            logger.debug(f"Invalid public-key length: {len(public_key)}, expected 43-44")
+            return False
+        
+        # ✅ ПРОВЕРКА 3: Полная валидация base64 - должен декодироваться в 32 байта
+        try:
+            # Добавляем padding для корректного декодирования
+            padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
+            
+            # Декодируем base64
+            decoded = base64.b64decode(padded, validate=True)
+            
+            # Проверяем что получилось ровно 32 байта (256 бит для Ed25519)
+            if len(decoded) != 32:
+                logger.debug(f"Invalid public-key: decoded to {len(decoded)} bytes, expected 32")
+                return False
+        except Exception as e:
+            logger.debug(f"Invalid public-key format: {e}")
+            return False
+        
+        # ✅ ПРОВЕРКА 4: short-id должен быть hex (0-9, a-f) и максимум 16 символов
         if short_id:
-            # Должен быть hex формат (только 0-9, a-f, A-F)
+            # Проверяем hex формат
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
+                logger.debug(f"Invalid short-id format (not hex): {short_id}")
                 return False
-            # Не больше 16 символов
             if len(short_id) > 16:
+                logger.debug(f"Invalid short-id: too long ({len(short_id)} > 16)")
                 return False
+        # else: short-id пусто - это OK
         
         return True
 
