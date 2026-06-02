@@ -471,31 +471,10 @@ class ConfigFetcher:
             "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
         self.sources: List[str] = [
-            "https://github.com/sakha1370/OpenRay/raw/refs/heads/main/output/all_valid_proxies.txt",
-            "https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/All_Configs_Sub.txt",
-            "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt",
-            "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt",
-            "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/sub.txt",
             "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
-            "https://github.com/Epodonios/v2ray-configs/raw/main/Splitted-By-Protocol/trojan.txt",
-            "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
-            "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
-            "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
-            "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
-            "https://raw.githubusercontent.com/expressalaki/ExpressVPN/refs/heads/main/configs3.txt",
-            "https://github.com/barry-far/V2ray-Config/raw/refs/heads/main/Splitted-By-Protocol/vless.txt",
-            "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
-            "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/mixed_iran.txt",
-            "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub",
-            "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt",
             "https://mifa.world/hysteria",
-            "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/tuic.txt",
-            "https://github.com/Argh94/Proxy-List/raw/refs/heads/main/All_Config.txt",
-            "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt",
             "https://subrostunnel.vercel.app/gen.txt",
             "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-            "https://github.com/Mr-Meshky/vify/raw/refs/heads/main/configs/vless.txt",
-            "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
             "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
             "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
             "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
@@ -506,10 +485,24 @@ class ConfigFetcher:
             "https://etoneya.su/1",
             "https://etoneya.su/whitelist",
             "https://gist.github.com/DestroyST6767/f00837ad379aa3272183fdaabcfd50da.txt",
+            "https://gist.github.com/DestroyST6767/50af50221ca1858ba2084efc0f524fbc.txt"
             "https://mifa.world/ss",
             "https://mifa.world/vless",
             "https://mifa.world/trojan",
-            "https://raw.githubusercontent.com/RKPchannel/RKP_bypass_configs/refs/heads/main/configs/url_work.txt"
+            "https://raw.githubusercontent.com/RKPchannel/RKP_bypass_configs/refs/heads/main/configs/url_work.txt",
+            "https://vpn.yzewe.ru/sub",
+            "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
+            "https://raw.githubusercontent.com/prominbro/sub/refs/heads/main/212.txt",
+            "https://obwl.obprojects.lol/configs/selected.txt",
+            "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
+            "https://raw.githubusercontent.com/AirLinkVPN1/AirLinkVPN/refs/heads/main/rkn_white_list",
+            "https://raw.githubusercontent.com/dequar/deqwl/refs/heads/main/deray.txt",
+            "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt",
+            "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/ru/vless.txt",
+            "https://subrostunnel.vercel.app/wl.txt",
+            "https://rostunnel.vercel.app/mega.txt",
+            "https://raw.githubusercontent.com/kort0881/vpn-checker-backend/refs/heads/main/checked/RU_Best/ru_white_all_WHITE.txt",
+            "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/main/subscriptions/FreeCFGHub1.txt"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
