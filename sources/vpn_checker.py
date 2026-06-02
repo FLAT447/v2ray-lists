@@ -508,7 +508,8 @@ class ConfigFetcher:
             "https://gist.github.com/DestroyST6767/f00837ad379aa3272183fdaabcfd50da.txt",
             "https://mifa.world/ss",
             "https://mifa.world/vless",
-            "https://mifa.world/trojan"
+            "https://mifa.world/trojan",
+            "https://raw.githubusercontent.com/RKPchannel/RKP_bypass_configs/refs/heads/main/configs/url_work.txt"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
