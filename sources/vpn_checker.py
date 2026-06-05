@@ -471,7 +471,6 @@ class ConfigFetcher:
             "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
         self.sources: List[str] = [
-            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
             "https://mifa.world/hysteria",
             "https://subrostunnel.vercel.app/gen.txt",
             "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
@@ -480,7 +479,6 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
             "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
             "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
-            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
             "https://etoneya.su/1",
             "https://etoneya.su/whitelist",
