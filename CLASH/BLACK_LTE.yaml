@@ -6,17 +6,6 @@
 
 proxies:
 - name: BLACK LTE [1]
-  type: hysteria2
-  server: 185.106.96.231
-  port: 443
-  udp: true
-  sni: s559.ccgfw.top
-  password: 10550754-cf62-3d3b-ba6a-50be27a275d7
-  obfs: salamander
-  obfs-password: 10550754-cf62-3d3b-ba6a-50be27a275d7
-  up: 30 Mbps
-  down: 100 Mbps
-- name: BLACK LTE [2]
   type: vless
   server: 88.216.66.30
   port: 8880
@@ -27,14 +16,64 @@ proxies:
     path: /
     headers:
       Host: vms.lifetime04.workers.dev
+- name: BLACK LTE [2]
+  type: hysteria2
+  server: 185.106.96.231
+  port: 443
+  udp: true
+  sni: s559.ccgfw.top
+  password: 10550754-cf62-3d3b-ba6a-50be27a275d7
+  obfs: salamander
+  obfs-password: 10550754-cf62-3d3b-ba6a-50be27a275d7
+  up: 30 Mbps
+  down: 100 Mbps
 - name: BLACK LTE [3]
+  type: trojan
+  server: 31.184.246.134
+  port: 443
+  password: l6ep4yzoadj6v2nf
+  sni: ''
+- name: BLACK LTE [5]
+  type: trojan
+  server: 78.159.131.12
+  port: 28259
+  sni: ads.x5.ru
+  password: MeaDiUmPlkWbZJ2BON8tz
+- name: BLACK LTE [7]
   type: vmess
   server: 5.188.190.252
   port: 22324
   uuid: 04621bae-ab36-11ec-b909-0242ac120002
   alterId: 0
   cipher: auto
-- name: BLACK LTE [6]
+- name: BLACK LTE [8]
+  type: vmess
+  server: 37.220.161.247
+  port: 443
+  sni: renderer-stream-1-411.mirra.now
+  uuid: df9c9355-b02c-4c12-909d-0dbeb725d52b
+  alterId: 0
+  cipher: auto
+  tls: true
+  servername: renderer-stream-1-411.mirra.now
+  network: ws
+  ws-opts:
+    path: /api/v1/gpu-stream/socket
+    headers:
+      Host: renderer-stream-1-411.mirra.now
+- name: BLACK LTE [9]
+  type: vless
+  server: 158.160.196.187
+  port: 443
+  uuid: 834184d0-b7f6-4e2c-9e12-a53a1d2af807
+  encryption: none
+  tls: true
+  client-fingerprint: edge
+  servername: 95.85.246.16.speed-storage.ru
+  network: grpc
+  grpc-opts:
+    grpc-service-name: /sequre/grpc/
+- name: BLACK LTE [11]
   type: vless
   server: 51.250.95.143
   port: 443
@@ -46,7 +85,7 @@ proxies:
     public-key: dEHsPQQSnMJiHJKnJRbbLFKQmwIemUXQsQ1zIYbLZng
     short-id: f6
   servername: www.mobile.yandex.ru
-- name: BLACK LTE [7]
+- name: BLACK LTE [12]
   type: vmess
   server: 93.93.89.99
   port: 443
@@ -61,7 +100,7 @@ proxies:
     path: /api/v1/gpu-stream/socket
     headers:
       Host: renderer-stream-1-411.mirra.now
-- name: BLACK LTE [8]
+- name: BLACK LTE [13]
   type: vmess
   server: 195.209.87.186
   port: 443
@@ -76,26 +115,14 @@ proxies:
     path: /api/v1/gpu-stream/socket
     headers:
       Host: renderer-stream-1-411.mirra.now
-- name: BLACK LTE [9]
+- name: BLACK LTE [14]
   type: vmess
   server: 5.188.190.252
   port: 22324
   uuid: 04621bae-ab36-11ec-b909-0242ac120002
   alterId: 1
   cipher: auto
-- name: BLACK LTE [10]
-  type: trojan
-  server: 31.184.246.134
-  port: 443
-  password: l6ep4yzoadj6v2nf
-  sni: ''
-- name: BLACK LTE [11]
-  type: vless
-  server: 51.250.28.71
-  port: 443
-  uuid: ffaab2f1-8d78-441a-b910-e8127dd3edb2
-  encryption: none
-- name: BLACK LTE [12]
+- name: BLACK LTE [15]
   type: vless
   server: 51.250.95.143
   port: 443
@@ -107,28 +134,7 @@ proxies:
     public-key: dEHsPQQSnMJiHJKnJRbbLFKQmwIemUXQsQ1zIYbLZng
     short-id: f6
   servername: www.mobile.yandex.ru
-- name: BLACK LTE [13]
-  type: vmess
-  server: 37.220.161.247
-  port: 443
-  sni: renderer-stream-1-411.mirra.now
-  uuid: df9c9355-b02c-4c12-909d-0dbeb725d52b
-  alterId: 0
-  cipher: auto
-  tls: true
-  servername: renderer-stream-1-411.mirra.now
-  network: ws
-  ws-opts:
-    path: /api/v1/gpu-stream/socket
-    headers:
-      Host: renderer-stream-1-411.mirra.now
-- name: BLACK LTE [17]
-  type: ss
-  server: 51.250.79.203
-  port: 22
-  cipher: chacha20-ietf-poly1305
-  password: NQRCh-qm11GH9MaRWX9NdmSdWaGRhFeS
-- name: BLACK LTE [18]
+- name: BLACK LTE [20]
   type: vless
   server: 84.201.169.198
   port: 443
@@ -136,27 +142,27 @@ proxies:
   encryption: none
   network: grpc
   grpc-opts: {}
-- name: BLACK LTE [22]
-  type: trojan
-  server: 78.159.131.12
-  port: 28259
-  sni: ads.x5.ru
-  password: MeaDiUmPlkWbZJ2BON8tz
+- name: BLACK LTE [21]
+  type: ss
+  server: 51.250.79.203
+  port: 22
+  cipher: chacha20-ietf-poly1305
+  password: NQRCh-qm11GH9MaRWX9NdmSdWaGRhFeS
 - name: BLACK LTE [23]
   type: vmess
-  server: 37.220.161.247
-  port: 443
-  sni: renderer-stream-1-411.mirra.now
-  uuid: df9c9355-b02c-4c12-909d-0dbeb725d52b
+  server: 185.78.165.153
+  port: 10001
+  sni: th1.vpnjantit.com
+  uuid: 1020f486-5e30-11f1-9b9b-bb0e43c242bb
   alterId: 0
   cipher: auto
   tls: true
-  servername: renderer-stream-1-411.mirra.now
+  servername: th1.vpnjantit.com
   network: ws
   ws-opts:
-    path: /api/v1/gpu-stream/socket
+    path: /vpnjantit
     headers:
-      Host: renderer-stream-1-411.mirra.now
+      Host: th1.vpnjantit.com
 proxy-groups:
 - name: Selector
   type: select
@@ -164,17 +170,17 @@ proxy-groups:
   - BLACK LTE [1]
   - BLACK LTE [2]
   - BLACK LTE [3]
-  - BLACK LTE [6]
+  - BLACK LTE [5]
   - BLACK LTE [7]
   - BLACK LTE [8]
   - BLACK LTE [9]
-  - BLACK LTE [10]
   - BLACK LTE [11]
   - BLACK LTE [12]
   - BLACK LTE [13]
-  - BLACK LTE [17]
-  - BLACK LTE [18]
-  - BLACK LTE [22]
+  - BLACK LTE [14]
+  - BLACK LTE [15]
+  - BLACK LTE [20]
+  - BLACK LTE [21]
   - BLACK LTE [23]
 - name: Auto Fallback
   type: fallback
@@ -184,17 +190,17 @@ proxy-groups:
   - BLACK LTE [1]
   - BLACK LTE [2]
   - BLACK LTE [3]
-  - BLACK LTE [6]
+  - BLACK LTE [5]
   - BLACK LTE [7]
   - BLACK LTE [8]
   - BLACK LTE [9]
-  - BLACK LTE [10]
   - BLACK LTE [11]
   - BLACK LTE [12]
   - BLACK LTE [13]
-  - BLACK LTE [17]
-  - BLACK LTE [18]
-  - BLACK LTE [22]
+  - BLACK LTE [14]
+  - BLACK LTE [15]
+  - BLACK LTE [20]
+  - BLACK LTE [21]
   - BLACK LTE [23]
 rules:
 - MATCH,Selector
