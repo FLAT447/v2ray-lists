@@ -556,10 +556,10 @@ class ConfigFetcher:
 
 class ConfigPinger:
     """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
-    def __init__(self, max_concurrent: int = 100):
+    def __init__(self, max_concurrent: int = 200):
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 1.5) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
