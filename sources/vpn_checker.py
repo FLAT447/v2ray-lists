@@ -9,8 +9,6 @@ import ipaddress
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs
-from dataclasses import dataclass
-from collections import Counter
 import aiohttp
 import requests
 import yaml
@@ -223,6 +221,7 @@ def parse_config_detailed(config: str) -> dict:
         parsed = urlparse(config)
         scheme = parsed.scheme.lower()
         
+        # ✅ Нормализация типов протоколов (hy2 → hysteria2, hysteria → hysteria2)
         PROTOCOL_MAP = {
             'hy2': 'hysteria2',
             'hysteria': 'hysteria2',
@@ -338,215 +337,6 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
         return False
 
     return True
-
-
-# ============================================================================
-# СИСТЕМА СКОРИРОВАНИЯ И СТАТИСТИКИ ДЛЯ GH ACTIONS
-# ============================================================================
-
-@dataclass
-class ConfigScore:
-    """Скор конфига на основе текущих метрик"""
-    config: str
-    ping_ms: float
-    protocol: str
-    server: str
-    port: int
-    sni: str
-    
-    score: float = 0.0
-    
-    def calculate(self) -> float:
-        """Вычислить скор конфига на основе текущих метрик задержки"""
-        if self.ping_ms <= 0:
-            return 0
-        
-        # 1. Скор по пингу (70% веса)
-        ping_score = self._ping_score() * 0.70
-        
-        # 2. Скор по разнообразию (30% веса)
-        diversity_bonus = 10
-        diversity_score = diversity_bonus * 0.30
-        
-        self.score = ping_score + diversity_score
-        return min(100, self.score)
-    
-    def _ping_score(self) -> float:
-        """Вычислить скор на основе пинга"""
-        if self.ping_ms < 50:
-            return 30
-        elif self.ping_ms < 100:
-            return 20
-        elif self.ping_ms < 200:
-            return 10
-        elif self.ping_ms < 300:
-            return 5
-        else:
-            return max(0, 15 - (self.ping_ms - 200) / 50)
-
-
-class GHActionsConfigFilter:
-    """
-    Фильтр для GitHub Actions.
-    Оптимизирован для работы без сохранения состояния между запусками.
-    """
-    def __init__(self):
-        self.configs_processed = 0
-        self.stats = {}
-    
-    async def filter_and_rank(
-        self,
-        configs: List[Dict],
-        whitelist_sni: Set[str],
-        whitelist_cidr: List[str],
-        target_count: int = 500
-    ) -> Tuple[List[str], List[str], List[str]]:
-        """Фильтрует и ранжирует конфиги"""
-        logger.info("🚀 Начинаем фильтрацию и скоринг конфигов для GH Actions")
-        
-        if not configs:
-            logger.warning("⚠️ Нет конфигов для фильтрации")
-            return [], [], []
-        
-        white_scores = []
-        black_lte_scores = []
-        black_scores = []
-        
-        for config_dict in configs:
-            score_obj = ConfigScore(
-                config=config_dict.get('config', ''),
-                ping_ms=float(config_dict.get('ping', 999)),
-                protocol=config_dict.get('protocol', 'unknown'),
-                server=config_dict.get('server', ''),
-                port=config_dict.get('port', 0),
-                sni=config_dict.get('sni', '')
-            )
-            
-            if score_obj.sni in whitelist_sni:
-                white_scores.append(score_obj)
-            elif self._is_in_whitelist_cidr(score_obj.server, whitelist_cidr):
-                black_lte_scores.append(score_obj)
-            else:
-                black_scores.append(score_obj)
-        
-        for score_list in [white_scores, black_lte_scores, black_scores]:
-            for score_obj in score_list:
-                score_obj.calculate()
-            score_list.sort(key=lambda x: x.score, reverse=True)
-        
-        white_ranked = self._select_with_diversity(white_scores, target_count)
-        black_lte_ranked = self._select_with_diversity(black_lte_scores, target_count // 2)
-        black_ranked = self._select_with_diversity(black_scores, target_count)
-        
-        white_full = [obj.config for obj in white_ranked]
-        black_lte = [obj.config for obj in black_lte_ranked]
-        black = [obj.config for obj in black_ranked]
-        
-        self._log_stats(white_ranked, black_lte_ranked, black_ranked)
-        
-        return white_full, black_lte, black
-    
-    def _select_with_diversity(
-        self,
-        scored_configs: List[ConfigScore],
-        target_count: int
-    ) -> List[ConfigScore]:
-        """Выбирает конфиги с жестким контролем разнообразия протоколов и хостов"""
-        if not scored_configs:
-            return []
-        
-        selected = []
-        protocol_count: Dict[str, int] = {}
-        provider_count: Dict[str, int] = {}
-        
-        for score_obj in scored_configs:
-            if len(selected) >= target_count:
-                break
-            
-            selected_count = max(1, len(selected))
-            proto_ratio = protocol_count.get(score_obj.protocol, 0) / selected_count
-            provider_name = self._extract_provider(score_obj.server)
-            provider_ratio = provider_count.get(provider_name, 0) / selected_count
-            
-            if proto_ratio > 0.40:  # Не более 40% одного протокола
-                continue
-            if provider_ratio > 0.30:  # Не более 30% одного провайдера
-                continue
-            
-            selected.append(score_obj)
-            protocol_count[score_obj.protocol] = protocol_count.get(score_obj.protocol, 0) + 1
-            provider_count[provider_name] = provider_count.get(provider_name, 0) + 1
-        
-        return selected
-    
-    def _extract_provider(self, server: str) -> str:
-        if not server or '.' not in server:
-            return 'unknown'
-        try:
-            parts = server.split('.')
-            return parts[-2] if len(parts) > 1 else parts[-1]
-        except:
-            return 'unknown'
-    
-    def _is_in_whitelist_cidr(self, server: str, whitelist_cidr: List[str]) -> bool:
-        try:
-            ip = ipaddress.ip_address(server)
-            for cidr in whitelist_cidr:
-                if ip in ipaddress.ip_network(cidr, strict=False):
-                    return True
-        except (ValueError, Exception):
-            pass
-        return False
-    
-    def _log_stats(self, white, black_lte, black):
-        """Формирует и логирует подробную статистику"""
-        def get_stats(configs_list):
-            if not configs_list:
-                return {'count': 0}
-            
-            protocols = Counter(c.protocol for c in configs_list)
-            providers = Counter(self._extract_provider(c.server) for c in configs_list)
-            pings = [c.ping_ms for c in configs_list if c.ping_ms > 0]
-            
-            return {
-                'count': len(configs_list),
-                'avg_ping': sum(pings) / len(pings) if pings else 0,
-                'min_ping': min(pings) if pings else 0,
-                'max_ping': max(pings) if pings else 0,
-                'protocols': dict(protocols.most_common()),
-                'top_providers': dict(providers.most_common(5))
-            }
-        
-        white_stats = get_stats(white)
-        black_lte_stats = get_stats(black_lte)
-        black_stats = get_stats(black)
-        
-        logger.info(f"""
-📊 РЕЗУЛЬТАТЫ ФИЛЬТРАЦИИ:
-├─ WHITE_FULL: {white_stats.get('count', 0)} шт (Ср. пинг: {white_stats.get('avg_ping', 0):.0f}ms)
-├─ BLACK_LTE: {black_lte_stats.get('count', 0)} шт (Ср. пинг: {black_lte_stats.get('avg_ping', 0):.0f}ms)
-└─ BLACK: {black_stats.get('count', 0)} шт (Ср. пинг: {black_stats.get('avg_ping', 0):.0f}ms)
-        """)
-        
-        tz_msk = timezone(timedelta(hours=3))
-        current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
-        
-        # Структура адаптирована для совместимости со старым сайтом + новые метрики
-        self.stats = {
-            "black": {"count": black_stats.get('count', 0), "updated": current_time_str},
-            "black_lte": {"count": black_lte_stats.get('count', 0), "updated": current_time_str},
-            "white_full": {"count": white_stats.get('count', 0), "updated": current_time_str},
-            "white_lite": {"count": min(500, white_stats.get('count', 0)), "updated": current_time_str},
-            "extended_metrics": {
-                "white_full": white_stats,
-                "black_lte": black_lte_stats,
-                "black": black_stats
-            },
-            "timestamp": datetime.now(tz_msk).isoformat()
-        }
-    
-    def get_stats_json(self) -> str:
-        return json.dumps(self.stats, indent=2, ensure_ascii=False)
 
 
 # ============================================================================
@@ -681,7 +471,6 @@ class ConfigFetcher:
             "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
         self.sources: List[str] = [
-            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
             "https://mifa.world/hysteria",
             "https://subrostunnel.vercel.app/gen.txt",
             "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
@@ -690,7 +479,6 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
             "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
             "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
-            "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/whitelist_full",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
             "https://etoneya.su/1",
             "https://etoneya.su/whitelist",
@@ -767,11 +555,11 @@ class ConfigFetcher:
 
 
 class ConfigPinger:
-    """Асинхронная проверка доступности портов и замер latency (ping)"""
+    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
     def __init__(self, max_concurrent: int = 100):
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def _check_config(self, config: str, timeout: float = 2.5) -> dict | None:
+    async def _check_config(self, config: str, timeout: float = 2.5) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
@@ -779,28 +567,17 @@ class ConfigPinger:
 
         async with self.semaphore:
             try:
-                start_time = asyncio.get_event_loop().time()
                 reader, writer = await asyncio.wait_for(
                     asyncio.open_connection(host, port),
                     timeout=timeout
                 )
-                ping_ms = (asyncio.get_event_loop().time() - start_time) * 1000
                 writer.close()
                 await writer.wait_closed()
-                
-                details = parse_config_detailed(config)
-                return {
-                    'config': config,
-                    'ping': ping_ms,
-                    'protocol': details.get('type', 'unknown'),
-                    'server': host,
-                    'port': port,
-                    'sni': sni
-                }
+                return config
             except Exception:
                 return None
 
-    async def ping_configs(self, configs: List[str]) -> List[dict]:
+    async def ping_configs(self, configs: List[str]) -> List[str]:
         logger.info(f"Проверяем доступность {len(configs)} конфигов...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
@@ -809,11 +586,90 @@ class ConfigPinger:
         return valid_configs
 
 
+class ConfigFilter:
+    """Асинхронная фильтрация по спискам ТСПУ на базе параллельного DoH"""
+    def __init__(self):
+        self.doh_servers = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
+
+    @alru_cache(maxsize=8192)
+    async def _resolve_doh(self, session: aiohttp.ClientSession, hostname: str) -> str | None:
+        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname):
+            return hostname
+
+        for provider in self.doh_servers:
+            try:
+                params = {"name": hostname, "type": "A"}
+                async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=3) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if "Answer" in data:
+                            for ans in data["Answer"]:
+                                if ans["type"] == 1:
+                                    return ans["data"]
+            except Exception:
+                continue
+        return None
+
+    async def filter_configs(
+        self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]
+    ) -> Tuple[List[str], List[str], List[str]]:
+        white, black_lte, black = [], [], []
+        sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
+        
+        networks = []
+        for net_str in whitelist_cidr:
+            try:
+                networks.append(ipaddress.ip_network(net_str.strip(), strict=False))
+            except Exception:
+                continue
+
+        async def process_single(config: str, session: aiohttp.ClientSession):
+            host, port, sni = parse_config(config)
+            
+            if not validate_config(config, host, port, sni):
+                return None
+
+            resolved_ip = await self._resolve_doh(session, host)
+            is_ip_whitelisted = False
+            
+            if resolved_ip:
+                try:
+                    ip_obj = ipaddress.ip_address(resolved_ip)
+                    for net in networks:
+                        if ip_obj in net:
+                            is_ip_whitelisted = True
+                            break
+                except Exception:
+                    pass
+
+            is_sni_whitelisted = bool(sni) and sni in sni_set
+            return config, is_ip_whitelisted, is_sni_whitelisted
+
+        async with aiohttp.ClientSession() as session:
+            tasks = [process_single(cfg, session) for cfg in configs]
+            results = await asyncio.gather(*tasks)
+
+            for res in results:
+                if not res:
+                    continue
+                cfg, is_ip_whitelisted, is_sni_whitelisted = res
+                
+                if is_ip_whitelisted:
+                    white.append(cfg)
+                elif is_sni_whitelisted:
+                    black_lte.append(cfg)
+                else:
+                    black.append(cfg)
+
+        logger.info(f"Фильтрация завершена: white={len(white)}, black_lte={len(black_lte)}, black={len(black)}")
+        return white, black_lte, black
+
+
 class VPNConfigCollector:
     """Главный координатор процесса выполнения сборщика"""
     def __init__(self):
         self.config_fetcher = ConfigFetcher()
-        self.config_filter = GHActionsConfigFilter()  # Умный фильтр с защитой от однообразия
+        self.config_filter = ConfigFilter()
         self.config_pinger = ConfigPinger(max_concurrent=120)
         
         github_token = os.getenv('GITHUB_TOKEN')
@@ -862,6 +718,10 @@ class VPNConfigCollector:
 
         return '\n'.join(meta + cleaned_configs)
 
+    # ========================================================================
+    # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
+    # ========================================================================
+    
     # SS cipher mapping для нормализации
     SS_CIPHER_MAP = {
         'chacha20-poly1305': 'chacha20-ietf-poly1305',
@@ -890,25 +750,42 @@ class VPNConfigCollector:
         public_key = reality_opts.get('public-key', '').strip()
         short_id = reality_opts.get('short-id', '').strip()
         
+        # ✅ ПРОВЕРКА 1: public-key не пусто
         if not public_key:
+            logger.debug("Invalid public-key: empty")
             return False
         
+        # ✅ ПРОВЕРКА 2: Длина public-key (43-44 символа для валидного base64)
         if len(public_key) < 43 or len(public_key) > 44:
+            logger.debug(f"Invalid public-key length: {len(public_key)}, expected 43-44")
             return False
         
+        # ✅ ПРОВЕРКА 3: Полная валидация base64 - должен декодироваться в 32 байта
         try:
+            # Добавляем padding для корректного декодирования
             padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
+            
+            # Декодируем base64
             decoded = base64.b64decode(padded, validate=True)
+            
+            # Проверяем что получилось ровно 32 байта (256 бит для Ed25519)
             if len(decoded) != 32:
+                logger.debug(f"Invalid public-key: decoded to {len(decoded)} bytes, expected 32")
                 return False
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Invalid public-key format: {e}")
             return False
         
+        # ✅ ПРОВЕРКА 4: short-id должен быть hex (0-9, a-f) и максимум 16 символов
         if short_id:
+            # Проверяем hex формат
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
+                logger.debug(f"Invalid short-id format (not hex): {short_id}")
                 return False
             if len(short_id) > 16:
+                logger.debug(f"Invalid short-id: too long ({len(short_id)} > 16)")
                 return False
+        # else: short-id пусто - это OK
         
         return True
 
@@ -925,10 +802,12 @@ class VPNConfigCollector:
             'port': int(details['port']),
         }
 
+        # ✅ ИСПРАВЛЕНИЕ 1: Убрать 'udp' если он не поддерживается типом прокси
+        # UDP поддерживается только некоторыми типами
         if ptype in ['hysteria2', 'tuic']:
             proxy['udp'] = details.get('udp', True)
 
-        if details.get('sni') and ptype not in ['vless']:
+        if details.get('sni') and ptype not in ['vless']:  # sni для не-VLESS типов
             proxy['sni'] = details['sni']
         if details.get('skip-cert-verify'):
             proxy['skip-cert-verify'] = True
@@ -939,15 +818,21 @@ class VPNConfigCollector:
             proxy['uuid'] = details['uuid']
             proxy['encryption'] = 'none'
             
+            # ✅ ИСПРАВЛЕНИЕ: flow XTLS-RprxVision ТОЛЬКО с REALITY!
+            # flow + TLS + WebSocket = конфликт и ошибка!
             has_reality = bool(details.get('reality-opts'))
             has_network = bool(details.get('network'))
             
             if details.get('flow'):
+                # flow требует REALITY и НЕСОВМЕСТИМ с network
                 if not has_reality:
-                    pass
+                    logger.debug(f"Flow without REALITY - skipping flow parameter")
+                    # Не добавляем flow без REALITY
                 elif has_network:
-                    pass
+                    logger.debug(f"Flow + network incompatible - skipping flow")
+                    # Не добавляем flow с network параметрами
                 else:
+                    # ✅ Добавляем flow только если есть REALITY и НЕТ network
                     proxy['flow'] = details['flow']
             
             if details.get('tls'):
@@ -955,21 +840,34 @@ class VPNConfigCollector:
             if details.get('client-fingerprint'):
                 proxy['client-fingerprint'] = details['client-fingerprint']
             
+            # ✅ ИСПРАВЛЕНИЕ 2: Правильно обрабатывать reality-opts с валидацией
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
+                
+                # Валидируем REALITY параметры
                 if not self._validate_reality_opts(reality_opts):
+                    logger.debug(f"Invalid REALITY opts for {details.get('server')}")
                     return None
                 
+                # Добавляем валидированные параметры
                 public_key = reality_opts.get('public-key', '').strip()
                 short_id = reality_opts.get('short-id', '').strip()
                 
-                proxy['reality-opts'] = {'public-key': public_key}
+                proxy['reality-opts'] = {}
+                proxy['reality-opts']['public-key'] = public_key
+                
+                # Добавляем short-id только если он есть и валидно
                 if short_id:
                     proxy['reality-opts']['short-id'] = short_id.lower()
             
+            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS (ВСЕГДА требуется для TLS)
+            # Используется для SNI в TLS handshake (неважно REALITY это или обычное TLS)
             if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
             
+            # ✅ ИСПРАВЛЕНИЕ 4: Network параметры (ws/grpc)
+            # ВАЖНО: network параметры НЕ совместимы с REALITY!
+            # Добавляем только если НЕТ REALITY параметров
             if not details.get('reality-opts'):
                 if details.get('network') == 'ws' and details.get('ws-opts'):
                     proxy['network'] = 'ws'
@@ -996,6 +894,7 @@ class VPNConfigCollector:
             if details.get('sni'):
                 proxy['servername'] = details['sni']
             
+            # ✅ ИСПРАВЛЕНИЕ 5: Правильно обрабатывать network для VMess
             if details.get('network') == 'ws' and details.get('ws-opts'):
                 proxy['network'] = 'ws'
                 ws_opts = details['ws-opts']
@@ -1050,8 +949,12 @@ class VPNConfigCollector:
             if not details.get('cipher') or not details.get('password'):
                 return None
             
+            # ✅ Нормализуем cipher (исправляем неправильные форматы)
             cipher = self._normalize_ss_cipher(details['cipher'])
+            
+            # ✅ Валидируем что cipher поддерживается в Clash
             if cipher not in self.VALID_SS_CIPHERS:
+                logger.debug(f"Unsupported SS cipher: {cipher}")
                 return None
             
             proxy['cipher'] = cipher
@@ -1087,6 +990,7 @@ class VPNConfigCollector:
 
         logger.info(f"Сгенерировано {len(proxies)} проксей для {title} (пропущено {invalid_count})")
 
+        # ✅ ИСПРАВЛЕНИЕ 6: Правильная структура YAML с пустыми полями
         clash_config = {
             'proxies': proxies,
             'proxy-groups': [
@@ -1114,6 +1018,7 @@ class VPNConfigCollector:
             f"# Valid proxies: {len(proxies)}\n\n"
         )
 
+        # ✅ ИСПРАВЛЕНИЕ 7: Правильные параметры PyYAML
         try:
             yaml_str = yaml.dump(
                 clash_config,
@@ -1156,19 +1061,22 @@ class VPNConfigCollector:
                 logger.warning("Конфиги не собраны.")
                 return
 
-            # Замеряет пинг и возвращает список словарей со структурой для скоринга
             alive_configs = await self.config_pinger.ping_configs(all_configs)
             logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
-            # Фильтрация на основе весов, задержек и разнообразия
-            white_full, black_lte, black = await self.config_filter.filter_and_rank(
-                alive_configs, self.whitelist_sni, self.whitelist_cidr, target_count=500
+            white_full, black_lte, black = await self.config_filter.filter_configs(
+                alive_configs, self.whitelist_sni, self.whitelist_cidr
             )
             
             white_lite = white_full[:500]
+            current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
             
-            # Получение расширенной структуры статистики
-            self.stats = self.config_filter.stats
+            self.stats = {
+                "black": {"count": len(black), "updated": current_time_str},
+                "black_lte": {"count": len(black_lte), "updated": current_time_str},
+                "white_full": {"count": len(white_full), "updated": current_time_str},
+                "white_lite": {"count": len(white_lite), "updated": current_time_str}
+            }
             
             # Генерация контента подписок
             black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
@@ -1194,7 +1102,7 @@ class VPNConfigCollector:
                 'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
                 'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
                 'CLASH/WHITE_LITE.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE LITE', white_lite),
-                'stats.json': self.config_filter.get_stats_json()
+                'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
             }
             
             await self.github_manager.push_files(files_to_push)
