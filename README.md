@@ -138,7 +138,7 @@ python proxy_checker.py                # генерирует файлы whiteli
 
 <summary>Гайд для Windows, Linux</summary>
 
-**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-windows64.zip) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.4/Throne-1.1.4-linux-amd64.zip)
+**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-windows64.zip) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-linux-amd64.zip)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
