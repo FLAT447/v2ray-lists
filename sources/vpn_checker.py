@@ -6,7 +6,7 @@ import base64
 import logging
 import asyncio
 import ipaddress
-import random  
+import random
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
@@ -22,7 +22,7 @@ from async_lru import alru_cache
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
+    handlers=[\
         logging.FileHandler('vpn_collector.log'),
         logging.StreamHandler()
     ]
@@ -35,7 +35,7 @@ INSECURE_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# Список разрешенных fingerprints для принудительной замены
+# Разрешенные значения client-fingerprint (fp) для принудительной замены
 ALLOWED_FPS = ['qq', 'firefox', 'edge']
 
 
@@ -73,18 +73,29 @@ def _is_valid_host(host: str) -> bool:
 
 
 def _force_update_fp_in_url(config_url: str, new_fp: str) -> str:
-    """Вспомогательная функция для замены параметра fp непосредственно в URL строке"""
+    """
+    Принудительно заменяет параметр fp (и его вариации) в строке URL.
+    Корректно обрабатывает стандартные '&' и экранированные '&amp;'.
+    """
     try:
-        parsed = urlparse(config_url)
+        # Стандартизируем разделители, если они пришли в виде &amp;
+        cleaned_url = config_url.replace('&amp;', '&')
+        
+        parsed = urlparse(cleaned_url)
         query_params = parse_qs(parsed.query)
-        if 'fp' in query_params:
-            query_params['fp'] = [new_fp]
-            # Пересобираем query string сохраняя структуру
-            new_query = urlencode(query_params, doseq=True)
-            return urlunparse(parsed._replace(query=new_query))
+        
+        # Меняем/добавляем параметр fp
+        query_params['fp'] = [new_fp]
+        
+        # Удаляем дублирующий параметр client-fingerprint, если он есть
+        if 'client-fingerprint' in query_params:
+            del query_params['client-fingerprint']
+
+        # Собираем query-строку обратно
+        new_query = urlencode(query_params, doseq=True)
+        return urlunparse(parsed._replace(query=new_query))
     except Exception:
-        pass
-    return config_url
+        return config_url
 
 
 def parse_config(config: str) -> Tuple[str, int, str]:
@@ -158,9 +169,8 @@ def parse_config_detailed(config: str) -> dict:
     """
     Глубокий парсер конфигурации. Извлекает параметры для всех поддерживаемых
     протоколов (vless, vmess, trojan, hysteria2, tuic, ss).
-    Также принудительно подменяет fingerprint.
+    Также принудительно подменяет fingerprint на один из списка ALLOWED_FPS.
     """
-    # Выбираем случайный разрешенный fp
     chosen_fp = random.choice(ALLOWED_FPS)
 
     result = {
@@ -170,7 +180,7 @@ def parse_config_detailed(config: str) -> dict:
         'sni': '',
         'udp': True,
         'flow': '',
-        'client-fingerprint': chosen_fp,  # Дефолтное значение теперь принудительное
+        'client-fingerprint': chosen_fp,
         'up': '30 Mbps',
         'down': '100 Mbps',
         'congestion_control': 'bbr',
@@ -208,8 +218,6 @@ def parse_config_detailed(config: str) -> dict:
                 query = parse_qs(parsed.query)
                 result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0] or query.get('host', [''])[0]
                 result['tls'] = query.get('security', [''])[0] == 'tls' or 'tls' in query
-                
-                # Принудительная замена fp для vmess, если он там передан
                 result['client-fingerprint'] = chosen_fp
                 
                 net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
@@ -296,7 +304,6 @@ def parse_config_detailed(config: str) -> dict:
                     'short-id': query.get('sid', [''])[0]
                 }
             
-            # Принудительная перезапись fingerprint
             result['client-fingerprint'] = chosen_fp
 
             net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
@@ -562,7 +569,7 @@ class ConfigFetcher:
                         if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped:
                             continue
                         
-                        # ✅ ФИЛЬТРАЦИЯ INSECURE_PATTERN
+                        # ✅ ФИЛЬТРАЦИЯ СЫРЫХ ДАННЫХ ЧЕРЕЗ INSECURE_PATTERN
                         if INSECURE_PATTERN.search(line_stripped):
                             logger.debug(f"Конфиг отброшен (обнаружен insecure): {line_stripped[:60]}...")
                             continue
@@ -743,7 +750,7 @@ class VPNConfigCollector:
         return config.strip()
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует текстовую подписку в формате V2Ray с принудительным fp"""
+        """Генерирует текстовую подписку в формате V2Ray с принудительной подменой fp"""
         meta = [
             f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
@@ -756,8 +763,9 @@ class VPNConfigCollector:
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if cleaned:
-                # Принудительно обновляем параметр fp прямо в текстовой строке URL для текстовых подписок
+                # Генерируем случайный fp для каждой конфигурации
                 chosen_fp = random.choice(ALLOWED_FPS)
+                # Принудительно перезаписываем fp в строке URL (игнорируя &amp;)
                 cleaned = _force_update_fp_in_url(cleaned, chosen_fp)
                 
                 named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
@@ -766,7 +774,7 @@ class VPNConfigCollector:
         return '\n'.join(meta + cleaned_configs)
 
     # ========================================================================
-    # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
+    # ПРАВИЛЬНАЯ ГЕНЕРАЦИЯ CLASH YAML
     # ========================================================================
     
     SS_CIPHER_MAP = {
@@ -864,7 +872,7 @@ class VPNConfigCollector:
             if details.get('tls'):
                 proxy['tls'] = True
             
-            # Применяется принудительный fingerprint
+            # Принудительный fingerprint для Clash
             proxy['client-fingerprint'] = details['client-fingerprint']
             
             if details.get('reality-opts'):
@@ -980,7 +988,7 @@ class VPNConfigCollector:
         return proxy
 
     def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует корректный Clash YAML"""
+        """Генерирует корректный Clash YAML с подмененными fp"""
         proxy_name_prefix = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
         invalid_count = 0
@@ -1237,6 +1245,15 @@ def run_validation_tests():
         "Фильтрация &allowInsecure=true",
         bool(INSECURE_PATTERN.search("vless://uuid@example.com:443?sni=ex.com&allowInsecure=true")),
         "Должен обнаружить паттерн"
+    )
+
+    print("\n📋 Тестирование функции принудительной подмены fp...")
+    test_conf = "vless://uuid@host:443?security=reality&amp;fp=chrome"
+    updated_conf = _force_update_fp_in_url(test_conf, "edge")
+    results.add_test(
+        "Замена fp и очистка от &amp;",
+        "fp=edge" in updated_conf and "&amp;" not in updated_conf,
+        f"Результат: {updated_conf}"
     )
 
     success = results.print_results()
