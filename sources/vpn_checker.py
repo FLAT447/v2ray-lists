@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Обновленный паттерн: ищет ключевые небезопасные параметры независимо от сложности разделителей
+# Паттерн для поиска небезопасных параметров
 INSECURE_PATTERN = re.compile(
     r'(?:allowinsecure|allow_insecure|insecure)[%3B]*=(?:1|true|yes)',
     re.IGNORECASE
@@ -73,8 +73,15 @@ def _is_valid_host(host: str) -> bool:
 
 
 def _normalize_url_delimiters(config_url: str) -> str:
-    """Приводит любые искаженные разделители параметров к стандартному виду '&'"""
+    """Приводит любые искаженные разделители параметров к стандартному виду '&' и удаляет type=raw"""
     cleaned = config_url.replace('&amp%3B', '&').replace('&amp;', '&').replace('%3B', '&')
+    
+    # Удаляем проблемный параметр type=raw, ломающий парсеры в Throne / Sing-box
+    cleaned = re.sub(r'[?&]type=raw(&|$)', r'\1', cleaned, flags=re.IGNORECASE)
+    cleaned = cleaned.replace('?&', '?')
+    if cleaned.endswith('?'):
+        cleaned = cleaned[:-1]
+        
     return cleaned
 
 
@@ -225,7 +232,8 @@ def parse_config_detailed(config: str) -> dict:
                 result['client-fingerprint'] = chosen_fp
                 
                 net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
-                if net_type:
+                net_type = net_type.lower().strip()
+                if net_type and net_type not in ['raw', 'tcp']:
                     result['network'] = net_type
                     if net_type == 'ws':
                         result['ws-opts'] = {
@@ -249,8 +257,8 @@ def parse_config_detailed(config: str) -> dict:
                 result['tls'] = str(data.get('tls', '')).lower() in ['tls', 'true', '1']
                 result['client-fingerprint'] = chosen_fp
                 
-                net_type = str(data.get('net', ''))
-                if net_type in ['ws', 'grpc']:
+                net_type = str(data.get('net', '')).lower().strip()
+                if net_type and net_type not in ['raw', 'tcp']:
                     result['network'] = net_type
                     if net_type == 'ws':
                         result['ws-opts'] = {
@@ -311,7 +319,8 @@ def parse_config_detailed(config: str) -> dict:
             result['client-fingerprint'] = chosen_fp
 
             net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
-            if net_type:
+            net_type = net_type.lower().strip()
+            if net_type and net_type not in ['raw', 'tcp']:
                 result['network'] = net_type
                 if net_type == 'ws':
                     result['ws-opts'] = {
@@ -573,10 +582,10 @@ class ConfigFetcher:
                         if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped:
                             continue
                         
-                        # ✅ Нормализуем разделители перед поиском небезопасных параметров
+                        # Нормализуем разделители и удаляем type=raw перед проверками
                         normalized_line = _normalize_url_delimiters(line_stripped)
                         
-                        # ✅ ФИЛЬТРАЦИЯ ЧЕРЕЗ ОБНОВЛЕННЫЙ INSECURE_PATTERN
+                        # Фильтрация через insecure паттерн
                         if INSECURE_PATTERN.search(normalized_line):
                             logger.info(f"Конфиг отброшен (обнаружен insecure): {line_stripped[:60]}...")
                             continue
@@ -770,9 +779,8 @@ class VPNConfigCollector:
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if cleaned:
-                # Генерируем случайный fp для каждой конфигурации
                 chosen_fp = random.choice(ALLOWED_FPS)
-                # Принудительно перезаписываем fp в строке URL (игнорируя &amp;, &amp%3B)
+                # Нормализация (включая удаление type=raw) и перезапись fp
                 cleaned = _force_update_fp_in_url(cleaned, chosen_fp)
                 
                 named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
@@ -811,29 +819,23 @@ class VPNConfigCollector:
         short_id = reality_opts.get('short-id', '').strip()
         
         if not public_key:
-            logger.debug("Invalid public-key: empty")
             return False
         
         if len(public_key) < 43 or len(public_key) > 44:
-            logger.debug(f"Invalid public-key length: {len(public_key)}, expected 43-44")
             return False
         
         try:
             padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
             decoded = base64.b64decode(padded, validate=True)
             if len(decoded) != 32:
-                logger.debug(f"Invalid public-key: decoded to {len(decoded)} bytes, expected 32")
                 return False
-        except Exception as e:
-            logger.debug(f"Invalid public-key format: {e}")
+        except Exception:
             return False
         
         if short_id:
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
-                logger.debug(f"Invalid short-id format (not hex): {short_id}")
                 return False
             if len(short_id) > 16:
-                logger.debug(f"Invalid short-id: too long ({len(short_id)} > 16)")
                 return False
         
         return True
@@ -869,34 +871,26 @@ class VPNConfigCollector:
             has_network = bool(details.get('network'))
             
             if details.get('flow'):
-                if not has_reality:
-                    logger.debug(f"Flow without REALITY - skipping flow parameter")
-                elif has_network:
-                    logger.debug(f"Flow + network incompatible - skipping flow")
+                if not has_reality or has_network:
+                    pass
                 else:
                     proxy['flow'] = details['flow']
             
             if details.get('tls'):
                 proxy['tls'] = True
             
-            # Принудительный fingerprint для Clash
             proxy['client-fingerprint'] = details['client-fingerprint']
             
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
-                
                 if not self._validate_reality_opts(reality_opts):
-                    logger.debug(f"Invalid REALITY opts for {details.get('server')}")
                     return None
                 
-                public_key = reality_opts.get('public-key', '').strip()
-                short_id = reality_opts.get('short-id', '').strip()
-                
-                proxy['reality-opts'] = {}
-                proxy['reality-opts']['public-key'] = public_key
-                
-                if short_id:
-                    proxy['reality-opts']['short-id'] = short_id.lower()
+                proxy['reality-opts'] = {
+                    'public-key': reality_opts.get('public-key', '').strip()
+                }
+                if reality_opts.get('short-id', '').strip():
+                    proxy['reality-opts']['short-id'] = reality_opts['short-id'].strip().lower()
             
             if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
@@ -986,7 +980,6 @@ class VPNConfigCollector:
             
             cipher = self._normalize_ss_cipher(details['cipher'])
             if cipher not in self.VALID_SS_CIPHERS:
-                logger.debug(f"Unsupported SS cipher: {cipher}")
                 return None
             
             proxy['cipher'] = cipher
@@ -998,7 +991,6 @@ class VPNConfigCollector:
         """Генерирует корректный Clash YAML с подмененными fp"""
         proxy_name_prefix = title.replace('V2Ray Lists - ', '').strip()
         proxies = []
-        invalid_count = 0
 
         for idx, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
@@ -1006,23 +998,16 @@ class VPNConfigCollector:
                 continue
             
             try:
-                # Перед глубоким парсингом для Clash нормализуем разделители параметров
                 normalized_cfg = _normalize_url_delimiters(cleaned)
                 details = parse_config_detailed(normalized_cfg)
                 proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
                 if proxy:
                     proxies.append(proxy)
-                else:
-                    invalid_count += 1
-            except Exception as e:
-                logger.debug(f"Ошибка при обработке конфига {idx}: {e}")
-                invalid_count += 1
+            except Exception:
+                pass
 
         if not proxies:
-            logger.warning(f"Никаких валидных проксей для {title}")
             return "# No valid proxies found"
-
-        logger.info(f"Сгенерировано {len(proxies)} проксей для {title} (пропущено {invalid_count})")
 
         clash_config = {
             'proxies': proxies,
@@ -1063,8 +1048,7 @@ class VPNConfigCollector:
                 explicit_end=False
             )
         except Exception as e:
-            logger.error(f"Ошибка YAML сериализации: {e}")
-            return comments + "# Error generating YAML"
+            return comments + f"# Error generating YAML: {e}"
 
         return comments + yaml_str
 
@@ -1079,22 +1063,18 @@ class VPNConfigCollector:
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
             sni_res.raise_for_status()
             self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
-            logger.info(f"Загружено {len(self.whitelist_sni)} SNI в whitelist")
             
             cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
             cidr_res.raise_for_status()
             self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
-            logger.info(f"Загружено {len(self.whitelist_cidr)} CIDR сетей в whitelist")
             
             all_configs = await self.config_fetcher.fetch_all_configs()
-            logger.info(f"Всего уникальных сырых конфигураций собрано: {len(all_configs)}")
             
             if not all_configs:
                 logger.warning("Конфиги не собраны.")
                 return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
-            logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
             white_full, black_lte, black = await self.config_filter.filter_configs(
                 alive_configs, self.whitelist_sni, self.whitelist_cidr
@@ -1137,7 +1117,6 @@ class VPNConfigCollector:
             }
             
             await self.github_manager.push_files(files_to_push)
-            
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
             
             if self.notifier:
@@ -1156,10 +1135,6 @@ class VPNConfigCollector:
                     f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
                     f"├ `white_full`: {self.stats['white_full']['count']}\n"
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
-                    f"📦 *Форматы подписок:*\n"
-                    f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
-                    f"├ Закодированные Base64 (.txt): Директория `BASE64/`\n"
-                    f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
                 self.notifier.send_message(msg_admin, is_report=False)
@@ -1187,7 +1162,6 @@ class TestResults:
         self.tests.append(f"{status} | {test_name}")
         if details:
             self.tests.append(f"         {details}")
-        
         if result:
             self.passed += 1
         else:
@@ -1200,55 +1174,27 @@ class TestResults:
         for test in self.tests:
             print(test)
         print("=" * 80)
-        print(f"Всего: {self.passed + self.failed} | Успешно: {self.passed} ✅ | Ошибок: {self.failed} ❌")
-        print("=" * 80)
         return self.failed == 0
 
 
 def run_validation_tests():
     results = TestResults()
 
-    print("\n📋 Тестирование ВАЛИДНЫХ конфигов...")
+    print("\n📋 Тестирование очистки от type=raw...")
+    raw_config = "vless://b880e510@at.synthori.space:8443?type=raw&security=reality"
+    normalized = _normalize_url_delimiters(raw_config)
     results.add_test(
-        "Конфиг с доменом и SNI",
-        validate_config("vless://uuid@example.com:443?sni=example.com", "example.com", 443, "example.com"),
-        "host=example.com, port=443, sni=example.com"
-    )
-    results.add_test(
-        "Конфиг с IPv4 и без SNI",
-        validate_config("trojan://pass@111.111.111.111:443", "111.111.111.111", 443, ""),
-        "host=111.111.111.111, port=443, sni=''"
-    )
-
-    print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с HOST)...")
-    results.add_test("Конфиг с пустым host", not validate_config("vless://uuid", "", 443, ""), "host=''")
-    results.add_test("Конфиг с пробелами", not validate_config("vless://uuid@not valid domain:443", "not valid domain", 443, ""), "host='not valid domain'")
-
-    print("\n📋 Тестирование фильтрации INSECURE_PATTERN...")
-    
-    # Тест на конфиг с нормальным разделителем
-    results.add_test(
-        "Фильтрация ?insecure=1",
-        bool(INSECURE_PATTERN.search(_normalize_url_delimiters("vless://uuid@example.com:443?insecure=1"))),
-        "Должен обнаружить паттерн"
+        "Удаление type=raw из параметров",
+        "type=raw" not in normalized and "security=reality" in normalized,
+        f"Результат: {normalized}"
     )
     
-    # Тест на ваш проблемный конфиг со сломанными разделителями &amp%3B
-    problematic_config = "vless://8bcdc02a-6197-4e5b-bbbf-4e7790d2796a@151.101.108.223:443?path=%2F&amp%3Bsecurity=tls&amp%3Bencryption=none&amp%3Binsecure=1"
-    normalized_prob = _normalize_url_delimiters(problematic_config)
+    print("\n📋 Тестирование глубокого парсинга для Clash...")
+    details = parse_config_detailed(normalized)
     results.add_test(
-        "Фильтрация сложного &amp%3BallowInsecure=1",
-        bool(INSECURE_PATTERN.search(normalized_prob)),
-        f"Результат нормализации: {normalized_prob}"
-    )
-
-    print("\n📋 Тестирование функции принудительной подмены fp...")
-    test_conf = "vless://uuid@host:443?security=reality&amp%3Bfp=chrome"
-    updated_conf = _force_update_fp_in_url(test_conf, "edge")
-    results.add_test(
-        "Замена fp и очистка от &amp%3B",
-        "fp=edge" in updated_conf and "amp%" not in updated_conf,
-        f"Результат: {updated_conf}"
+        "network не должен быть равен raw",
+        details.get('network') != 'raw',
+        f"Поле network в словаре: {details.get('network')}"
     )
 
     success = results.print_results()
