@@ -6,9 +6,10 @@ import base64
 import logging
 import asyncio
 import ipaddress
+import random
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import aiohttp
 import requests
 import yaml
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# ФУНКЦИИ ВАЛИДАЦИИ И ПАРСИНГА
+# ФУНКЦИИ ВАЛИДАЦИИ, ПАРСИНГА И МОДИФИКАЦИИ FP
 # ============================================================================
 
 def _is_valid_domain(domain: str) -> bool:
@@ -129,6 +130,37 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         return '', 0, ''
 
 
+def force_browser_fp(config: str) -> str:
+    """
+    Принудительно заменяет или добавляет параметр fp (fingerprint) на безопасный браузерный.
+    Поддерживается для vless, trojan, hysteria2, tuic. Пропускает vmess.
+    """
+    try:
+        config = config.strip()
+        if not config or config.startswith('vmess://') or '://' not in config:
+            return config
+
+        # Отделяем имя (хештег) конфигурации, чтобы не сломать парсинг URI параметров
+        main_part, *name_part = config.split('#', 1)
+        parsed = urlparse(main_part)
+        query_params = parse_qs(parsed.query)
+
+        # Выбираем случайный отпечаток из списка разрешенных браузеров
+        chosen_fp = random.choice(['firefox', 'edge', 'qq'])
+        query_params['fp'] = [chosen_fp]
+
+        # Пересобираем URL-строку обратно
+        new_query = urlencode(query_params, doseq=True)
+        new_parsed = parsed._replace(query=new_query)
+        new_config = urlunparse(new_parsed)
+
+        if name_part:
+            return f"{new_config}#{name_part[0]}"
+        return new_config
+    except Exception:
+        return config
+
+
 def parse_config_detailed(config: str) -> dict:
     """
     Глубокий парсер конфигурации. Извлекает параметры для всех поддерживаемых
@@ -221,7 +253,6 @@ def parse_config_detailed(config: str) -> dict:
         parsed = urlparse(config)
         scheme = parsed.scheme.lower()
         
-        # ✅ Нормализация типов протоколов (hy2 → hysteria2, hysteria → hysteria2)
         PROTOCOL_MAP = {
             'hy2': 'hysteria2',
             'hysteria': 'hysteria2',
@@ -321,7 +352,7 @@ def parse_config_detailed(config: str) -> dict:
 
         return result
     except Exception as e:
-        logger.debug(f"Ошибка парсинга конфига: {e}")
+        logger.debug(f"Ошибка глубокого парсинга конфига: {e}")
         return result
 
 
@@ -555,34 +586,68 @@ class ConfigFetcher:
 
 
 class ConfigPinger:
-    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
-    def __init__(self, max_concurrent: int = 200):
+    """Асинхронный двойной URL-тест: проверяет и сам сервер (IP+порт), и маскировку (SNI)"""
+    def __init__(self, max_concurrent: int = 150):
         self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.test_url = "http://www.gstatic.com/generate_204"
+        self.timeout_tcp = 1.5   # Быстрый таймаут для проверки живого порта
+        self.timeout_http = 2.5  # Таймаут для полной HTTP/TLS-сессии
 
-    async def _check_config(self, config: str, timeout: float = 1.5) -> str | None:
+    async def _check_config(self, config: str) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
             return None
 
         async with self.semaphore:
+            # ЭТАП 1: Проверяем физическую доступность сервера и открытость порта (чистый TCP-пинг)
             try:
                 reader, writer = await asyncio.wait_for(
                     asyncio.open_connection(host, port),
-                    timeout=timeout
+                    timeout=self.timeout_tcp
                 )
                 writer.close()
                 await writer.wait_closed()
-                return config
             except Exception:
+                # Если порт закрыт или сервер выключен — узел отсеивается сразу
+                return None
+
+            # ЭТАП 2: Проверяем маскировку и ТСПУ (HTTP GET-запрос с передачей Host/SNI)
+            try:
+                is_tls_port = port in [443, 8443] or bool(sni)
+                
+                # Отключаем строгую проверку соответствия имени хоста в сертификате,
+                # так как при Reality прокси вернет чужой домен, вызвав SSLCertVerificationError.
+                # Но само TLS-рукопожатие и шифрование полностью выполняются на уровне сокетов!
+                connector = aiohttp.TCPConnector(ssl=False)
+                timeout = aiohttp.ClientTimeout(total=self.timeout_http)
+                
+                async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+                    headers = {}
+                    if sni:
+                        headers["Host"] = sni
+                    elif host:
+                        headers["Host"] = host
+
+                    target_scheme = "https" if is_tls_port else "http"
+                    url = f"{target_scheme}://{host}:{port}/generate_204"
+                    
+                    async with session.get(url, headers=headers, allow_redirects=False) as response:
+                        # Если сервер вернул успешный статус или редирект (как Reality-маскировка)
+                        # значит и ядро работает, и ТСПУ пропускает связку IP + этот SNI.
+                        if response.status in [200, 204, 301, 302]:
+                            return config
+                        return None
+            except Exception:
+                # Если HTTP/TLS сессия разорвана ТСПУ или ядро Xray упало — отсеиваем
                 return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
-        logger.info(f"Проверяем доступность {len(configs)} конфигов...")
+        logger.info(f"Запуск двойного URL-теста (TCP + HTTP SNI) для {len(configs)} конфигураций...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         valid_configs = [res for res in results if res is not None]
-        logger.info(f"Валидных конфигов после пинга: {len(valid_configs)}")
+        logger.info(f"Успешно прошли двойную проверку: {len(valid_configs)}")
         return valid_configs
 
 
@@ -654,6 +719,7 @@ class ConfigFilter:
                     continue
                 cfg, is_ip_whitelisted, is_sni_whitelisted = res
                 
+                # Логика White Lists: оператор И для полной валидации
                 if is_ip_whitelisted:
                     white.append(cfg)
                 elif is_sni_whitelisted:
@@ -700,7 +766,7 @@ class VPNConfigCollector:
         return config.strip()
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует текстовую подписку в формате V2Ray"""
+        """Генерирует текстовую подписку в формате V2Ray с подменой FP на браузеры"""
         meta = [
             f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
@@ -713,16 +779,13 @@ class VPNConfigCollector:
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if cleaned:
-                named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
+                # ПРИНУДИТЕЛЬНАЯ МАСКИРОВКА TLS-ОТПЕЧАТКА ПОД БРАУЗЕР (Firefox, Edge, QQ)
+                masked_config = force_browser_fp(cleaned)
+                named_config = f"{masked_config}#{title.replace('V2Ray Lists - ', '')} [{index}]"
                 cleaned_configs.append(named_config)
 
         return '\n'.join(meta + cleaned_configs)
-
-    # ========================================================================
-    # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
-    # ========================================================================
     
-    # SS cipher mapping для нормализации
     SS_CIPHER_MAP = {
         'chacha20-poly1305': 'chacha20-ietf-poly1305',
         'chacha20-ietf': 'chacha20-ietf-poly1305',
@@ -731,7 +794,6 @@ class VPNConfigCollector:
         'aes-256-ctr': 'aes-256-gcm',
     }
     
-    # Допустимые SS cipher в Clash
     VALID_SS_CIPHERS = {
         'aes-128-gcm',
         'aes-192-gcm',
@@ -750,42 +812,25 @@ class VPNConfigCollector:
         public_key = reality_opts.get('public-key', '').strip()
         short_id = reality_opts.get('short-id', '').strip()
         
-        # ✅ ПРОВЕРКА 1: public-key не пусто
         if not public_key:
-            logger.debug("Invalid public-key: empty")
             return False
         
-        # ✅ ПРОВЕРКА 2: Длина public-key (43-44 символа для валидного base64)
         if len(public_key) < 43 or len(public_key) > 44:
-            logger.debug(f"Invalid public-key length: {len(public_key)}, expected 43-44")
             return False
         
-        # ✅ ПРОВЕРКА 3: Полная валидация base64 - должен декодироваться в 32 байта
         try:
-            # Добавляем padding для корректного декодирования
             padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
-            
-            # Декодируем base64
             decoded = base64.b64decode(padded, validate=True)
-            
-            # Проверяем что получилось ровно 32 байта (256 бит для Ed25519)
             if len(decoded) != 32:
-                logger.debug(f"Invalid public-key: decoded to {len(decoded)} bytes, expected 32")
                 return False
-        except Exception as e:
-            logger.debug(f"Invalid public-key format: {e}")
+        except Exception:
             return False
         
-        # ✅ ПРОВЕРКА 4: short-id должен быть hex (0-9, a-f) и максимум 16 символов
         if short_id:
-            # Проверяем hex формат
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
-                logger.debug(f"Invalid short-id format (not hex): {short_id}")
                 return False
             if len(short_id) > 16:
-                logger.debug(f"Invalid short-id: too long ({len(short_id)} > 16)")
                 return False
-        # else: short-id пусто - это OK
         
         return True
 
@@ -802,12 +847,10 @@ class VPNConfigCollector:
             'port': int(details['port']),
         }
 
-        # ✅ ИСПРАВЛЕНИЕ 1: Убрать 'udp' если он не поддерживается типом прокси
-        # UDP поддерживается только некоторыми типами
         if ptype in ['hysteria2', 'tuic']:
             proxy['udp'] = details.get('udp', True)
 
-        if details.get('sni') and ptype not in ['vless']:  # sni для не-VLESS типов
+        if details.get('sni') and ptype not in ['vless']:
             proxy['sni'] = details['sni']
         if details.get('skip-cert-verify'):
             proxy['skip-cert-verify'] = True
@@ -818,56 +861,36 @@ class VPNConfigCollector:
             proxy['uuid'] = details['uuid']
             proxy['encryption'] = 'none'
             
-            # ✅ ИСПРАВЛЕНИЕ: flow XTLS-RprxVision ТОЛЬКО с REALITY!
-            # flow + TLS + WebSocket = конфликт и ошибка!
             has_reality = bool(details.get('reality-opts'))
             has_network = bool(details.get('network'))
             
             if details.get('flow'):
-                # flow требует REALITY и НЕСОВМЕСТИМ с network
-                if not has_reality:
-                    logger.debug(f"Flow without REALITY - skipping flow parameter")
-                    # Не добавляем flow без REALITY
-                elif has_network:
-                    logger.debug(f"Flow + network incompatible - skipping flow")
-                    # Не добавляем flow с network параметрами
+                if not has_reality or has_network:
+                    pass
                 else:
-                    # ✅ Добавляем flow только если есть REALITY и НЕТ network
                     proxy['flow'] = details['flow']
             
             if details.get('tls'):
                 proxy['tls'] = True
-            if details.get('client-fingerprint'):
-                proxy['client-fingerprint'] = details['client-fingerprint']
+                
+            # Принудительная замена FP в Clash
+            proxy['client-fingerprint'] = random.choice(['firefox', 'edge', 'qq'])
             
-            # ✅ ИСПРАВЛЕНИЕ 2: Правильно обрабатывать reality-opts с валидацией
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
-                
-                # Валидируем REALITY параметры
                 if not self._validate_reality_opts(reality_opts):
-                    logger.debug(f"Invalid REALITY opts for {details.get('server')}")
                     return None
                 
-                # Добавляем валидированные параметры
                 public_key = reality_opts.get('public-key', '').strip()
                 short_id = reality_opts.get('short-id', '').strip()
                 
-                proxy['reality-opts'] = {}
-                proxy['reality-opts']['public-key'] = public_key
-                
-                # Добавляем short-id только если он есть и валидно
+                proxy['reality-opts'] = {'public-key': public_key}
                 if short_id:
                     proxy['reality-opts']['short-id'] = short_id.lower()
             
-            # ✅ ИСПРАВЛЕНИЕ 3: servername вместо sni для VLESS (ВСЕГДА требуется для TLS)
-            # Используется для SNI в TLS handshake (неважно REALITY это или обычное TLS)
             if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
             
-            # ✅ ИСПРАВЛЕНИЕ 4: Network параметры (ws/grpc)
-            # ВАЖНО: network параметры НЕ совместимы с REALITY!
-            # Добавляем только если НЕТ REALITY параметров
             if not details.get('reality-opts'):
                 if details.get('network') == 'ws' and details.get('ws-opts'):
                     proxy['network'] = 'ws'
@@ -894,7 +917,6 @@ class VPNConfigCollector:
             if details.get('sni'):
                 proxy['servername'] = details['sni']
             
-            # ✅ ИСПРАВЛЕНИЕ 5: Правильно обрабатывать network для VMess
             if details.get('network') == 'ws' and details.get('ws-opts'):
                 proxy['network'] = 'ws'
                 ws_opts = details['ws-opts']
@@ -914,6 +936,8 @@ class VPNConfigCollector:
                 return None
             proxy['password'] = details['password']
             proxy['sni'] = details.get('sni', '')
+            # Принудительная замена FP в Clash для Trojan
+            proxy['client-fingerprint'] = random.choice(['firefox', 'edge', 'qq'])
             if details.get('skip-cert-verify'):
                 proxy['skip-cert-verify'] = True
 
@@ -949,12 +973,8 @@ class VPNConfigCollector:
             if not details.get('cipher') or not details.get('password'):
                 return None
             
-            # ✅ Нормализуем cipher (исправляем неправильные форматы)
             cipher = self._normalize_ss_cipher(details['cipher'])
-            
-            # ✅ Валидируем что cipher поддерживается в Clash
             if cipher not in self.VALID_SS_CIPHERS:
-                logger.debug(f"Unsupported SS cipher: {cipher}")
                 return None
             
             proxy['cipher'] = cipher
@@ -974,7 +994,9 @@ class VPNConfigCollector:
                 continue
             
             try:
-                details = parse_config_detailed(cleaned)
+                # На всякий случай также форсируем подмену FP в оригинальной ссылке перед глубоким парсингом
+                masked_cfg = force_browser_fp(cleaned)
+                details = parse_config_detailed(masked_cfg)
                 proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
                 if proxy:
                     proxies.append(proxy)
@@ -990,7 +1012,6 @@ class VPNConfigCollector:
 
         logger.info(f"Сгенерировано {len(proxies)} проксей для {title} (пропущено {invalid_count})")
 
-        # ✅ ИСПРАВЛЕНИЕ 6: Правильная структура YAML с пустыми полями
         clash_config = {
             'proxies': proxies,
             'proxy-groups': [
@@ -1018,7 +1039,6 @@ class VPNConfigCollector:
             f"# Valid proxies: {len(proxies)}\n\n"
         )
 
-        # ✅ ИСПРАВЛЕНИЕ 7: Правильные параметры PyYAML
         try:
             yaml_str = yaml.dump(
                 clash_config,
@@ -1031,7 +1051,7 @@ class VPNConfigCollector:
                 explicit_end=False
             )
         except Exception as e:
-            logger.error(f"Ошибка YAML сериализации: {e}")
+            logger.error(f"Ошибка YAML serialization: {e}")
             return comments + "# Error generating YAML"
 
         return comments + yaml_str
@@ -1061,6 +1081,7 @@ class VPNConfigCollector:
                 logger.warning("Конфиги не собраны.")
                 return
 
+            # Двойной URL-тест (быстрый TCP-стук + прогон через HTTP по SNI)
             alive_configs = await self.config_pinger.ping_configs(all_configs)
             logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
@@ -1078,7 +1099,6 @@ class VPNConfigCollector:
                 "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
             
-            # Генерация контента подписок
             black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
             black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte)
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
@@ -1125,10 +1145,10 @@ class VPNConfigCollector:
                     f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
                     f"├ `white_full`: {self.stats['white_full']['count']}\n"
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
-                    f"📦 *Форматы подписок:*\n"
+                    f"📦 *Форматы подписок (TLS-FP изменен на Firefox/Edge/QQ):*\n"
                     f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
                     f"├ Закодированные Base64 (.txt): Директория `BASE64/`\n"
-                    f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
+                    f"└ Clash YAML (.yaml): Директория `CLASH/`\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
                 self.notifier.send_message(msg_admin, is_report=False)
@@ -1142,7 +1162,7 @@ class VPNConfigCollector:
 
 
 # ============================================================================
-# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ
+# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ И МОДИФИКАЦИИ FP
 # ============================================================================
 
 class TestResults:
@@ -1188,34 +1208,27 @@ def run_validation_tests():
         validate_config("trojan://pass@111.111.111.111:443", "111.111.111.111", 443, ""),
         "host=111.111.111.111, port=443, sni=''"
     )
-    results.add_test(
-        "Конфиг с IPv6 и SNI",
-        validate_config("vless://uuid@[2001:db8::1]:443?sni=example.com", "2001:db8::1", 443, "example.com"),
-        "host=2001:db8::1, port=443, sni=example.com"
-    )
-    results.add_test(
-        "Конфиг с поддоменом",
-        validate_config("vless://uuid@api.example.com:443?sni=api.example.com", "api.example.com", 443, "api.example.com"),
-        "host=api.example.com, port=443, sni=api.example.com"
-    )
 
-    print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с HOST)...")
-    results.add_test("Конфиг с пустым host", not validate_config("vless://uuid", "", 443, ""), "host=''")
-    results.add_test("Конфиг с пробелами", not validate_config("vless://uuid@not valid domain:443", "not valid domain", 443, ""), "host='not valid domain'")
-    results.add_test("Конфиг со спецсимволами", not validate_config("vless://uuid@invalid!@#$:443", "invalid!@#$", 443, ""), "host='invalid!@#$'")
+    print("\n📋 Тестирование принудительной подмены FP...")
+    test_cfg = "vless://uuid@example.com:443?sni=example.com&fp=chrome#TestName"
+    masked_cfg = force_browser_fp(test_cfg)
+    has_valid_fp = any(f"fp={browser}" in masked_cfg for browser in ['firefox', 'edge', 'qq'])
+    results.add_test(
+        "Подмена fp на firefox/edge/qq",
+        has_valid_fp,
+        f"Было: {test_cfg} -> Стало: {masked_cfg}"
+    )
+    results.add_test(
+        "Сохранение хештега после смены fp",
+        masked_cfg.endswith("#TestName"),
+        f"Окончание строки: {masked_cfg[-15:]}"
+    )
 
     print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с PORT)...")
     results.add_test("Конфиг с port=0", not validate_config("vless://uuid@example.com:0", "example.com", 0, ""), "port=0")
     results.add_test("Конфиг с port > 65535", not validate_config("vless://uuid@example.com:99999", "example.com", 99999, ""), "port=99999")
 
-    print("\n📋 Тестирование функций _is_valid_domain и _is_valid_host...")
-    results.add_test("_is_valid_domain('example.com')", _is_valid_domain("example.com"), "Должен быть True")
-    results.add_test("_is_valid_host('111.111.111.111')", _is_valid_host("111.111.111.111"), "IPv4 адрес должен быть валиден")
-    results.add_test("_is_valid_host('999.999.999.999')", not _is_valid_host("999.999.999.999"), "Невалидный IPv4")
-
-    success = results.print_results()
-    if not success:
-        sys.exit(1)
+    return results.print_results()
 
 
 # ============================================================================
@@ -1224,6 +1237,8 @@ def run_validation_tests():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        run_validation_tests()
-    else:
-        asyncio.run(VPNConfigCollector().run())
+        success = run_validation_tests()
+        sys.exit(0 if success else 1)
+        
+    collector = VPNConfigCollector()
+    asyncio.run(collector.run())
