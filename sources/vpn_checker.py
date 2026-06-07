@@ -456,7 +456,7 @@ class TelegramNotifier:
 class GithubManager:
     """Коммит и пуш файлов напрямую в репозиторий GitHub через API"""
     def __init__(self, token: str):
-        self.gh = GitHub.Auth.Token(token)
+        self.gh = Github.Auth.Token(token)
         self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
 
     def _push_sync(self, files: Dict[str, str]) -> bool:
