@@ -6,7 +6,7 @@ import base64
 import logging
 import asyncio
 import ipaddress
-import random
+import random  
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
@@ -17,7 +17,7 @@ from github import Github, GithubException
 from async_lru import alru_cache
 
 # ============================================================================
-# НАСТРОЙКА ЛОГИРОВАНИЯ
+# НАСТРОЙКА ЛОГИРОВАНИЯ И ГЛОБАЛЬНЫЕ ПАТТЕРНЫ
 # ============================================================================
 logging.basicConfig(
     level=logging.INFO,
@@ -29,9 +29,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Паттерн для поиска небезопасных конфигураций
+INSECURE_PATTERN = re.compile(
+    r'(?:[?&;]|3%[Bb])(allowinsecure|allow_insecure|insecure)=(?:1|true|yes)(?:[&;#]|$|(?=\s|$))',
+    re.IGNORECASE
+)
+
+# Список разрешенных fingerprints для принудительной замены
+ALLOWED_FPS = ['qq', 'firefox', 'edge']
+
 
 # ============================================================================
-# ФУНКЦИИ ВАЛИДАЦИИ, ПАРСИНГА И МОДИФИКАЦИИ FP
+# ФУНКЦИИ ВАЛИДАЦИИ И ПАРСИНГА
 # ============================================================================
 
 def _is_valid_domain(domain: str) -> bool:
@@ -61,6 +70,21 @@ def _is_valid_host(host: str) -> bool:
         return True
 
     return False
+
+
+def _force_update_fp_in_url(config_url: str, new_fp: str) -> str:
+    """Вспомогательная функция для замены параметра fp непосредственно в URL строке"""
+    try:
+        parsed = urlparse(config_url)
+        query_params = parse_qs(parsed.query)
+        if 'fp' in query_params:
+            query_params['fp'] = [new_fp]
+            # Пересобираем query string сохраняя структуру
+            new_query = urlencode(query_params, doseq=True)
+            return urlunparse(parsed._replace(query=new_query))
+    except Exception:
+        pass
+    return config_url
 
 
 def parse_config(config: str) -> Tuple[str, int, str]:
@@ -130,42 +154,15 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         return '', 0, ''
 
 
-def force_browser_fp(config: str) -> str:
-    """
-    Принудительно заменяет или добавляет параметр fp (fingerprint) на безопасный браузерный.
-    Поддерживается для vless, trojan, hysteria2, tuic. Пропускает vmess.
-    """
-    try:
-        config = config.strip()
-        if not config or config.startswith('vmess://') or '://' not in config:
-            return config
-
-        # Отделяем имя (хештег) конфигурации, чтобы не сломать парсинг URI параметров
-        main_part, *name_part = config.split('#', 1)
-        parsed = urlparse(main_part)
-        query_params = parse_qs(parsed.query)
-
-        # Выбираем случайный отпечаток из списка разрешенных браузеров
-        chosen_fp = random.choice(['firefox', 'edge', 'qq'])
-        query_params['fp'] = [chosen_fp]
-
-        # Пересобираем URL-строку обратно
-        new_query = urlencode(query_params, doseq=True)
-        new_parsed = parsed._replace(query=new_query)
-        new_config = urlunparse(new_parsed)
-
-        if name_part:
-            return f"{new_config}#{name_part[0]}"
-        return new_config
-    except Exception:
-        return config
-
-
 def parse_config_detailed(config: str) -> dict:
     """
     Глубокий парсер конфигурации. Извлекает параметры для всех поддерживаемых
     протоколов (vless, vmess, trojan, hysteria2, tuic, ss).
+    Также принудительно подменяет fingerprint.
     """
+    # Выбираем случайный разрешенный fp
+    chosen_fp = random.choice(ALLOWED_FPS)
+
     result = {
         'type': 'unknown',
         'server': '',
@@ -173,7 +170,7 @@ def parse_config_detailed(config: str) -> dict:
         'sni': '',
         'udp': True,
         'flow': '',
-        'client-fingerprint': '',
+        'client-fingerprint': chosen_fp,  # Дефолтное значение теперь принудительное
         'up': '30 Mbps',
         'down': '100 Mbps',
         'congestion_control': 'bbr',
@@ -212,6 +209,9 @@ def parse_config_detailed(config: str) -> dict:
                 result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0] or query.get('host', [''])[0]
                 result['tls'] = query.get('security', [''])[0] == 'tls' or 'tls' in query
                 
+                # Принудительная замена fp для vmess, если он там передан
+                result['client-fingerprint'] = chosen_fp
+                
                 net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
                 if net_type:
                     result['network'] = net_type
@@ -235,6 +235,7 @@ def parse_config_detailed(config: str) -> dict:
                 result['cipher'] = 'auto'
                 result['sni'] = str(data.get('sni', '') or data.get('host', ''))
                 result['tls'] = str(data.get('tls', '')).lower() in ['tls', 'true', '1']
+                result['client-fingerprint'] = chosen_fp
                 
                 net_type = str(data.get('net', ''))
                 if net_type in ['ws', 'grpc']:
@@ -294,9 +295,9 @@ def parse_config_detailed(config: str) -> dict:
                     'public-key': query.get('pbk', [''])[0],
                     'short-id': query.get('sid', [''])[0]
                 }
-            fp = query.get('fp', [''])[0]
-            if fp:
-                result['client-fingerprint'] = fp
+            
+            # Принудительная перезапись fingerprint
+            result['client-fingerprint'] = chosen_fp
 
             net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
             if net_type:
@@ -314,12 +315,14 @@ def parse_config_detailed(config: str) -> dict:
         elif scheme == 'trojan':
             result['password'] = auth_part
             result['tls'] = True
+            result['client-fingerprint'] = chosen_fp
             if query.get('insecure', [''])[0] in ['1', 'true']:
                 result['skip-cert-verify'] = True
 
         elif scheme in ['hysteria2', 'hysteria']:
             result['type'] = 'hysteria2'
             result['password'] = auth_part
+            result['client-fingerprint'] = chosen_fp
             up_str = query.get('up', [''])[0]
             down_str = query.get('down', [''])[0]
             if up_str:
@@ -334,6 +337,7 @@ def parse_config_detailed(config: str) -> dict:
                 result['uuid'], result['password'] = auth_part.split(':', 1)
             else:
                 result['uuid'] = auth_part
+            result['client-fingerprint'] = chosen_fp
             result['alpn'] = query.get('alpn', [['h3']])[0].split(',')
             result['congestion_control'] = query.get('congestion_control', ['bbr'])[0]
             result['udp_relay_mode'] = query.get('udp_relay_mode', ['native'])[0]
@@ -352,7 +356,7 @@ def parse_config_detailed(config: str) -> dict:
 
         return result
     except Exception as e:
-        logger.debug(f"Ошибка глубокого парсинга конфига: {e}")
+        logger.debug(f"Ошибка парсинга конфига: {e}")
         return result
 
 
@@ -495,7 +499,7 @@ class GithubManager:
 
 
 class ConfigFetcher:
-    """Сбор и Base64-декодирование сырых конфигов"""
+    """Сбор, Base64-декодирование сырых конфигов и фильтрация insecure"""
     def __init__(self):
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -552,10 +556,18 @@ class ConfigFetcher:
                         except Exception:
                             pass
 
-                    configs = [
-                        line.strip() for line in text.splitlines()
-                        if line.strip() and not line.strip().startswith('#') and '://' in line
-                    ]
+                    configs = []
+                    for line in text.splitlines():
+                        line_stripped = line.strip()
+                        if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped:
+                            continue
+                        
+                        # ✅ ФИЛЬТРАЦИЯ INSECURE_PATTERN
+                        if INSECURE_PATTERN.search(line_stripped):
+                            logger.debug(f"Конфиг отброшен (обнаружен insecure): {line_stripped[:60]}...")
+                            continue
+                            
+                        configs.append(line_stripped)
                     return configs
                 logger.warning(f"Источник {url} вернул статус {response.status}")
                 return []
@@ -586,68 +598,34 @@ class ConfigFetcher:
 
 
 class ConfigPinger:
-    """Асинхронный двойной URL-тест: проверяет и сам сервер (IP+порт), и маскировку (SNI)"""
-    def __init__(self, max_concurrent: int = 150):
+    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
+    def __init__(self, max_concurrent: int = 200):
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.test_url = "http://www.gstatic.com/generate_204"
-        self.timeout_tcp = 1.5   # Быстрый таймаут для проверки живого порта
-        self.timeout_http = 2.5  # Таймаут для полной HTTP/TLS-сессии
 
-    async def _check_config(self, config: str) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 1.5) -> str | None:
         host, port, sni = parse_config(config)
         
         if not validate_config(config, host, port, sni):
             return None
 
         async with self.semaphore:
-            # ЭТАП 1: Проверяем физическую доступность сервера и открытость порта (чистый TCP-пинг)
             try:
                 reader, writer = await asyncio.wait_for(
                     asyncio.open_connection(host, port),
-                    timeout=self.timeout_tcp
+                    timeout=timeout
                 )
                 writer.close()
                 await writer.wait_closed()
+                return config
             except Exception:
-                # Если порт закрыт или сервер выключен — узел отсеивается сразу
-                return None
-
-            # ЭТАП 2: Проверяем маскировку и ТСПУ (HTTP GET-запрос с передачей Host/SNI)
-            try:
-                is_tls_port = port in [443, 8443] or bool(sni)
-                
-                # Отключаем строгую проверку соответствия имени хоста в сертификате,
-                # так как при Reality прокси вернет чужой домен, вызвав SSLCertVerificationError.
-                # Но само TLS-рукопожатие и шифрование полностью выполняются на уровне сокетов!
-                connector = aiohttp.TCPConnector(ssl=False)
-                timeout = aiohttp.ClientTimeout(total=self.timeout_http)
-                
-                async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-                    headers = {}
-                    if sni:
-                        headers["Host"] = sni
-                    elif host:
-                        headers["Host"] = host
-
-                    target_scheme = "https" if is_tls_port else "http"
-                    url = f"{target_scheme}://{host}:{port}/generate_204"
-                    
-                    async with session.get(url, headers=headers, allow_redirects=False) as response:
-                        # Если сервер вернул успешный статус или редирект (как Reality-маскировка)
-                        # значит и ядро работает, и ТСПУ пропускает связку IP + этот SNI.
-                        if response.status in [200, 204, 301, 302]:
-                            return config
-                        return None
-            except Exception:
-                # Если HTTP/TLS сессия разорвана ТСПУ или ядро Xray упало — отсеиваем
                 return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
-        logger.info(f"Запуск двойного URL-теста (TCP + HTTP SNI) для {len(configs)} конфигураций...")
+        logger.info(f"Проверяем доступность {len(configs)} конфигов...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         valid_configs = [res for res in results if res is not None]
-        logger.info(f"Успешно прошли двойную проверку: {len(valid_configs)}")
+        logger.info(f"Валидных конфигов после пинга: {len(valid_configs)}")
         return valid_configs
 
 
@@ -719,7 +697,6 @@ class ConfigFilter:
                     continue
                 cfg, is_ip_whitelisted, is_sni_whitelisted = res
                 
-                # Логика White Lists: оператор И для полной валидации
                 if is_ip_whitelisted:
                     white.append(cfg)
                 elif is_sni_whitelisted:
@@ -766,7 +743,7 @@ class VPNConfigCollector:
         return config.strip()
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует текстовую подписку в формате V2Ray с подменой FP на браузеры"""
+        """Генерирует текстовую подписку в формате V2Ray с принудительным fp"""
         meta = [
             f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
@@ -779,12 +756,18 @@ class VPNConfigCollector:
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if cleaned:
-                # ПРИНУДИТЕЛЬНАЯ МАСКИРОВКА TLS-ОТПЕЧАТКА ПОД БРАУЗЕР (Firefox, Edge, QQ)
-                masked_config = force_browser_fp(cleaned)
-                named_config = f"{masked_config}#{title.replace('V2Ray Lists - ', '')} [{index}]"
+                # Принудительно обновляем параметр fp прямо в текстовой строке URL для текстовых подписок
+                chosen_fp = random.choice(ALLOWED_FPS)
+                cleaned = _force_update_fp_in_url(cleaned, chosen_fp)
+                
+                named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
                 cleaned_configs.append(named_config)
 
         return '\n'.join(meta + cleaned_configs)
+
+    # ========================================================================
+    # ИСПРАВЛЕННЫЕ МЕТОДЫ ДЛЯ ГЕНЕРАЦИИ CLASH YAML
+    # ========================================================================
     
     SS_CIPHER_MAP = {
         'chacha20-poly1305': 'chacha20-ietf-poly1305',
@@ -813,23 +796,29 @@ class VPNConfigCollector:
         short_id = reality_opts.get('short-id', '').strip()
         
         if not public_key:
+            logger.debug("Invalid public-key: empty")
             return False
         
         if len(public_key) < 43 or len(public_key) > 44:
+            logger.debug(f"Invalid public-key length: {len(public_key)}, expected 43-44")
             return False
         
         try:
             padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
             decoded = base64.b64decode(padded, validate=True)
             if len(decoded) != 32:
+                logger.debug(f"Invalid public-key: decoded to {len(decoded)} bytes, expected 32")
                 return False
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Invalid public-key format: {e}")
             return False
         
         if short_id:
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
+                logger.debug(f"Invalid short-id format (not hex): {short_id}")
                 return False
             if len(short_id) > 16:
+                logger.debug(f"Invalid short-id: too long ({len(short_id)} > 16)")
                 return False
         
         return True
@@ -865,26 +854,32 @@ class VPNConfigCollector:
             has_network = bool(details.get('network'))
             
             if details.get('flow'):
-                if not has_reality or has_network:
-                    pass
+                if not has_reality:
+                    logger.debug(f"Flow without REALITY - skipping flow parameter")
+                elif has_network:
+                    logger.debug(f"Flow + network incompatible - skipping flow")
                 else:
                     proxy['flow'] = details['flow']
             
             if details.get('tls'):
                 proxy['tls'] = True
-                
-            # Принудительная замена FP в Clash
-            proxy['client-fingerprint'] = random.choice(['firefox', 'edge', 'qq'])
+            
+            # Применяется принудительный fingerprint
+            proxy['client-fingerprint'] = details['client-fingerprint']
             
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
+                
                 if not self._validate_reality_opts(reality_opts):
+                    logger.debug(f"Invalid REALITY opts for {details.get('server')}")
                     return None
                 
                 public_key = reality_opts.get('public-key', '').strip()
                 short_id = reality_opts.get('short-id', '').strip()
                 
-                proxy['reality-opts'] = {'public-key': public_key}
+                proxy['reality-opts'] = {}
+                proxy['reality-opts']['public-key'] = public_key
+                
                 if short_id:
                     proxy['reality-opts']['short-id'] = short_id.lower()
             
@@ -936,8 +931,7 @@ class VPNConfigCollector:
                 return None
             proxy['password'] = details['password']
             proxy['sni'] = details.get('sni', '')
-            # Принудительная замена FP в Clash для Trojan
-            proxy['client-fingerprint'] = random.choice(['firefox', 'edge', 'qq'])
+            proxy['client-fingerprint'] = details['client-fingerprint']
             if details.get('skip-cert-verify'):
                 proxy['skip-cert-verify'] = True
 
@@ -949,6 +943,7 @@ class VPNConfigCollector:
             proxy['obfs-password'] = details.get('password', '')
             proxy['up'] = details.get('up', '30 Mbps')
             proxy['down'] = details.get('down', '100 Mbps')
+            proxy['client-fingerprint'] = details['client-fingerprint']
             if details.get('sni'):
                 proxy['sni'] = details['sni']
 
@@ -958,6 +953,7 @@ class VPNConfigCollector:
             proxy['uuid'] = details['uuid']
             if details.get('password'):
                 proxy['password'] = details['password']
+            proxy['client-fingerprint'] = details['client-fingerprint']
             if details.get('alpn'):
                 alpn = details['alpn']
                 if isinstance(alpn, list):
@@ -975,6 +971,7 @@ class VPNConfigCollector:
             
             cipher = self._normalize_ss_cipher(details['cipher'])
             if cipher not in self.VALID_SS_CIPHERS:
+                logger.debug(f"Unsupported SS cipher: {cipher}")
                 return None
             
             proxy['cipher'] = cipher
@@ -994,9 +991,7 @@ class VPNConfigCollector:
                 continue
             
             try:
-                # На всякий случай также форсируем подмену FP в оригинальной ссылке перед глубоким парсингом
-                masked_cfg = force_browser_fp(cleaned)
-                details = parse_config_detailed(masked_cfg)
+                details = parse_config_detailed(cleaned)
                 proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
                 if proxy:
                     proxies.append(proxy)
@@ -1051,7 +1046,7 @@ class VPNConfigCollector:
                 explicit_end=False
             )
         except Exception as e:
-            logger.error(f"Ошибка YAML serialization: {e}")
+            logger.error(f"Ошибка YAML сериализации: {e}")
             return comments + "# Error generating YAML"
 
         return comments + yaml_str
@@ -1081,7 +1076,6 @@ class VPNConfigCollector:
                 logger.warning("Конфиги не собраны.")
                 return
 
-            # Двойной URL-тест (быстрый TCP-стук + прогон через HTTP по SNI)
             alive_configs = await self.config_pinger.ping_configs(all_configs)
             logger.info(f"Доступных конфигураций после пинга: {len(alive_configs)}")
             
@@ -1145,10 +1139,10 @@ class VPNConfigCollector:
                     f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
                     f"├ `white_full`: {self.stats['white_full']['count']}\n"
                     f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
-                    f"📦 *Форматы подписок (TLS-FP изменен на Firefox/Edge/QQ):*\n"
+                    f"📦 *Форматы подписок:*\n"
                     f"├ Текстовые (.txt): BLACK_FULL, BLACK_LTE, WHITE_FULL, WHITE_LITE\n"
                     f"├ Закодированные Base64 (.txt): Директория `BASE64/`\n"
-                    f"└ Clash YAML (.yaml): Директория `CLASH/`\n\n"
+                    f"└ Clash YAML (.yaml): CLASH/BLACK_FULL, CLASH/BLACK_LTE, CLASH/WHITE_FULL, CLASH/WHITE_LITE\n\n"
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
                 self.notifier.send_message(msg_admin, is_report=False)
@@ -1162,7 +1156,7 @@ class VPNConfigCollector:
 
 
 # ============================================================================
-# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ И МОДИФИКАЦИИ FP
+# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ
 # ============================================================================
 
 class TestResults:
@@ -1208,27 +1202,46 @@ def run_validation_tests():
         validate_config("trojan://pass@111.111.111.111:443", "111.111.111.111", 443, ""),
         "host=111.111.111.111, port=443, sni=''"
     )
+    results.add_test(
+        "Конфиг с IPv6 и SNI",
+        validate_config("vless://uuid@[2001:db8::1]:443?sni=example.com", "2001:db8::1", 443, "example.com"),
+        "host=2001:db8::1, port=443, sni=example.com"
+    )
+    results.add_test(
+        "Конфиг с поддоменом",
+        validate_config("vless://uuid@api.example.com:443?sni=api.example.com", "api.example.com", 443, "api.example.com"),
+        "host=api.example.com, port=443, sni=api.example.com"
+    )
 
-    print("\n📋 Тестирование принудительной подмены FP...")
-    test_cfg = "vless://uuid@example.com:443?sni=example.com&fp=chrome#TestName"
-    masked_cfg = force_browser_fp(test_cfg)
-    has_valid_fp = any(f"fp={browser}" in masked_cfg for browser in ['firefox', 'edge', 'qq'])
-    results.add_test(
-        "Подмена fp на firefox/edge/qq",
-        has_valid_fp,
-        f"Было: {test_cfg} -> Стало: {masked_cfg}"
-    )
-    results.add_test(
-        "Сохранение хештега после смены fp",
-        masked_cfg.endswith("#TestName"),
-        f"Окончание строки: {masked_cfg[-15:]}"
-    )
+    print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с HOST)...")
+    results.add_test("Конфиг с пустым host", not validate_config("vless://uuid", "", 443, ""), "host=''")
+    results.add_test("Конфиг с пробелами", not validate_config("vless://uuid@not valid domain:443", "not valid domain", 443, ""), "host='not valid domain'")
+    results.add_test("Конфиг со спецсимволами", not validate_config("vless://uuid@invalid!@#$:443", "invalid!@#$", 443, ""), "host='invalid!@#$'")
 
     print("\n📋 Тестирование НЕВАЛИДНЫХ конфигов (проблемы с PORT)...")
     results.add_test("Конфиг с port=0", not validate_config("vless://uuid@example.com:0", "example.com", 0, ""), "port=0")
     results.add_test("Конфиг с port > 65535", not validate_config("vless://uuid@example.com:99999", "example.com", 99999, ""), "port=99999")
 
-    return results.print_results()
+    print("\n📋 Тестирование функций _is_valid_domain и _is_valid_host...")
+    results.add_test("_is_valid_domain('example.com')", _is_valid_domain("example.com"), "Должен быть True")
+    results.add_test("_is_valid_host('111.111.111.111')", _is_valid_host("111.111.111.111"), "IPv4 адрес должен быть валиден")
+    results.add_test("_is_valid_host('999.999.999.999')", not _is_valid_host("999.999.999.999"), "Невалидный IPv4")
+
+    print("\n📋 Тестирование фильтрации INSECURE_PATTERN...")
+    results.add_test(
+        "Фильтрация ?insecure=1",
+        bool(INSECURE_PATTERN.search("vless://uuid@example.com:443?insecure=1")),
+        "Должен обнаружить паттерн"
+    )
+    results.add_test(
+        "Фильтрация &allowInsecure=true",
+        bool(INSECURE_PATTERN.search("vless://uuid@example.com:443?sni=ex.com&allowInsecure=true")),
+        "Должен обнаружить паттерн"
+    )
+
+    success = results.print_results()
+    if not success:
+        sys.exit(1)
 
 
 # ============================================================================
@@ -1237,8 +1250,6 @@ def run_validation_tests():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        success = run_validation_tests()
-        sys.exit(0 if success else 1)
-        
-    collector = VPNConfigCollector()
-    asyncio.run(collector.run())
+        run_validation_tests()
+    else:
+        asyncio.run(VPNConfigCollector().run())
