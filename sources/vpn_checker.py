@@ -456,7 +456,7 @@ class TelegramNotifier:
 class GithubManager:
     """Коммит и пуш файлов напрямую в репозиторий GitHub через API"""
     def __init__(self, token: str):
-        self.gh = Github(token)
+        self.gh = github.Auth.Token(token)
         self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
 
     def _push_sync(self, files: Dict[str, str]) -> bool:
@@ -587,7 +587,6 @@ class ConfigFetcher:
                         
                         # Фильтрация через insecure паттерн
                         if INSECURE_PATTERN.search(normalized_line):
-                            logger.info(f"Конфиг отброшен (обнаружен insecure): {line_stripped[:60]}...")
                             continue
                             
                         configs.append(line_stripped)
