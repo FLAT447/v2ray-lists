@@ -812,17 +812,48 @@ class VPNConfigCollector:
         cipher_lower = cipher.lower().strip()
         return self.SS_CIPHER_MAP.get(cipher_lower, cipher_lower)
 
+    def _normalize_short_id(self, short_id: str) -> str:
+        """
+        Нормализует REALITY short-id:
+        - приводит к нижнему регистру
+        - обрезает до максимум 16 hex-символов (8 байт)
+        - гарантирует чётную длину (целое число байт)
+        Возвращает пустую строку, если результат невалиден.
+        """
+        if not short_id:
+            return ''
+
+        sid = short_id.strip().lower()
+
+        # Проверяем, что строка состоит только из hex-символов
+        if not all(c in '0123456789abcdef' for c in sid):
+            return ''
+
+        # Обрезаем до 16 символов максимум
+        sid = sid[:16]
+
+        # Гарантируем чётную длину
+        if len(sid) % 2 != 0:
+            sid = sid[:-1]
+
+        return sid
+
     def _validate_reality_opts(self, reality_opts: dict) -> bool:
-        """Валидирует REALITY параметры с полной проверкой public-key"""
+        """
+        Валидирует REALITY параметры:
+        - public-key: base64url, декодируется в ровно 32 байта
+        - short-id: hex-строка, чётная длина, максимум 16 символов (8 байт)
+        """
         public_key = reality_opts.get('public-key', '').strip()
         short_id = reality_opts.get('short-id', '').strip()
-        
+
+        # Валидация public-key
         if not public_key:
             return False
-        
+
         if len(public_key) < 43 or len(public_key) > 44:
             return False
-        
+
         try:
             padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
             decoded = base64.b64decode(padded, validate=True)
@@ -830,13 +861,19 @@ class VPNConfigCollector:
                 return False
         except Exception:
             return False
-        
+
+        # Валидация short-id (опциональный параметр)
         if short_id:
+            # Только hex-символы
             if not all(c in '0123456789abcdefABCDEF' for c in short_id):
                 return False
+            # Максимум 16 символов (8 байт)
             if len(short_id) > 16:
                 return False
-        
+            # Длина должна быть чётной (целое число байт)
+            if len(short_id) % 2 != 0:
+                return False
+
         return True
 
     def _build_clash_proxy(self, details: dict, index: int, proxy_name_prefix: str) -> Optional[dict]:
@@ -882,14 +919,24 @@ class VPNConfigCollector:
             
             if details.get('reality-opts'):
                 reality_opts = details['reality-opts']
-                if not self._validate_reality_opts(reality_opts):
-                    return None
-                
-                proxy['reality-opts'] = {
-                    'public-key': reality_opts.get('public-key', '').strip()
+
+                # Нормализуем short-id перед валидацией
+                raw_sid = reality_opts.get('short-id', '').strip()
+                normalized_sid = self._normalize_short_id(raw_sid)
+                reality_opts_normalized = {
+                    'public-key': reality_opts.get('public-key', '').strip(),
+                    'short-id': normalized_sid
                 }
-                if reality_opts.get('short-id', '').strip():
-                    proxy['reality-opts']['short-id'] = reality_opts['short-id'].strip().lower()
+
+                if not self._validate_reality_opts(reality_opts_normalized):
+                    return None
+
+                proxy['reality-opts'] = {
+                    'public-key': reality_opts_normalized['public-key']
+                }
+                # Записываем short-id только если он непустой после нормализации
+                if normalized_sid:
+                    proxy['reality-opts']['short-id'] = normalized_sid
             
             if details.get('sni') and details.get('tls'):
                 proxy['servername'] = details['sni']
@@ -1178,7 +1225,11 @@ class TestResults:
 
 def run_validation_tests():
     results = TestResults()
+    collector = VPNConfigCollector.__new__(VPNConfigCollector)
 
+    # ------------------------------------------------------------------
+    # Тесты нормализации type=raw
+    # ------------------------------------------------------------------
     print("\n📋 Тестирование очистки от type=raw...")
     raw_config = "vless://b880e510@at.synthori.space:8443?type=raw&security=reality"
     normalized = _normalize_url_delimiters(raw_config)
@@ -1187,13 +1238,101 @@ def run_validation_tests():
         "type=raw" not in normalized and "security=reality" in normalized,
         f"Результат: {normalized}"
     )
-    
+
     print("\n📋 Тестирование глубокого парсинга для Clash...")
     details = parse_config_detailed(normalized)
     results.add_test(
         "network не должен быть равен raw",
         details.get('network') != 'raw',
         f"Поле network в словаре: {details.get('network')}"
+    )
+
+    # ------------------------------------------------------------------
+    # Тесты нормализации short-id
+    # ------------------------------------------------------------------
+    print("\n📋 Тестирование нормализации REALITY short-id...")
+
+    # Корректный 16-символьный short-id — должен пройти без изменений
+    sid_16 = collector._normalize_short_id('6ba85179e30d4fc3')
+    results.add_test(
+        "16-символьный short-id остаётся без изменений",
+        sid_16 == '6ba85179e30d4fc3',
+        f"Результат: '{sid_16}'"
+    )
+
+    # Нечётная длина — должен обрезаться до чётной
+    sid_odd = collector._normalize_short_id('6ba85179e30d4f')
+    results.add_test(
+        "Нечётный short-id обрезается до чётной длины",
+        len(sid_odd) % 2 == 0,
+        f"Результат: '{sid_odd}' (длина {len(sid_odd)})"
+    )
+
+    # Длиннее 16 символов — обрезается до 16
+    sid_long = collector._normalize_short_id('6ba85179e30d4fc3aabbcc')
+    results.add_test(
+        "short-id длиннее 16 символов обрезается до 16",
+        len(sid_long) <= 16,
+        f"Результат: '{sid_long}' (длина {len(sid_long)})"
+    )
+
+    # Uppercase — приводится к lower
+    sid_upper = collector._normalize_short_id('6BA85179E30D4FC3')
+    results.add_test(
+        "short-id приводится к нижнему регистру",
+        sid_upper == '6ba85179e30d4fc3',
+        f"Результат: '{sid_upper}'"
+    )
+
+    # Невалидные символы — возвращает пустую строку
+    sid_invalid = collector._normalize_short_id('ZZZZZZZZ')
+    results.add_test(
+        "short-id с невалидными символами возвращает пустую строку",
+        sid_invalid == '',
+        f"Результат: '{sid_invalid}'"
+    )
+
+    # ------------------------------------------------------------------
+    # Тесты _validate_reality_opts
+    # ------------------------------------------------------------------
+    print("\n📋 Тестирование валидации REALITY opts...")
+
+    valid_pk = 'D9EktvCfJb5l8mBkJHx3U31BIUwIBHJKV85OzyNnDlU'
+
+    results.add_test(
+        "Валидный public-key + корректный short-id",
+        collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85179e30d4fc3'}),
+        f"pk={valid_pk}, sid=6ba85179e30d4fc3"
+    )
+
+    results.add_test(
+        "Валидный public-key без short-id",
+        collector._validate_reality_opts({'public-key': valid_pk, 'short-id': ''}),
+        f"pk={valid_pk}, sid=''"
+    )
+
+    results.add_test(
+        "Невалидный public-key (короткий) — должен вернуть False",
+        not collector._validate_reality_opts({'public-key': 'abc', 'short-id': ''}),
+        "pk='abc'"
+    )
+
+    results.add_test(
+        "short-id нечётной длины — должен вернуть False",
+        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85'}),
+        "sid='6ba85' (нечётная длина)"
+    )
+
+    results.add_test(
+        "short-id длиннее 16 символов — должен вернуть False",
+        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85179e30d4fc3aa'}),
+        "sid='6ba85179e30d4fc3aa' (18 символов)"
+    )
+
+    results.add_test(
+        "short-id с невалидными символами — должен вернуть False",
+        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': 'zzzzzzzz'}),
+        "sid='zzzzzzzz'"
     )
 
     success = results.print_results()
