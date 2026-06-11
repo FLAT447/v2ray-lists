@@ -12,7 +12,6 @@ from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import aiohttp
 import requests
-import yaml
 from github import Github, GithubException
 from async_lru import alru_cache
 
@@ -75,13 +74,13 @@ def _is_valid_host(host: str) -> bool:
 def _normalize_url_delimiters(config_url: str) -> str:
     """Приводит любые искаженные разделители параметров к стандартному виду '&' и удаляет type=raw"""
     cleaned = config_url.replace('&amp%3B', '&').replace('&amp;', '&').replace('%3B', '&')
-    
+
     # Удаляем проблемный параметр type=raw, ломающий парсеры в Throne / Sing-box
     cleaned = re.sub(r'[?&]type=raw(&|$)', r'\1', cleaned, flags=re.IGNORECASE)
     cleaned = cleaned.replace('?&', '?')
     if cleaned.endswith('?'):
         cleaned = cleaned[:-1]
-        
+
     return cleaned
 
 
@@ -92,13 +91,13 @@ def _force_update_fp_in_url(config_url: str, new_fp: str) -> str:
     """
     try:
         cleaned_url = _normalize_url_delimiters(config_url)
-        
+
         parsed = urlparse(cleaned_url)
         query_params = parse_qs(parsed.query)
-        
+
         # Меняем/добавляем параметр fp
         query_params['fp'] = [new_fp]
-        
+
         # Удаляем дублирующий параметр client-fingerprint, если он есть
         if 'client-fingerprint' in query_params:
             del query_params['client-fingerprint']
@@ -177,209 +176,6 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         return '', 0, ''
 
 
-def parse_config_detailed(config: str) -> dict:
-    """
-    Глубокий парсер конфигурации. Извлекает параметры для всех поддерживаемых
-    протоколов (vless, vmess, trojan, hysteria2, tuic, ss).
-    """
-    chosen_fp = random.choice(ALLOWED_FPS)
-
-    result = {
-        'type': 'unknown',
-        'server': '',
-        'port': 0,
-        'sni': '',
-        'udp': True,
-        'flow': '',
-        'client-fingerprint': chosen_fp,
-        'up': '30 Mbps',
-        'down': '100 Mbps',
-        'congestion_control': 'bbr',
-        'udp_relay_mode': 'native',
-        'auth_type': 'none'
-    }
-    try:
-        config = config.strip()
-        if not config:
-            return result
-
-        if config.startswith('vmess://'):
-            rem = config[8:].split('#')[0].strip()
-            if '?' in rem or '@' in rem or (':' in rem and not rem.replace(':', '').isalnum()):
-                parsed = urlparse(config)
-                result['type'] = 'vmess'
-                netloc = parsed.netloc
-                auth_part, _, host_port = netloc.rpartition('@')
-                
-                if host_port.startswith('['):
-                    end_bracket = host_port.find(']')
-                    if end_bracket != -1:
-                        result['server'] = host_port[1:end_bracket]
-                        port_part = host_port[end_bracket + 1:]
-                        if port_part.startswith(':'):
-                            result['port'] = int(port_part.split(':')[1].split('?')[0])
-                else:
-                    if ':' in host_port:
-                        result['server'], port_str = host_port.split(':', 1)
-                        result['port'] = int(port_str.split('?')[0])
-                    else:
-                        result['server'] = host_port
-
-                result['uuid'] = auth_part
-                query = parse_qs(parsed.query)
-                result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0] or query.get('host', [''])[0]
-                result['tls'] = query.get('security', [''])[0] == 'tls' or 'tls' in query
-                result['client-fingerprint'] = chosen_fp
-                
-                net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
-                net_type = net_type.lower().strip()
-                if net_type and net_type not in ['raw', 'tcp']:
-                    result['network'] = net_type
-                    if net_type == 'ws':
-                        result['ws-opts'] = {
-                            'path': query.get('path', ['/'])[0],
-                            'headers': {'Host': result['sni'] or result['server']}
-                        }
-                    elif net_type == 'grpc':
-                        result['grpc-opts'] = {
-                            'grpc-service-name': query.get('serviceName', [''])[0]
-                        }
-            else:
-                b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
-                data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
-                result['type'] = 'vmess'
-                result['server'] = str(data.get('add', ''))
-                result['port'] = int(data.get('port', 0))
-                result['uuid'] = str(data.get('id', ''))
-                result['alterId'] = int(data.get('aid', 0))
-                result['cipher'] = 'auto'
-                result['sni'] = str(data.get('sni', '') or data.get('host', ''))
-                result['tls'] = str(data.get('tls', '')).lower() in ['tls', 'true', '1']
-                result['client-fingerprint'] = chosen_fp
-                
-                net_type = str(data.get('net', '')).lower().strip()
-                if net_type and net_type not in ['raw', 'tcp']:
-                    result['network'] = net_type
-                    if net_type == 'ws':
-                        result['ws-opts'] = {
-                            'path': str(data.get('path', '/')),
-                            'headers': {'Host': result['sni'] or result['server']}
-                        }
-                    elif net_type == 'grpc':
-                        result['grpc-opts'] = {
-                            'grpc-service-name': str(data.get('path', ''))
-                        }
-            return result
-
-        parsed = urlparse(config)
-        scheme = parsed.scheme.lower()
-        
-        PROTOCOL_MAP = {
-            'hy2': 'hysteria2',
-            'hysteria': 'hysteria2',
-        }
-        scheme = PROTOCOL_MAP.get(scheme, scheme)
-        result['type'] = scheme
-
-        netloc = parsed.netloc
-        auth_part, _, host_port = netloc.rpartition('@')
-        if not auth_part:
-            host_port = netloc
-
-        if host_port.startswith('['):
-            end_bracket = host_port.find(']')
-            if end_bracket != -1:
-                result['server'] = host_port[1:end_bracket]
-                port_part = host_port[end_bracket + 1:]
-                if port_part.startswith(':'):
-                    result['port'] = int(port_part.split(':')[1].split('?')[0])
-        else:
-            if ':' in host_port:
-                result['server'], port_str = host_port.split(':', 1)
-                result['port'] = int(port_str.split('?')[0])
-            else:
-                result['server'] = host_port
-
-        query = parse_qs(parsed.query)
-        result['sni'] = query.get('sni', [''])[0] or query.get('peer', [''])[0]
-
-        if scheme == 'vless':
-            result['uuid'] = auth_part
-            result['cipher'] = 'none'
-            result['flow'] = query.get('flow', [''])[0] or 'xtls-rprx-vision'
-            security = query.get('security', [''])[0]
-            if security in ['tls', 'reality']:
-                result['tls'] = True
-            if security == 'reality':
-                result['reality-opts'] = {
-                    'public-key': query.get('pbk', [''])[0],
-                    'short-id': query.get('sid', [''])[0]
-                }
-            
-            result['client-fingerprint'] = chosen_fp
-
-            net_type = query.get('type', [''])[0] or query.get('net', [''])[0]
-            net_type = net_type.lower().strip()
-            if net_type and net_type not in ['raw', 'tcp']:
-                result['network'] = net_type
-                if net_type == 'ws':
-                    result['ws-opts'] = {
-                        'path': query.get('path', ['/'])[0],
-                        'headers': {'Host': query.get('host', [''])[0] or result['sni'] or result['server']}
-                    }
-                elif net_type == 'grpc':
-                    result['grpc-opts'] = {
-                        'grpc-service-name': query.get('serviceName', [''])[0]
-                    }
-
-        elif scheme == 'trojan':
-            result['password'] = auth_part
-            result['tls'] = True
-            result['client-fingerprint'] = chosen_fp
-            if query.get('insecure', [''])[0] in ['1', 'true']:
-                result['skip-cert-verify'] = True
-
-        elif scheme in ['hysteria2', 'hysteria']:
-            result['type'] = 'hysteria2'
-            result['password'] = auth_part
-            result['client-fingerprint'] = chosen_fp
-            up_str = query.get('up', [''])[0]
-            down_str = query.get('down', [''])[0]
-            if up_str:
-                result['up'] = up_str
-            if down_str:
-                result['down'] = down_str
-            if query.get('insecure', [''])[0] in ['1', 'true']:
-                result['skip-cert-verify'] = True
-
-        elif scheme == 'tuic':
-            if ':' in auth_part:
-                result['uuid'], result['password'] = auth_part.split(':', 1)
-            else:
-                result['uuid'] = auth_part
-            result['client-fingerprint'] = chosen_fp
-            result['alpn'] = query.get('alpn', [['h3']])[0].split(',')
-            result['congestion_control'] = query.get('congestion_control', ['bbr'])[0]
-            result['udp_relay_mode'] = query.get('udp_relay_mode', ['native'])[0]
-
-        elif scheme == 'ss':
-            try:
-                if ':' in auth_part:
-                    result['cipher'], result['password'] = auth_part.split(':', 1)
-                else:
-                    padded = auth_part + "=" * ((4 - len(auth_part) % 4) % 4)
-                    decoded = base64.b64decode(padded).decode('utf-8', errors='ignore')
-                    if ':' in decoded:
-                        result['cipher'], result['password'] = decoded.split(':', 1)
-            except Exception:
-                pass
-
-        return result
-    except Exception as e:
-        logger.debug(f"Ошибка парсинга конфига: {e}")
-        return result
-
-
 def validate_config(config: str, host: str, port: int, sni: str) -> bool:
     """Валидирует распарсенную конфигурацию."""
     if not host or port <= 0 or port > 65535:
@@ -402,15 +198,15 @@ class TelegramNotifier:
     """Отправка уведомлений и статусов работы в Telegram"""
     def __init__(self, token: str, chat_id: str, channel_id: str = None):
         self.token = token
-        self.chat_id = chat_id          
-        self.channel_id = channel_id    
+        self.chat_id = chat_id
+        self.channel_id = channel_id
         self.api_url = f"https://api.telegram.org/bot{self.token}/sendMessage"
 
     def send_message(self, text: str, is_report: bool = False):
         if is_report and self.channel_id:
             tz_msk = timezone(timedelta(hours=3))
             time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
-            
+
             total_configs = 0
             try:
                 for line in text.split('\n'):
@@ -477,12 +273,12 @@ class GithubManager:
                             data = json.loads(existing_text)
                         except Exception:
                             data = {}
-                        
+
                         try:
                             data['configs'] = json.loads(content)
                         except Exception:
                             data['configs'] = content
-                        
+
                         commit_content = json.dumps(data, indent=2, ensure_ascii=False)
 
                     repo.update_file(
@@ -550,7 +346,7 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
             "https://raw.githubusercontent.com/AirLinkVPN1/AirLinkVPN/refs/heads/main/rkn_white_list",
             "https://raw.githubusercontent.com/dequar/deqwl/refs/heads/main/deray.txt",
-            "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt",
+            "https://raw.githubusercontent.com/ewecross78-gif/whitelist1/main/list.txt",
             "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/ru/vless.txt",
             "https://subrostunnel.vercel.app/wl.txt",
             "https://rostunnel.vercel.app/mega.txt",
@@ -565,7 +361,7 @@ class ConfigFetcher:
                 if response.status == 200:
                     text = await response.text()
                     text_stripped = text.strip()
-                    
+
                     if text_stripped and not any(text_stripped.startswith(p) for p in ['vless://', 'vmess://', 'ss://', 'trojan://', 'hysteria', 'tuic://', '#']):
                         try:
                             cleaned_b64 = "".join(text_stripped.split())
@@ -581,14 +377,14 @@ class ConfigFetcher:
                         line_stripped = line.strip()
                         if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped:
                             continue
-                        
+
                         # Нормализуем разделители и удаляем type=raw перед проверками
                         normalized_line = _normalize_url_delimiters(line_stripped)
-                        
+
                         # Фильтрация через insecure паттерн
                         if INSECURE_PATTERN.search(normalized_line):
                             continue
-                            
+
                         configs.append(line_stripped)
                     return configs
                 logger.warning(f"Источник {url} вернул статус {response.status}")
@@ -606,7 +402,7 @@ class ConfigFetcher:
             results = await asyncio.gather(*tasks)
             for config_list in results:
                 all_configs.extend(config_list)
-        
+
         unique_configs = {}
         for cfg in all_configs:
             cfg_stripped = cfg.strip()
@@ -626,7 +422,7 @@ class ConfigPinger:
 
     async def _check_config(self, config: str, timeout: float = 1.5) -> str | None:
         host, port, sni = parse_config(config)
-        
+
         if not validate_config(config, host, port, sni):
             return None
 
@@ -680,7 +476,7 @@ class ConfigFilter:
     ) -> Tuple[List[str], List[str], List[str]]:
         white, black_lte, black = [], [], []
         sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
-        
+
         networks = []
         for net_str in whitelist_cidr:
             try:
@@ -690,13 +486,13 @@ class ConfigFilter:
 
         async def process_single(config: str, session: aiohttp.ClientSession):
             host, port, sni = parse_config(config)
-            
+
             if not validate_config(config, host, port, sni):
                 return None
 
             resolved_ip = await self._resolve_doh(session, host)
             is_ip_whitelisted = False
-            
+
             if resolved_ip:
                 try:
                     ip_obj = ipaddress.ip_address(resolved_ip)
@@ -718,7 +514,7 @@ class ConfigFilter:
                 if not res:
                     continue
                 cfg, is_ip_whitelisted, is_sni_whitelisted = res
-                
+
                 if is_ip_whitelisted:
                     white.append(cfg)
                 elif is_sni_whitelisted:
@@ -736,22 +532,22 @@ class VPNConfigCollector:
         self.config_fetcher = ConfigFetcher()
         self.config_filter = ConfigFilter()
         self.config_pinger = ConfigPinger(max_concurrent=120)
-        
+
         github_token = os.getenv('GITHUB_TOKEN')
         if not github_token:
             raise ValueError("Переменная окружения GITHUB_TOKEN не задана")
         self.github_manager = GithubManager(github_token)
-        
+
         telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
         telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
         telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
-        
+
         if telegram_token and telegram_chat_id:
             self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_channel_id)
         else:
             self.notifier = None
             logger.warning("Telegram не настроен")
-        
+
         self.whitelist_sni: Set[str] = set()
         self.whitelist_cidr: List[str] = []
 
@@ -773,7 +569,7 @@ class VPNConfigCollector:
             f"#support-url: https://t.me/flat447",
             f"#profile-update-interval: 1\n"
         ]
-    
+
         cleaned_configs = []
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
@@ -781,322 +577,10 @@ class VPNConfigCollector:
                 chosen_fp = random.choice(ALLOWED_FPS)
                 # Нормализация (включая удаление type=raw) и перезапись fp
                 cleaned = _force_update_fp_in_url(cleaned, chosen_fp)
-                
                 named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
                 cleaned_configs.append(named_config)
 
         return '\n'.join(meta + cleaned_configs)
-
-    # ========================================================================
-    # ПРАВИЛЬНАЯ ГЕНЕРАЦИЯ CLASH YAML
-    # ========================================================================
-    
-    SS_CIPHER_MAP = {
-        'chacha20-poly1305': 'chacha20-ietf-poly1305',
-        'chacha20-ietf': 'chacha20-ietf-poly1305',
-        'aes-128-ctr': 'aes-128-gcm',
-        'aes-192-ctr': 'aes-192-gcm',
-        'aes-256-ctr': 'aes-256-gcm',
-    }
-    
-    VALID_SS_CIPHERS = {
-        'aes-128-gcm',
-        'aes-192-gcm',
-        'aes-256-gcm',
-        'chacha20-ietf-poly1305',
-        'xchacha20-ietf-poly1305',
-    }
-
-    def _normalize_ss_cipher(self, cipher: str) -> str:
-        """Нормализует Shadowsocks cipher на правильный формат"""
-        cipher_lower = cipher.lower().strip()
-        return self.SS_CIPHER_MAP.get(cipher_lower, cipher_lower)
-
-    def _normalize_short_id(self, short_id: str) -> str:
-        """
-        Нормализует REALITY short-id:
-        - приводит к нижнему регистру
-        - обрезает до максимум 16 hex-символов (8 байт)
-        - гарантирует чётную длину (целое число байт)
-        Возвращает пустую строку, если результат невалиден.
-        """
-        if not short_id:
-            return ''
-
-        sid = short_id.strip().lower()
-
-        # Проверяем, что строка состоит только из hex-символов
-        if not all(c in '0123456789abcdef' for c in sid):
-            return ''
-
-        # Обрезаем до 16 символов максимум
-        sid = sid[:16]
-
-        # Гарантируем чётную длину
-        if len(sid) % 2 != 0:
-            sid = sid[:-1]
-
-        return sid
-
-    def _validate_reality_opts(self, reality_opts: dict) -> bool:
-        """
-        Валидирует REALITY параметры:
-        - public-key: base64url, декодируется в ровно 32 байта
-        - short-id: hex-строка, чётная длина, максимум 16 символов (8 байт)
-        """
-        public_key = reality_opts.get('public-key', '').strip()
-        short_id = reality_opts.get('short-id', '').strip()
-
-        # Валидация public-key
-        if not public_key:
-            return False
-
-        if len(public_key) < 43 or len(public_key) > 44:
-            return False
-
-        try:
-            padded = public_key + "=" * ((4 - len(public_key) % 4) % 4)
-            decoded = base64.b64decode(padded, validate=True)
-            if len(decoded) != 32:
-                return False
-        except Exception:
-            return False
-
-        # Валидация short-id (опциональный параметр)
-        if short_id:
-            # Только hex-символы
-            if not all(c in '0123456789abcdefABCDEF' for c in short_id):
-                return False
-            # Максимум 16 символов (8 байт)
-            if len(short_id) > 16:
-                return False
-            # Длина должна быть чётной (целое число байт)
-            if len(short_id) % 2 != 0:
-                return False
-
-        return True
-
-    def _build_clash_proxy(self, details: dict, index: int, proxy_name_prefix: str) -> Optional[dict]:
-        """Строит словарь прокси для Clash на основе распарсенных данных"""
-        ptype = details['type']
-        if ptype == 'unknown' or not details['server'] or details['port'] <= 0:
-            return None
-
-        proxy = {
-            'name': f'{proxy_name_prefix} [{index}]',
-            'type': ptype,
-            'server': details['server'],
-            'port': int(details['port']),
-        }
-
-        if ptype in ['hysteria2', 'tuic']:
-            proxy['udp'] = details.get('udp', True)
-
-        if details.get('sni') and ptype not in ['vless']:
-            proxy['sni'] = details['sni']
-        if details.get('skip-cert-verify'):
-            proxy['skip-cert-verify'] = True
-
-        if ptype == 'vless':
-            if not details.get('uuid'):
-                return None
-            proxy['uuid'] = details['uuid']
-            proxy['encryption'] = 'none'
-            
-            has_reality = bool(details.get('reality-opts'))
-            has_network = bool(details.get('network'))
-            
-            if details.get('flow'):
-                if not has_reality or has_network:
-                    pass
-                else:
-                    proxy['flow'] = details['flow']
-            
-            if details.get('tls'):
-                proxy['tls'] = True
-            
-            proxy['client-fingerprint'] = details['client-fingerprint']
-            
-            if details.get('reality-opts'):
-                reality_opts = details['reality-opts']
-
-                # Нормализуем short-id перед валидацией
-                raw_sid = reality_opts.get('short-id', '').strip()
-                normalized_sid = self._normalize_short_id(raw_sid)
-                reality_opts_normalized = {
-                    'public-key': reality_opts.get('public-key', '').strip(),
-                    'short-id': normalized_sid
-                }
-
-                if not self._validate_reality_opts(reality_opts_normalized):
-                    return None
-
-                proxy['reality-opts'] = {
-                    'public-key': reality_opts_normalized['public-key']
-                }
-                # Записываем short-id только если он непустой после нормализации
-                if normalized_sid:
-                    proxy['reality-opts']['short-id'] = normalized_sid
-            
-            if details.get('sni') and details.get('tls'):
-                proxy['servername'] = details['sni']
-            
-            if not details.get('reality-opts'):
-                if details.get('network') == 'ws' and details.get('ws-opts'):
-                    proxy['network'] = 'ws'
-                    ws_opts = details['ws-opts']
-                    proxy['ws-opts'] = {}
-                    if ws_opts.get('path'):
-                        proxy['ws-opts']['path'] = ws_opts['path']
-                    if ws_opts.get('headers'):
-                        proxy['ws-opts']['headers'] = ws_opts['headers']
-                elif details.get('network') == 'grpc' and details.get('grpc-opts'):
-                    proxy['network'] = 'grpc'
-                    proxy['grpc-opts'] = {}
-                    if details['grpc-opts'].get('grpc-service-name'):
-                        proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
-
-        elif ptype == 'vmess':
-            if not details.get('uuid'):
-                return None
-            proxy['uuid'] = details['uuid']
-            proxy['alterId'] = int(details.get('alterId', 0))
-            proxy['cipher'] = details.get('cipher', 'auto')
-            if details.get('tls'):
-                proxy['tls'] = True
-            if details.get('sni'):
-                proxy['servername'] = details['sni']
-            
-            if details.get('network') == 'ws' and details.get('ws-opts'):
-                proxy['network'] = 'ws'
-                ws_opts = details['ws-opts']
-                proxy['ws-opts'] = {}
-                if ws_opts.get('path'):
-                    proxy['ws-opts']['path'] = ws_opts['path']
-                if ws_opts.get('headers'):
-                    proxy['ws-opts']['headers'] = ws_opts['headers']
-            elif details.get('network') == 'grpc' and details.get('grpc-opts'):
-                proxy['network'] = 'grpc'
-                proxy['grpc-opts'] = {}
-                if details['grpc-opts'].get('grpc-service-name'):
-                    proxy['grpc-opts']['grpc-service-name'] = details['grpc-opts']['grpc-service-name']
-
-        elif ptype == 'trojan':
-            if not details.get('password'):
-                return None
-            proxy['password'] = details['password']
-            proxy['sni'] = details.get('sni', '')
-            proxy['client-fingerprint'] = details['client-fingerprint']
-            if details.get('skip-cert-verify'):
-                proxy['skip-cert-verify'] = True
-
-        elif ptype == 'hysteria2':
-            if not details.get('password'):
-                return None
-            proxy['password'] = details['password']
-            proxy['obfs'] = 'salamander'
-            proxy['obfs-password'] = details.get('password', '')
-            proxy['up'] = details.get('up', '30 Mbps')
-            proxy['down'] = details.get('down', '100 Mbps')
-            proxy['client-fingerprint'] = details['client-fingerprint']
-            if details.get('sni'):
-                proxy['sni'] = details['sni']
-
-        elif ptype == 'tuic':
-            if not details.get('uuid'):
-                return None
-            proxy['uuid'] = details['uuid']
-            if details.get('password'):
-                proxy['password'] = details['password']
-            proxy['client-fingerprint'] = details['client-fingerprint']
-            if details.get('alpn'):
-                alpn = details['alpn']
-                if isinstance(alpn, list):
-                    proxy['alpn'] = alpn
-                elif isinstance(alpn, str):
-                    proxy['alpn'] = [alpn]
-            proxy['congestion-control'] = details.get('congestion_control', 'bbr')
-            proxy['udp-relay-mode'] = details.get('udp_relay_mode', 'native')
-            if details.get('sni'):
-                proxy['sni'] = details['sni']
-
-        elif ptype == 'ss':
-            if not details.get('cipher') or not details.get('password'):
-                return None
-            
-            cipher = self._normalize_ss_cipher(details['cipher'])
-            if cipher not in self.VALID_SS_CIPHERS:
-                return None
-            
-            proxy['cipher'] = cipher
-            proxy['password'] = details['password']
-
-        return proxy
-
-    def _generate_clash_yaml_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует корректный Clash YAML с подмененными fp"""
-        proxy_name_prefix = title.replace('V2Ray Lists - ', '').strip()
-        proxies = []
-
-        for idx, cfg in enumerate(configs, start=1):
-            cleaned = self._clean_config(cfg)
-            if not cleaned:
-                continue
-            
-            try:
-                normalized_cfg = _normalize_url_delimiters(cleaned)
-                details = parse_config_detailed(normalized_cfg)
-                proxy = self._build_clash_proxy(details, idx, proxy_name_prefix)
-                if proxy:
-                    proxies.append(proxy)
-            except Exception:
-                pass
-
-        if not proxies:
-            return "# No valid proxies found"
-
-        clash_config = {
-            'proxies': proxies,
-            'proxy-groups': [
-                {
-                    'name': 'Selector',
-                    'type': 'select',
-                    'proxies': [p['name'] for p in proxies]
-                },
-                {
-                    'name': 'Auto Fallback',
-                    'type': 'fallback',
-                    'url': 'http://www.gstatic.com/generate_204',
-                    'interval': 300,
-                    'proxies': [p['name'] for p in proxies]
-                }
-            ],
-            'rules': ['MATCH,Selector']
-        }
-
-        comments = (
-            f"# 🔰 V2Ray Clash Subscription\n"
-            f"# Profile: {title}\n"
-            f"# Support: https://t.me/flat447\n"
-            f"# Update interval: 1 hour\n"
-            f"# Valid proxies: {len(proxies)}\n\n"
-        )
-
-        try:
-            yaml_str = yaml.dump(
-                clash_config,
-                allow_unicode=True,
-                sort_keys=False,
-                default_flow_style=False,
-                default_style=None,
-                indent=2,
-                explicit_start=False,
-                explicit_end=False
-            )
-        except Exception as e:
-            return comments + f"# Error generating YAML: {e}"
-
-        return comments + yaml_str
 
     async def run(self):
         tz_msk = timezone(timedelta(hours=3))
@@ -1105,37 +589,37 @@ class VPNConfigCollector:
         try:
             logger.info("Загрузка списков ТСПУ...")
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            
+
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
             sni_res.raise_for_status()
             self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
-            
+
             cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
             cidr_res.raise_for_status()
             self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
-            
+
             all_configs = await self.config_fetcher.fetch_all_configs()
-            
+
             if not all_configs:
                 logger.warning("Конфиги не собраны.")
                 return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
-            
+
             white_full, black_lte, black = await self.config_filter.filter_configs(
                 alive_configs, self.whitelist_sni, self.whitelist_cidr
             )
-            
+
             white_lite = white_full[:500]
             current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
-            
+
             self.stats = {
                 "black": {"count": len(black), "updated": current_time_str},
                 "black_lte": {"count": len(black_lte), "updated": current_time_str},
                 "white_full": {"count": len(white_full), "updated": current_time_str},
                 "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
-            
+
             black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
             black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte)
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
@@ -1145,7 +629,7 @@ class VPNConfigCollector:
             black_lte_b64 = base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8')
             white_full_b64 = base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8')
             white_lite_b64 = base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8')
-            
+
             files_to_push = {
                 'BLACK_FULL.txt': black_txt,
                 'BLACK_LTE.txt': black_lte_txt,
@@ -1155,16 +639,12 @@ class VPNConfigCollector:
                 'BASE64/BLACK_LTE.txt': black_lte_b64,
                 'BASE64/WHITE_FULL.txt': white_full_b64,
                 'BASE64/WHITE_LITE.txt': white_lite_b64,
-                'CLASH/BLACK_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK FULL', black),
-                'CLASH/BLACK_LTE.yaml': self._generate_clash_yaml_content('V2Ray Lists - BLACK LTE', black_lte),
-                'CLASH/WHITE_FULL.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE FULL', white_full),
-                'CLASH/WHITE_LITE.yaml': self._generate_clash_yaml_content('V2Ray Lists - WHITE LITE', white_lite),
                 'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
             }
-            
+
             await self.github_manager.push_files(files_to_push)
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
-            
+
             if self.notifier:
                 msg_channel = (
                     f"black: {self.stats['black']['count']}\n"
@@ -1173,7 +653,7 @@ class VPNConfigCollector:
                     f"white_lite: {self.stats['white_lite']['count']}"
                 )
                 self.notifier.send_message(msg_channel, is_report=True)
-                
+
                 msg_admin = (
                     f"✅ *Сбор завершен успешно!*\n\n"
                     f"📊 *Статистика подписок:*\n"
@@ -1184,9 +664,9 @@ class VPNConfigCollector:
                     f"⏱ Время выполнения: {duration:.1f} сек"
                 )
                 self.notifier.send_message(msg_admin, is_report=False)
-                
+
             logger.info("✅ Сбор завершен успешно!")
-                
+
         except Exception as e:
             logger.critical(f"Критический сбой: {e}")
             if self.notifier:
@@ -1225,7 +705,6 @@ class TestResults:
 
 def run_validation_tests():
     results = TestResults()
-    collector = VPNConfigCollector.__new__(VPNConfigCollector)
 
     # ------------------------------------------------------------------
     # Тесты нормализации type=raw
@@ -1239,100 +718,52 @@ def run_validation_tests():
         f"Результат: {normalized}"
     )
 
-    print("\n📋 Тестирование глубокого парсинга для Clash...")
-    details = parse_config_detailed(normalized)
+    # ------------------------------------------------------------------
+    # Тесты нормализации insecure
+    # ------------------------------------------------------------------
+    print("\n📋 Тестирование фильтрации insecure конфигов...")
+    insecure_cfg = "vless://uuid@host:443?security=tls&allowinsecure=1"
     results.add_test(
-        "network не должен быть равен raw",
-        details.get('network') != 'raw',
-        f"Поле network в словаре: {details.get('network')}"
+        "allowinsecure=1 определяется как небезопасный",
+        bool(INSECURE_PATTERN.search(insecure_cfg)),
+        f"Конфиг: {insecure_cfg}"
+    )
+
+    safe_cfg = "vless://uuid@host:443?security=reality&fp=firefox"
+    results.add_test(
+        "Безопасный конфиг не отфильтровывается",
+        not bool(INSECURE_PATTERN.search(safe_cfg)),
+        f"Конфиг: {safe_cfg}"
     )
 
     # ------------------------------------------------------------------
-    # Тесты нормализации short-id
+    # Тесты _force_update_fp_in_url
     # ------------------------------------------------------------------
-    print("\n📋 Тестирование нормализации REALITY short-id...")
-
-    # Корректный 16-символьный short-id — должен пройти без изменений
-    sid_16 = collector._normalize_short_id('6ba85179e30d4fc3')
+    print("\n📋 Тестирование принудительной замены fp...")
+    fp_cfg = "vless://uuid@host:443?security=reality&fp=chrome"
+    updated = _force_update_fp_in_url(fp_cfg, 'firefox')
     results.add_test(
-        "16-символьный short-id остаётся без изменений",
-        sid_16 == '6ba85179e30d4fc3',
-        f"Результат: '{sid_16}'"
-    )
-
-    # Нечётная длина — должен обрезаться до чётной
-    sid_odd = collector._normalize_short_id('6ba85179e30d4f')
-    results.add_test(
-        "Нечётный short-id обрезается до чётной длины",
-        len(sid_odd) % 2 == 0,
-        f"Результат: '{sid_odd}' (длина {len(sid_odd)})"
-    )
-
-    # Длиннее 16 символов — обрезается до 16
-    sid_long = collector._normalize_short_id('6ba85179e30d4fc3aabbcc')
-    results.add_test(
-        "short-id длиннее 16 символов обрезается до 16",
-        len(sid_long) <= 16,
-        f"Результат: '{sid_long}' (длина {len(sid_long)})"
-    )
-
-    # Uppercase — приводится к lower
-    sid_upper = collector._normalize_short_id('6BA85179E30D4FC3')
-    results.add_test(
-        "short-id приводится к нижнему регистру",
-        sid_upper == '6ba85179e30d4fc3',
-        f"Результат: '{sid_upper}'"
-    )
-
-    # Невалидные символы — возвращает пустую строку
-    sid_invalid = collector._normalize_short_id('ZZZZZZZZ')
-    results.add_test(
-        "short-id с невалидными символами возвращает пустую строку",
-        sid_invalid == '',
-        f"Результат: '{sid_invalid}'"
+        "fp=chrome заменяется на fp=firefox",
+        'fp=firefox' in updated and 'fp=chrome' not in updated,
+        f"Результат: {updated}"
     )
 
     # ------------------------------------------------------------------
-    # Тесты _validate_reality_opts
+    # Тесты parse_config
     # ------------------------------------------------------------------
-    print("\n📋 Тестирование валидации REALITY opts...")
-
-    valid_pk = 'D9EktvCfJb5l8mBkJHx3U31BIUwIBHJKV85OzyNnDlU'
-
+    print("\n📋 Тестирование базового парсера...")
+    host, port, sni = parse_config("vless://uuid@1.2.3.4:443?sni=example.com&security=reality")
     results.add_test(
-        "Валидный public-key + корректный short-id",
-        collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85179e30d4fc3'}),
-        f"pk={valid_pk}, sid=6ba85179e30d4fc3"
+        "Корректный парсинг host/port/sni",
+        host == '1.2.3.4' and port == 443 and sni == 'example.com',
+        f"host={host}, port={port}, sni={sni}"
     )
 
+    host2, port2, sni2 = parse_config("trojan://pass@bad-host:-1?sni=x")
     results.add_test(
-        "Валидный public-key без short-id",
-        collector._validate_reality_opts({'public-key': valid_pk, 'short-id': ''}),
-        f"pk={valid_pk}, sid=''"
-    )
-
-    results.add_test(
-        "Невалидный public-key (короткий) — должен вернуть False",
-        not collector._validate_reality_opts({'public-key': 'abc', 'short-id': ''}),
-        "pk='abc'"
-    )
-
-    results.add_test(
-        "short-id нечётной длины — должен вернуть False",
-        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85'}),
-        "sid='6ba85' (нечётная длина)"
-    )
-
-    results.add_test(
-        "short-id длиннее 16 символов — должен вернуть False",
-        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': '6ba85179e30d4fc3aa'}),
-        "sid='6ba85179e30d4fc3aa' (18 символов)"
-    )
-
-    results.add_test(
-        "short-id с невалидными символами — должен вернуть False",
-        not collector._validate_reality_opts({'public-key': valid_pk, 'short-id': 'zzzzzzzz'}),
-        "sid='zzzzzzzz'"
+        "Невалидный порт -1 не проходит validate_config",
+        not validate_config('', host2, port2, sni2),
+        f"port={port2}"
     )
 
     success = results.print_results()
