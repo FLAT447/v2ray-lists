@@ -94,7 +94,7 @@ python proxy_checker.py                # генерирует файлы whiteli
 <details>
 <summary>Гайд на Andorid</summary>
 	
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.1/v2rayNG_2.2.1_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.5/v2rayNG_2.2.5_universal.apk)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -108,7 +108,7 @@ python proxy_checker.py                # генерирует файлы whiteli
 
 <summary>Гайд для Android TV</summary>
 
-**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.1/v2rayNG_2.2.1_universal.apk)
+**1.** Скачиваем **«v2rayNG»** — [Ссылка](https://github.com/2dust/v2rayNG/releases/download/2.2.5/v2rayNG_2.2.5_universal.apk)
 
 > Чёрные Списки: [BLACK_LTE](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/BLACK_LTE.png), [BLACK_FULL](https://github.com/FLAT447/v2ray-lists/tree/main/qr-codes/BLACK_FULL.png)
 
@@ -139,7 +139,7 @@ python proxy_checker.py                # генерирует файлы whiteli
 
 <summary>Гайд для Windows, Linux</summary>
 
-**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-windows64.zip) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.5/Throne-1.1.5-linux-amd64.zip)
+**1.** Скачиваем **«Throne»** — [Windows 10/11](https://github.com/throneproj/Throne/releases/download/1.1.6/Throne-1.1.6-windows64.zip) / [Windows 7/8/8.1](https://github.com/throneproj/Throne/releases/download/1.1.6/Throne-1.1.6-windowslegacy64.zip) / [Linux](https://github.com/throneproj/Throne/releases/download/1.1.6/Throne-1.1.6-linux-amd64.zip)
 
 **2.** Копируем в буфер обмена ссылку из раздела [🗂️ Основные подписки](#-основные-подписки)
 
@@ -224,6 +224,9 @@ python proxy_checker.py                # генерирует файлы whiteli
 # 📜 Поддержать автора
 
 TON: UQBRZI9s95gtehUkm_NESZ-HJOmhJlHn025uu_Uqn1xfhlCR
+USDT (TRC20): TUadZfsYhCsCEje852r4mWichUWvGcvY5E
+ETH: 0x08DCB85468d46E1D48094d8945B762fCF6F3AD64
+BTC: bc1q485z2g5gan0qmdyrg2r672ua2tukk08ns92s56
 
 ---
 
