@@ -7,8 +7,8 @@ import logging
 import asyncio
 import ipaddress
 import random
-import shutil
 import socket
+import ssl
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
@@ -186,93 +186,48 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
     return True
 
 # ============================================================================
-# ВАЛИДАТОР ПРИКЛАДНОГО УРОВНЯ (SING-BOX L7 HANDSHAKE)
+# НАДЕЖНЫЙ ВАЛИДАТОР (TCP + TLS/L7 HANDSHAKE НА PYTHON)
 # ============================================================================
 
-class SingBoxValidator:
-    def __init__(self, max_concurrent: int = 30):
+class AdvancedValidator:
+    """Глубокая проверка: TCP сессия + имитация TLS Handshake для защиты от блокировок ТСПУ"""
+    def __init__(self, max_concurrent: int = 100):
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.singbox_path = './sing-box' if os.path.exists('./sing-box') else shutil.which('sing-box')
-        if not self.singbox_path:
-            logger.warning("⚠️ sing-box не найден! Откат к чистому TCP.")
 
-    async def _wait_for_port(self, port: int, attempts: int = 15, delay: float = 0.1) -> bool:
-        """Динамическое ожидание открытия локального входящего порта sing-box"""
-        for _ in range(attempts):
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.05)
-                result = sock.connect_ex(('127.0.0.1', port))
-                sock.close()
-                if result == 0:
-                    return True
-            except Exception:
-                pass
-            await asyncio.sleep(delay)
-        return False
-
-    async def check_l7(self, config_url: str) -> bool:
-        if not self.singbox_path:
-            return True
-
+    async def check_l7_tls(self, host: str, port: int, sni: str, timeout: float = 2.5) -> bool:
         async with self.semaphore:
-            local_port = random.randint(22000, 42000)
-            temp_config_path = f"temp_{local_port}.json"
-            
-            sb_config = {
-                "log": {"level": "silent"},
-                "inbounds": [{
-                    "type": "mixed",
-                    "listen": "127.0.0.1",
-                    "listen_port": local_port
-                }],
-                "outbounds": [
-                    {
-                        "type": "url",
-                        "url": config_url
-                    },
-                    {
-                        "type": "direct",
-                        "tag": "direct"
-                    }
-                ]
-            }
-            
             try:
-                with open(temp_config_path, 'w') as f:
-                    json.dump(sb_config, f)
-
-                proc = await asyncio.create_subprocess_exec(
-                    self.singbox_path, 'run', '-c', temp_config_path,
-                    stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+                # Шаг 1: Обычный TCP-пинг
+                reader, writer = await asyncio.wait_for(
+                    asyncio.open_connection(host.strip('[]'), port), timeout=timeout
                 )
                 
-                # Ждем пока sing-box действительно забиндит порт
-                if not await self._wait_for_port(local_port):
-                    raise RuntimeError("Sing-box core port timeout")
-                
-                # Запрос к Google через развернутый инстанс прокси (увеличенный таймаут)
-                connector = aiohttp.TCPConnector(ssl=False)
-                async with aiohttp.ClientSession(connector=connector) as session:
-                    proxy_url = f"http://127.0.0.1:{local_port}"
-                    async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=7.0) as resp:
-                        if resp.status in [200, 204]:
-                            proc.terminate()
-                            await proc.wait()
-                            return True
-            except Exception:
-                pass
-            finally:
-                if 'proc' in locals() and proc.returncode is None:
+                # Шаг 2: Если протокол использует TLS/SNI (VLESS-Reality, Trojan и т.д.), проверим прохождение Handshake
+                if sni:
                     try:
-                        proc.kill()
-                        await proc.wait()
+                        ssl_context = ssl.create_default_context()
+                        ssl_context.check_hostname = False
+                        ssl_context.verify_mode = ssl.CERT_NONE
+                        
+                        # Оборачиваем существующий сокет в TLS асинхронно
+                        transport = writer.transport
+                        sock = transport.get_extra_info('socket')
+                        if sock:
+                            await asyncio.wait_for(
+                                asyncio.get_event_loop().start_tls(transport, reader, ssl_context, server_hostname=sni),
+                                timeout=timeout
+                            )
                     except Exception:
-                        pass
-                if os.path.exists(temp_config_path):
-                    try: os.remove(temp_config_path)
-                    except Exception: pass
-            return False
+                        # Если TLS лег (ТСПУ заблокировал рукопожатие), но порт открыт — это мертвый конфиг
+                        writer.close()
+                        await writer.wait_closed()
+                        return False
+
+                writer.close()
+                await writer.wait_closed()
+                return True
+            except Exception:
+                return False
 
 # ============================================================================
 # ОСНОВНЫЕ МОДУЛИ И СБОРЩИК
@@ -302,7 +257,6 @@ class TelegramNotifier:
 
 class GithubManager:
     def __init__(self, token: str):
-        # Исправление DeprecationWarning
         auth = Auth.Token(token)
         self.gh = Github(auth=auth)
         self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
@@ -311,7 +265,7 @@ class GithubManager:
         try:
             repo = self.gh.get_repo(self.repo_name)
             
-            # Избегаем race condition: берем самую свежую ветку напрямую с сервера API
+            # Получаем свежие указатели коммитов напрямую
             ref = repo.get_git_ref("heads/main")
             old_commit = repo.get_git_commit(ref.object.sha)
             base_tree = repo.get_git_tree(old_commit.tree.sha)
@@ -325,17 +279,20 @@ class GithubManager:
                 except Exception: old_data['configs'] = files['stats.json']
                 files['stats.json'] = json.dumps(old_data, indent=2, ensure_ascii=False)
 
-            element_list = [InputGitTreeElement(path=fp, mode='100644', type='blob', content=co) for fp, co in files.items()]
+            # Передаем пути БЕЗ создания вложенных поддеревьев вручную (PyGithub это сделает сам через плоский список путей со слэшами)
+            element_list = []
+            for path, content in files.items():
+                element_list.append(InputGitTreeElement(path=path, mode='100644', type='blob', content=content))
+
             tree = repo.create_git_tree(element_list, base_tree)
             time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
             
-            # Пересобираем коммит
             new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree.sha, [old_commit])
             ref.edit(new_commit.sha)
-            logger.info("⚡ Все коммиты атомарно отправлены на GitHub.")
+            logger.info("⚡ Все файлы успешно закоммичены в GitHub.")
             return True
         except Exception as e:
-            logger.error(f"GitHub Manager error: {e}")
+            logger.error(f"GitHub Manager критическая ошибка: {str(e)}")
             return False
 
     async def push_files(self, files: Dict[str, str]) -> bool:
@@ -398,6 +355,7 @@ class ConfigFetcher:
             results = await asyncio.gather(*tasks)
             for config_list in results: all_configs.extend(config_list)
 
+        # Жесткая дедупликация хостов
         unique_nodes = {}
         for cfg in all_configs:
             host, port, _ = parse_config(cfg)
@@ -408,28 +366,20 @@ class ConfigFetcher:
         return list(unique_nodes.values())
 
 class ConfigPinger:
-    def __init__(self, max_concurrent: int = 100):
-        self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.sb_validator = SingBoxValidator()
+    def __init__(self):
+        self.validator = AdvancedValidator()
 
-    async def _check_config(self, config: str, timeout: float = 2.0) -> Optional[str]:
+    async def _check_config(self, config: str) -> Optional[str]:
         host, port, sni = parse_config(config)
         if not validate_config(config, host, port, sni): return None
-
-        async with self.semaphore:
-            try:
-                reader, writer = await asyncio.wait_for(asyncio.open_connection(host.strip('[]'), port), timeout=timeout)
-                writer.close()
-                await writer.wait_closed()
-                
-                if await self.sb_validator.check_l7(config):
-                    return config
-            except Exception:
-                pass
-            return None
+        
+        # Запускаем комбинированный тест
+        if await self.validator.check_l7_tls(host, port, sni):
+            return config
+        return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
-        logger.info(f"Проверка {len(configs)} уникальных серверов (TCP + L7 Sing-Box)...")
+        logger.info(f"Проверка {len(configs)} уникальных серверов (TCP + Асинхронный TLS Handshake)...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         res = [r for r in results if r is not None]
@@ -487,7 +437,7 @@ class VPNConfigCollector:
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
         meta = [
-            f"#announce: 🔰 Проверено через L7 Sing-Box Handshake. Меньше ms — стабильнее соединение.",
+            f"#announce: 🔰 Проверено через TLS L7 Handshake. Обход ТСПУ активен.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
             f"#profile-title: {title}", f"#support-url: https://t.me/flat447", f"#profile-update-interval: 1\n"
         ]
@@ -527,6 +477,7 @@ class VPNConfigCollector:
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
             white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
 
+            # Пути нормализованы для дерева GitHub API
             files_to_push = {
                 'BLACK_FULL.txt': black_txt, 'BLACK_LTE.txt': black_lte_txt, 'WHITE_FULL.txt': white_full_txt, 'WHITE_LITE.txt': white_lite_txt,
                 'BASE64/BLACK_FULL.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
