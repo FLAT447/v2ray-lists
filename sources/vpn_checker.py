@@ -764,10 +764,10 @@ class VPNConfigCollector:
                 'BLACK_LTE.txt': black_lte_txt,
                 'WHITE_FULL.txt': white_full_txt,
                 'WHITE_LITE.txt': white_lite_txt,
-                'BLACK_FULL_B64.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
-                'BLACK_LTE_B64.txt': base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8'),
-                'WHITE_FULL_B64.txt': base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8'),
-                'WHITE_LITE_B64.txt': base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/BLACK_FULL.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/BLACK_LTE.txt': base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/WHITE_FULL.txt': base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/WHITE_LITE4.txt': base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8'),
                 'stats.json': json.dumps(stats, indent=2, ensure_ascii=False)
             }
 
