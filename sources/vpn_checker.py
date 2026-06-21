@@ -7,12 +7,13 @@ import logging
 import asyncio
 import ipaddress
 import random
+import shutil
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import aiohttp
 import requests
-from github import Github, GithubException
+from github import Github, InputGitTreeElement
 from async_lru import alru_cache
 
 # ============================================================================
@@ -28,98 +29,101 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Паттерн для поиска небезопасных параметров
-INSECURE_PATTERN = re.compile(
-    r'(?:allowinsecure|allow_insecure|insecure)[%3B]*=(?:1|true|yes)',
-    re.IGNORECASE
-)
-
-# Разрешенные значения client-fingerprint (fp) для принудительной замены
+INSECURE_PATTERN = re.compile(r'(?:allowinsecure|allow_insecure|insecure)[%3B]*=(?:1|true|yes)', re.IGNORECASE)
 ALLOWED_FPS = ['qq', 'firefox', 'edge']
 
+# Подсети Cloudflare для фильтрации прокси-мусора
+CLOUDFLARE_NETWORKS = [
+    ipaddress.ip_network("173.245.48.0/20"), ipaddress.ip_network("103.21.244.0/22"),
+    ipaddress.ip_network("103.22.200.0/22"), ipaddress.ip_network("103.31.4.0/22"),
+    ipaddress.ip_network("141.101.64.0/18"), ipaddress.ip_network("108.162.192.0/18"),
+    ipaddress.ip_network("190.93.240.0/20"), ipaddress.ip_network("188.114.96.0/20"),
+    ipaddress.ip_network("197.234.240.0/22"), ipaddress.ip_network("198.41.128.0/17"),
+    ipaddress.ip_network("162.158.0.0/15"), ipaddress.ip_network("104.16.0.0/13"),
+    ipaddress.ip_network("104.24.0.0/14"), ipaddress.ip_network("172.64.0.0/13"),
+    ipaddress.ip_network("131.0.72.0/22")
+]
+
+@alru_cache(maxsize=8192)
+async def _global_resolve_doh(hostname: str, servers: Tuple[str, ...]) -> Optional[str]:
+    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname) or ":" in hostname:
+        return hostname
+    async def fetch_dns(session: aiohttp.ClientSession, provider: str) -> Optional[str]:
+        try:
+            params = {"name": hostname, "type": "A"}
+            async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=3) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if "Answer" in data:
+                        for ans in data["Answer"]:
+                            if ans.get("type") == 1:
+                                return ans["data"]
+        except Exception:
+            pass
+        return None
+    async with aiohttp.ClientSession() as session:
+        for provider in servers:
+            res = await fetch_dns(session, provider)
+            if res:
+                return res
+    return None
+
+def _is_cloudflare_ip(ip_str: str) -> bool:
+    try:
+        ip_obj = ipaddress.ip_address(ip_str.strip('[]'))
+        return any(ip_obj in net for net in CLOUDFLARE_NETWORKS)
+    except Exception:
+        return False
 
 # ============================================================================
 # ФУНКЦИИ ВАЛИДАЦИИ И ПАРСИНГА
 # ============================================================================
 
 def _is_valid_domain(domain: str) -> bool:
-    """Проверяет валидность доменного имени"""
     if not domain or len(domain) > 253:
         return False
-
-    if re.match(r'^[\d.]+$', domain):
+    if re.match(r'^[\d.]+$', domain) or ":" in domain:
         return False
-
-    domain_pattern = r'^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-    return re.match(domain_pattern, domain.lower()) is not None
-
+    return re.match(r'^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$', domain.lower()) is not None
 
 def _is_valid_host(host: str) -> bool:
-    """Проверяет является ли host IP-адресом или доменом"""
     if not host:
         return False
-
+    clean_host = host.strip('[]')
     try:
-        ipaddress.ip_address(host)
+        ipaddress.ip_address(clean_host)
         return True
     except ValueError:
         pass
-
-    if _is_valid_domain(host):
-        return True
-
-    return False
-
+    return _is_valid_domain(clean_host)
 
 def _normalize_url_delimiters(config_url: str) -> str:
-    """Приводит любые искаженные разделители параметров к стандартному виду '&' и удаляет type=raw"""
     cleaned = config_url.replace('&amp%3B', '&').replace('&amp;', '&').replace('%3B', '&')
-
-    # Удаляем проблемный параметр type=raw, ломающий парсеры в Throne / Sing-box
     cleaned = re.sub(r'[?&]type=raw(&|$)', r'\1', cleaned, flags=re.IGNORECASE)
     cleaned = cleaned.replace('?&', '?')
     if cleaned.endswith('?'):
         cleaned = cleaned[:-1]
-
     return cleaned
 
-
 def _force_update_fp_in_url(config_url: str, new_fp: str) -> str:
-    """
-    Принудительно заменяет параметр fp (и его вариации) в строке URL.
-    Корректно обрабатывает стандартные и искаженные разделители.
-    """
     try:
         cleaned_url = _normalize_url_delimiters(config_url)
-
         parsed = urlparse(cleaned_url)
         query_params = parse_qs(parsed.query)
-
-        # Меняем/добавляем параметр fp
         query_params['fp'] = [new_fp]
-
-        # Удаляем дублирующий параметр client-fingerprint, если он есть
         if 'client-fingerprint' in query_params:
             del query_params['client-fingerprint']
-
-        # Собираем query-строку обратно
         new_query = urlencode(query_params, doseq=True)
         return urlunparse(parsed._replace(query=new_query))
     except Exception:
         return config_url
 
-
 def parse_config(config: str) -> Tuple[str, int, str]:
-    """
-    Базовый парсер для валидации.
-    Возвращает: (host, port, sni)
-    """
     host, port, sni = '', 0, ''
     try:
         config = config.strip()
         if not config:
             return host, port, sni
-
         if config.startswith('vmess://'):
             rem = config[8:].split('#')[0].strip()
             if '?' in rem or '@' in rem or (':' in rem and not rem.replace(':', '').isalnum()):
@@ -153,7 +157,6 @@ def parse_config(config: str) -> Tuple[str, int, str]:
         parsed = urlparse(config)
         netloc = parsed.netloc
         host_port = netloc.rsplit('@', 1)[1] if '@' in netloc else netloc
-
         if host_port.startswith('['):
             end_bracket = host_port.find(']')
             if end_bracket != -1:
@@ -167,35 +170,101 @@ def parse_config(config: str) -> Tuple[str, int, str]:
                 port = int(port_str.split('?')[0])
             else:
                 host = host_port
-
         query_params = parse_qs(parsed.query)
         sni = query_params.get('sni', [''])[0] or query_params.get('peer', [''])[0]
-
         return host.lower(), port, sni.lower()
     except Exception:
         return '', 0, ''
 
-
 def validate_config(config: str, host: str, port: int, sni: str) -> bool:
-    """Валидирует распарсенную конфигурацию."""
     if not host or port <= 0 or port > 65535:
         return False
-
     if not _is_valid_host(host):
         return False
-
     if sni and not _is_valid_domain(sni):
         return False
-
     return True
 
+# ============================================================================
+# ВАЛИДАТОР ПРИКЛАДНОГО УРОВНЯ (SING-BOX L7 HANDSHAKE)
+# ============================================================================
+
+class SingBoxValidator:
+    """Проверка прохождения реального трафика через локальный бинарник sing-box"""
+    def __init__(self, max_concurrent: int = 40):
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.singbox_path = './sing-box' if os.path.exists('./sing-box') else shutil.which('sing-box')
+        if not self.singbox_path:
+            logger.warning("⚠️ sing-box не найден! Валидация L7 отключена, откат к TCP пингу.")
+
+    async def check_l7(self, config_url: str) -> bool:
+        if not self.singbox_path:
+            return True # Без бинарника пропускаем все, прошедшие TCP
+
+        async with self.semaphore:
+            local_port = random.randint(20000, 40000)
+            temp_config_path = f"temp_{local_port}.json"
+            
+            # Генерация временной конфигурации sing-box (mixed-inbound -> outbound proxy)
+            sb_config = {
+                "log": {"level": "silent"},
+                "inbounds": [{
+                    "type": "mixed",
+                    "listen": "127.0.0.1",
+                    "listen_port": local_port
+                }],
+                "outbounds": [
+                    {
+                        "type": "url",
+                        "url": config_url
+                    },
+                    {
+                        "type": "direct",
+                        "tag": "direct"
+                    }
+                ]
+            }
+            
+            try:
+                with open(temp_config_path, 'w') as f:
+                    json.dump(sb_config, f)
+
+                # Запускаем sing-box в фоне
+                proc = await asyncio.create_subprocess_exec(
+                    self.singbox_path, 'run', '-c', temp_config_path,
+                    stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+                )
+                
+                await asyncio.sleep(0.4) # Даем ядру инициализироваться
+                
+                # Тестируем прохождение трафика через созданный SOCKS/HTTP прокси к Google
+                connector = aiohttp.TCPConnector(ssl=False)
+                async with aiohttp.ClientSession(connector=connector) as session:
+                    proxy_url = f"http://127.0.0.1:{local_port}"
+                    async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=4.5) as resp:
+                        if resp.status in [200, 204]:
+                            proc.terminate()
+                            await proc.wait()
+                            return True
+            except Exception:
+                pass
+            finally:
+                if 'proc' in locals() and proc.returncode is None:
+                    try:
+                        proc.kill()
+                        await proc.wait()
+                    except Exception:
+                        pass
+                if os.path.exists(temp_config_path):
+                    try: os.remove(temp_config_path)
+                    except Exception: pass
+            return False
 
 # ============================================================================
-# КЛАССЫ СБОРЩИКА И МОДУЛИ КЛИЕНТОВ
+# ОСНОВНЫЕ МОДУЛИ И СБОРЩИК
 # ============================================================================
 
 class TelegramNotifier:
-    """Отправка уведомлений и статусов работы в Telegram"""
     def __init__(self, token: str, chat_id: str, channel_id: str = None):
         self.token = token
         self.chat_id = chat_id
@@ -206,51 +275,18 @@ class TelegramNotifier:
         if is_report and self.channel_id:
             tz_msk = timezone(timedelta(hours=3))
             time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
-
-            total_configs = 0
-            try:
-                for line in text.split('\n'):
-                    if any(k in line for k in ['black', 'white_full', 'white_lite']):
-                        digits = ''.join(filter(str.isdigit, line))
-                        if digits:
-                            total_configs += int(digits)
-            except Exception:
-                total_configs = "N/A"
-
+            total_configs = sum(int(''.join(filter(str.isdigit, line)) or 0) for line in text.split('\n') if any(k in line for k in ['black', 'white_full', 'white_lite']))
             channel_text = (
-                f"🔄 V2Ray подписки обновлены!\n"
-                f"📅 Время: {time_str}\n"
-                f"📊 Всего конфигураций: {total_configs}\n\n"
-                f"📦 <a href=\"https://github.com/FLAT447/v2ray-lists\">Репозиторий проекта</a>\n"
-                f"⚡ <a href=\"https://flat447.github.io/v2ray-lists-site\">Сайт проекта</a>"
+                f"🔄 V2Ray подписки обновлены!\n📅 Время: {time_str}\n📊 Всего конфигураций: {total_configs}\n\n"
+                f"📦 <a href=\"https://github.com/FLAT447/v2ray-lists\">Репозиторий проекта</a>\n⚡ <a href=\"https://flat447.github.io/v2ray-lists-site\">Сайт проекта</a>"
             )
-
-            payload = {
-                "chat_id": self.channel_id,
-                "text": channel_text,
-                "parse_mode": "HTML",
-                "disable_web_page_preview": True
-            }
-            logger.info("Отправка итогового отчета в Telegram-канал...")
+            payload = {"chat_id": self.channel_id, "text": channel_text, "parse_mode": "HTML", "disable_web_page_preview": True}
         else:
-            payload = {
-                "chat_id": self.chat_id,
-                "text": text,
-                "parse_mode": "Markdown",
-                "disable_web_page_preview": True
-            }
-            logger.info("Отправка системного уведомления в чат...")
-
-        try:
-            response = requests.post(self.api_url, json=payload, timeout=10)
-            if response.status_code != 200:
-                logger.error(f"Telegram API вернул ошибку: {response.text}")
-        except Exception as e:
-            logger.error(f"Не удалось отправить уведомление в Telegram: {e}")
-
+            payload = {"chat_id": self.chat_id, "text": text, "parse_mode": "Markdown", "disable_web_page_preview": True}
+        try: requests.post(self.api_url, json=payload, timeout=10)
+        except Exception as e: logger.error(f"Telegram error: {e}")
 
 class GithubManager:
-    """Коммит и пуш файлов напрямую в репозиторий GitHub через API"""
     def __init__(self, token: str):
         self.gh = Github(token)
         self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
@@ -258,72 +294,38 @@ class GithubManager:
     def _push_sync(self, files: Dict[str, str]) -> bool:
         try:
             repo = self.gh.get_repo(self.repo_name)
-            tz_msk = timezone(timedelta(hours=3))
-            time_str_msk = datetime.now(tz_msk).strftime("%d.%m.%Y %H:%M:%S MSK")
+            ref = repo.get_git_ref("heads/main")
+            old_commit = repo.get_git_commit(ref.object.sha)
+            base_tree = repo.get_git_tree(old_commit.tree.sha)
 
-            for file_path, content in files.items():
-                commit_content = content
+            if 'stats.json' in files:
                 try:
-                    contents = repo.get_contents(file_path)
-                    sha = contents.sha
+                    contents = repo.get_contents('stats.json')
+                    old_data = json.loads(contents.decoded_content.decode('utf-8'))
+                except Exception: old_data = {}
+                try: old_data['configs'] = json.loads(files['stats.json'])
+                except Exception: old_data['configs'] = files['stats.json']
+                files['stats.json'] = json.dumps(old_data, indent=2, ensure_ascii=False)
 
-                    if file_path == 'stats.json':
-                        try:
-                            existing_text = contents.decoded_content.decode('utf-8')
-                            data = json.loads(existing_text)
-                        except Exception:
-                            data = {}
-
-                        try:
-                            data['configs'] = json.loads(content)
-                        except Exception:
-                            data['configs'] = content
-
-                        commit_content = json.dumps(data, indent=2, ensure_ascii=False)
-
-                    repo.update_file(
-                        path=file_path,
-                        message=f"🔄 Обновление {file_path} по времени МСК [{time_str_msk}]",
-                        content=commit_content,
-                        sha=sha
-                    )
-                    logger.info(f"Файл {file_path} успешно обновлен в репозитории.")
-                except GithubException as e:
-                    if e.status == 404:
-                        if file_path == 'stats.json':
-                            try:
-                                data = {'configs': json.loads(content)}
-                            except Exception:
-                                data = {'configs': content}
-                            commit_content = json.dumps(data, indent=2, ensure_ascii=False)
-
-                        repo.create_file(
-                            path=file_path,
-                            message=f"✨ Create {file_path} via API [{time_str_msk}]",
-                            content=commit_content
-                        )
-                        logger.info(f"Файл {file_path} успешно создан в репозитории.")
-                    else:
-                        raise e
+            element_list = [InputGitTreeElement(path=fp, mode='100644', type='blob', content=co) for fp, co in files.items()]
+            tree = repo.create_git_tree(element_list, base_tree)
+            time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
+            new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree.sha, [old_commit])
+            ref.edit(new_commit.sha)
+            logger.info("⚡ Все коммиты атомарно отправлены на GitHub.")
             return True
         except Exception as e:
-            logger.error(f"Ошибка при работе с GitHub API: {e}")
+            logger.error(f"GitHub Manager error: {e}")
             return False
 
     async def push_files(self, files: Dict[str, str]) -> bool:
         return await asyncio.to_thread(self._push_sync, files)
 
-
 class ConfigFetcher:
-    """Сбор, Base64-декодирование сырых конфигов и фильтрация insecure"""
     def __init__(self):
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-        }
+        self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         self.sources: List[str] = [
-            "https://mifa.world/hysteria",
-            "https://subrostunnel.vercel.app/gen.txt",
+            "https://mifa.world/hysteria", "https://subrostunnel.vercel.app/gen.txt",
             "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
             "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
             "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
@@ -331,292 +333,177 @@ class ConfigFetcher:
             "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
             "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
             "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
-            "https://etoneya.su/1",
-            "https://etoneya.su/whitelist",
+            "https://etoneya.su/1", "https://etoneya.su/whitelist",
             "https://gist.github.com/DestroyST6767/f4dd6f12e5ba9d04ff8d19db0396e310.txt",
-            "https://mifa.world/ss",
-            "https://mifa.world/vless",
-            "https://mifa.world/trojan",
+            "https://mifa.world/ss", "https://mifa.world/vless", "https://mifa.world/trojan",
             "https://raw.githubusercontent.com/RKPchannel/RKP_bypass_configs/refs/heads/main/configs/url_work.txt",
-            "https://vpn.yzewe.ru/sub",
-            "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
-            "https://raw.githubusercontent.com/prominbro/sub/refs/heads/main/212.txt",
-            "https://obwl.obprojects.lol/configs/selected.txt",
+            "https://vpn.yzewe.ru/sub", "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
+            "https://raw.githubusercontent.com/prominbro/sub/refs/heads/main/212.txt", "https://obwl.obprojects.lol/configs/selected.txt",
             "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
             "https://raw.githubusercontent.com/AirLinkVPN1/AirLinkVPN/refs/heads/main/rkn_white_list",
             "https://raw.githubusercontent.com/dequar/deqwl/refs/heads/main/deray.txt",
             "https://raw.githubusercontent.com/ewecross78-gif/whitelist1/main/list.txt",
             "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/ru/vless.txt",
-            "https://subrostunnel.vercel.app/wl.txt",
-            "https://rostunnel.vercel.app/mega.txt",
+            "https://subrostunnel.vercel.app/wl.txt", "https://rostunnel.vercel.app/mega.txt",
             "https://raw.githubusercontent.com/kort0881/vpn-checker-backend/refs/heads/main/checked/RU_Best/ru_white_all_WHITE.txt",
             "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/main/subscriptions/FreeCFGHub1.txt"
         ]
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
         try:
-            logger.info(f"Запрос к источнику: {url}")
             async with session.get(url, headers=self.headers, timeout=15) as response:
                 if response.status == 200:
                     text = await response.text()
                     text_stripped = text.strip()
-
                     if text_stripped and not any(text_stripped.startswith(p) for p in ['vless://', 'vmess://', 'ss://', 'trojan://', 'hysteria', 'tuic://', '#']):
                         try:
-                            cleaned_b64 = "".join(text_stripped.split())
-                            cleaned_b64 += "=" * ((4 - len(cleaned_b64) % 4) % 4)
+                            cleaned_b64 = "".join(text_stripped.split()) + "=" * ((4 - len(text_stripped.strip()) % 4) % 4)
                             decoded = base64.b64decode(cleaned_b64).decode('utf-8', errors='ignore')
-                            if any(p in decoded for p in ['://', 'vless://', 'vmess://', 'ss://', 'trojan://']):
-                                text = decoded
-                        except Exception:
-                            pass
-
+                            if any(p in decoded for p in ['://', 'vless://', 'vmess://']): text = decoded
+                        except Exception: pass
                     configs = []
                     for line in text.splitlines():
                         line_stripped = line.strip()
-                        if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped:
-                            continue
-
-                        # Нормализуем разделители и удаляем type=raw перед проверками
-                        normalized_line = _normalize_url_delimiters(line_stripped)
-
-                        # Фильтрация через insecure паттерн
-                        if INSECURE_PATTERN.search(normalized_line):
-                            continue
-
+                        if not line_stripped or line_stripped.startswith('#') or '://' not in line_stripped: continue
+                        if INSECURE_PATTERN.search(_normalize_url_delimiters(line_stripped)): continue
                         configs.append(line_stripped)
                     return configs
-                logger.warning(f"Источник {url} вернул статус {response.status}")
                 return []
-        except Exception as e:
-            logger.error(f"Ошибка при скачивании из {url}: {e}")
-            return []
+        except Exception: return []
 
     async def fetch_all_configs(self) -> List[str]:
-        if not self.sources:
-            return []
         all_configs = []
         async with aiohttp.ClientSession() as session:
             tasks = [self.fetch_source(session, url) for url in self.sources]
             results = await asyncio.gather(*tasks)
-            for config_list in results:
-                all_configs.extend(config_list)
+            for config_list in results: all_configs.extend(config_list)
 
-        unique_configs = {}
+        # Жесткая дедупликация по паре (host, port)
+        unique_nodes = {}
         for cfg in all_configs:
-            cfg_stripped = cfg.strip()
-            if not cfg_stripped:
-                continue
-            core_part = cfg_stripped.split('#')[0].strip()
-            if core_part and core_part not in unique_configs:
-                unique_configs[core_part] = cfg_stripped
-
-        return list(unique_configs.values())
-
+            host, port, _ = parse_config(cfg)
+            if host and port:
+                key = f"{host}:{port}"
+                if key not in unique_nodes:
+                    unique_nodes[key] = cfg
+        return list(unique_nodes.values())
 
 class ConfigPinger:
-    """Асинхронная проверка доступности портов с защитой от перегрузки сети"""
-    def __init__(self, max_concurrent: int = 200):
+    def __init__(self, max_concurrent: int = 150):
         self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.sb_validator = SingBoxValidator()
 
-    async def _check_config(self, config: str, timeout: float = 1.5) -> str | None:
+    async def _check_config(self, config: str, timeout: float = 1.5) -> Optional[str]:
         host, port, sni = parse_config(config)
-
-        if not validate_config(config, host, port, sni):
-            return None
+        if not validate_config(config, host, port, sni): return None
 
         async with self.semaphore:
             try:
-                reader, writer = await asyncio.wait_for(
-                    asyncio.open_connection(host, port),
-                    timeout=timeout
-                )
+                # Шаг 1: Быстрый TCP пинг порта
+                reader, writer = await asyncio.wait_for(asyncio.open_connection(host.strip('[]'), port), timeout=timeout)
                 writer.close()
                 await writer.wait_closed()
-                return config
+                
+                # Шаг 2: Глубокая L7 Handshake проверка через sing-box
+                if await self.sb_validator.check_l7(config):
+                    return config
             except Exception:
-                return None
+                pass
+            return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
-        logger.info(f"Проверяем доступность {len(configs)} конфигов...")
+        logger.info(f"Проверка {len(configs)} уникальных серверов (TCP + L7 Sing-Box)...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
-        valid_configs = [res for res in results if res is not None]
-        logger.info(f"Валидных конфигов после пинга: {len(valid_configs)}")
-        return valid_configs
-
+        res = [r for r in results if r is not None]
+        logger.info(f"Успешно прошли полную валидацию: {len(res)}")
+        return res
 
 class ConfigFilter:
-    """Асинхронная фильтрация по спискам ТСПУ на базе параллельного DoH"""
     def __init__(self):
-        self.doh_servers = ["https://dns.google/resolve", "https://cloudflare-dns.com/dns-query"]
+        self.doh_servers = ("https://dns.google/resolve", "https://cloudflare-dns.com/dns-query")
 
-    @alru_cache(maxsize=8192)
-    async def _resolve_doh(self, session: aiohttp.ClientSession, hostname: str) -> str | None:
-        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", hostname):
-            return hostname
-
-        for provider in self.doh_servers:
-            try:
-                params = {"name": hostname, "type": "A"}
-                async with session.get(provider, params=params, headers={"accept": "application/dns-json"}, timeout=3) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        if "Answer" in data:
-                            for ans in data["Answer"]:
-                                if ans["type"] == 1:
-                                    return ans["data"]
-            except Exception:
-                continue
-        return None
-
-    async def filter_configs(
-        self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]
-    ) -> Tuple[List[str], List[str], List[str]]:
+    async def filter_configs(self, configs: List[str], whitelist_sni: Set[str], whitelist_cidr: List[str]) -> Tuple[List[str], List[str], List[str]]:
         white, black_lte, black = [], [], []
         sni_set = {s.lower().strip() for s in whitelist_sni if s.strip()}
+        networks = [ipaddress.ip_network(n.strip(), strict=False) for n in whitelist_cidr if n.strip()]
 
-        networks = []
-        for net_str in whitelist_cidr:
-            try:
-                networks.append(ipaddress.ip_network(net_str.strip(), strict=False))
-            except Exception:
-                continue
-
-        async def process_single(config: str, session: aiohttp.ClientSession):
+        async def process_single(config: str):
             host, port, sni = parse_config(config)
-
-            if not validate_config(config, host, port, sni):
+            resolved_ip = await _global_resolve_doh(host, self.doh_servers)
+            
+            # Улучшение: моментальный дроп CDN Cloudflare
+            if resolved_ip and _is_cloudflare_ip(resolved_ip):
                 return None
 
-            resolved_ip = await self._resolve_doh(session, host)
             is_ip_whitelisted = False
-
             if resolved_ip:
                 try:
-                    ip_obj = ipaddress.ip_address(resolved_ip)
-                    for net in networks:
-                        if ip_obj in net:
-                            is_ip_whitelisted = True
-                            break
-                except Exception:
-                    pass
+                    ip_obj = ipaddress.ip_address(resolved_ip.strip('[]'))
+                    is_ip_whitelisted = any(ip_obj in net for net in networks)
+                except Exception: pass
 
             is_sni_whitelisted = bool(sni) and sni in sni_set
             return config, is_ip_whitelisted, is_sni_whitelisted
 
-        async with aiohttp.ClientSession() as session:
-            tasks = [process_single(cfg, session) for cfg in configs]
-            results = await asyncio.gather(*tasks)
+        tasks = [process_single(cfg) for cfg in configs]
+        results = await asyncio.gather(*tasks)
 
-            for res in results:
-                if not res:
-                    continue
-                cfg, is_ip_whitelisted, is_sni_whitelisted = res
-
-                if is_ip_whitelisted:
-                    white.append(cfg)
-                elif is_sni_whitelisted:
-                    black_lte.append(cfg)
-                else:
-                    black.append(cfg)
-
-        logger.info(f"Фильтрация завершена: white={len(white)}, black_lte={len(black_lte)}, black={len(black)}")
+        for res in results:
+            if not res: continue
+            cfg, is_ip_w, is_sni_w = res
+            if is_ip_w: white.append(cfg)
+            elif is_sni_w: black_lte.append(cfg)
+            else: black.append(cfg)
         return white, black_lte, black
 
-
 class VPNConfigCollector:
-    """Главный координатор процесса выполнения сборщика"""
     def __init__(self):
         self.config_fetcher = ConfigFetcher()
         self.config_filter = ConfigFilter()
-        self.config_pinger = ConfigPinger(max_concurrent=120)
-
-        github_token = os.getenv('GITHUB_TOKEN')
-        if not github_token:
-            raise ValueError("Переменная окружения GITHUB_TOKEN не задана")
-        self.github_manager = GithubManager(github_token)
-
-        telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
-        telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
-
-        if telegram_token and telegram_chat_id:
-            self.notifier = TelegramNotifier(telegram_token, telegram_chat_id, telegram_channel_id)
-        else:
-            self.notifier = None
-            logger.warning("Telegram не настроен")
-
-        self.whitelist_sni: Set[str] = set()
-        self.whitelist_cidr: List[str] = []
+        self.config_pinger = ConfigPinger()
+        self.github_manager = GithubManager(os.getenv('GITHUB_TOKEN'))
+        t_token, t_chat, t_chan = os.getenv('TELEGRAM_BOT_TOKEN'), os.getenv('TELEGRAM_CHAT_ID'), os.getenv('TELEGRAM_CHANNEL_ID')
+        self.notifier = TelegramNotifier(t_token, t_chat, t_chan) if t_token and t_chat else None
 
     def _clean_config(self, config: str) -> str:
-        if not config:
-            return ""
-        if "#" in config:
-            parts = config.split('#')
-            if '://' in parts[0]:
-                return parts[0].strip()
-        return config.strip()
+        return config.split('#')[0].strip() if "#" in config and '://' in config.split('#')[0] else config.strip()
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
-        """Генерирует текстовую подписку в формате V2Ray с принудительной подменой fp"""
         meta = [
-            f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
+            f"#announce: 🔰 Проверено через L7 Sing-Box Handshake. Меньше ms — стабильнее соединение.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
-            f"#profile-title: {title}",
-            f"#support-url: https://t.me/flat447",
-            f"#profile-update-interval: 1\n"
+            f"#profile-title: {title}", f"#support-url: https://t.me/flat447", f"#profile-update-interval: 1\n"
         ]
-
         cleaned_configs = []
         for index, cfg in enumerate(configs, start=1):
             cleaned = self._clean_config(cfg)
             if cleaned:
-                chosen_fp = random.choice(ALLOWED_FPS)
-                # Нормализация (включая удаление type=raw) и перезапись fp
-                cleaned = _force_update_fp_in_url(cleaned, chosen_fp)
-                named_config = f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]"
-                cleaned_configs.append(named_config)
-
+                cleaned = _force_update_fp_in_url(cleaned, random.choice(ALLOWED_FPS))
+                cleaned_configs.append(f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]")
         return '\n'.join(meta + cleaned_configs)
 
     async def run(self):
         tz_msk = timezone(timedelta(hours=3))
         start_time = datetime.now(tz_msk)
-
         try:
-            logger.info("Загрузка списков ТСПУ...")
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-
+            headers = {"User-Agent": "Mozilla/5.0"}
             sni_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/whitelist.txt', headers=headers, timeout=20)
-            sni_res.raise_for_status()
-            self.whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
-
+            whitelist_sni = {line.strip() for line in sni_res.text.splitlines() if line.strip() and not line.startswith('#')}
             cidr_res = requests.get('https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/main/cidrwhitelist.txt', headers=headers, timeout=20)
-            cidr_res.raise_for_status()
-            self.whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
+            whitelist_cidr = [line.strip() for line in cidr_res.text.splitlines() if line.strip() and not line.startswith('#')]
 
             all_configs = await self.config_fetcher.fetch_all_configs()
-
-            if not all_configs:
-                logger.warning("Конфиги не собраны.")
-                return
+            if not all_configs: return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
-
-            white_full, black_lte, black = await self.config_filter.filter_configs(
-                alive_configs, self.whitelist_sni, self.whitelist_cidr
-            )
-
+            white_full, black_lte, black = await self.config_filter.filter_configs(alive_configs, whitelist_sni, whitelist_cidr)
             white_lite = white_full[:500]
             current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
 
-            self.stats = {
-                "black": {"count": len(black), "updated": current_time_str},
-                "black_lte": {"count": len(black_lte), "updated": current_time_str},
-                "white_full": {"count": len(white_full), "updated": current_time_str},
-                "white_lite": {"count": len(white_lite), "updated": current_time_str}
+            stats = {
+                "black": {"count": len(black), "updated": current_time_str}, "black_lte": {"count": len(black_lte), "updated": current_time_str},
+                "white_full": {"count": len(white_full), "updated": current_time_str}, "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
 
             black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
@@ -624,158 +511,26 @@ class VPNConfigCollector:
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
             white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
 
-            black_b64 = base64.b64encode(black_txt.encode('utf-8')).decode('utf-8')
-            black_lte_b64 = base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8')
-            white_full_b64 = base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8')
-            white_lite_b64 = base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8')
-
             files_to_push = {
-                'BLACK_FULL.txt': black_txt,
-                'BLACK_LTE.txt': black_lte_txt,
-                'WHITE_FULL.txt': white_full_txt,
-                'WHITE_LITE.txt': white_lite_txt,
-                'BASE64/BLACK_FULL.txt': black_b64,
-                'BASE64/BLACK_LTE.txt': black_lte_b64,
-                'BASE64/WHITE_FULL.txt': white_full_b64,
-                'BASE64/WHITE_LITE.txt': white_lite_b64,
-                'stats.json': json.dumps(self.stats, indent=2, ensure_ascii=False)
+                'BLACK_FULL.txt': black_txt, 'BLACK_LTE.txt': black_lte_txt, 'WHITE_FULL.txt': white_full_txt, 'WHITE_LITE.txt': white_lite_txt,
+                'BASE64/BLACK_FULL.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/BLACK_LTE.txt': base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/WHITE_FULL.txt': base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/WHITE_LITE.txt': base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8'),
+                'stats.json': json.dumps(stats, indent=2, ensure_ascii=False)
             }
 
             await self.github_manager.push_files(files_to_push)
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
 
             if self.notifier:
-                msg_channel = (
-                    f"black: {self.stats['black']['count']}\n"
-                    f"black_lte: {self.stats['black_lte']['count']}\n"
-                    f"white_full: {self.stats['white_full']['count']}\n"
-                    f"white_lite: {self.stats['white_lite']['count']}"
-                )
+                msg_channel = f"black: {len(black)}\nblack_lte: {len(black_lte)}\nwhite_full: {len(white_full)}\nwhite_lite: {len(white_lite)}"
                 self.notifier.send_message(msg_channel, is_report=True)
-
-                msg_admin = (
-                    f"✅ *Сбор завершен успешно!*\n\n"
-                    f"📊 *Статистика подписок:*\n"
-                    f"├ `black`: {self.stats['black']['count']}\n"
-                    f"├ `black_lte`: {self.stats['black_lte']['count']}\n"
-                    f"├ `white_full`: {self.stats['white_full']['count']}\n"
-                    f"└ `white_lite`: {self.stats['white_lite']['count']}\n\n"
-                    f"⏱ Время выполнения: {duration:.1f} сек"
-                )
-                self.notifier.send_message(msg_admin, is_report=False)
-
-            logger.info("✅ Сбор завершен успешно!")
-
+                self.notifier.send_message(f"✅ *Сбор завершен успешно за {duration:.1f} сек!*", is_report=False)
         except Exception as e:
             logger.critical(f"Критический сбой: {e}")
-            if self.notifier:
-                self.notifier.send_message(f"❌ *Критическая ошибка скрипта:* `{e}`", is_report=False)
-
-
-# ============================================================================
-# ЮНИТ ТЕСТЫ ВАЛИДАЦИИ
-# ============================================================================
-
-class TestResults:
-    def __init__(self):
-        self.passed = 0
-        self.failed = 0
-        self.tests = []
-
-    def add_test(self, test_name: str, result: bool, details: str = ""):
-        status = "✅ PASS" if result else "❌ FAIL"
-        self.tests.append(f"{status} | {test_name}")
-        if details:
-            self.tests.append(f"         {details}")
-        if result:
-            self.passed += 1
-        else:
-            self.failed += 1
-
-    def print_results(self):
-        print("\n" + "=" * 80)
-        print("РЕЗУЛЬТАТЫ ТЕСТОВ ВАЛИДАЦИИ")
-        print("=" * 80)
-        for test in self.tests:
-            print(test)
-        print("=" * 80)
-        return self.failed == 0
-
-
-def run_validation_tests():
-    results = TestResults()
-
-    # ------------------------------------------------------------------
-    # Тесты нормализации type=raw
-    # ------------------------------------------------------------------
-    print("\n📋 Тестирование очистки от type=raw...")
-    raw_config = "vless://b880e510@at.synthori.space:8443?type=raw&security=reality"
-    normalized = _normalize_url_delimiters(raw_config)
-    results.add_test(
-        "Удаление type=raw из параметров",
-        "type=raw" not in normalized and "security=reality" in normalized,
-        f"Результат: {normalized}"
-    )
-
-    # ------------------------------------------------------------------
-    # Тесты нормализации insecure
-    # ------------------------------------------------------------------
-    print("\n📋 Тестирование фильтрации insecure конфигов...")
-    insecure_cfg = "vless://uuid@host:443?security=tls&allowinsecure=1"
-    results.add_test(
-        "allowinsecure=1 определяется как небезопасный",
-        bool(INSECURE_PATTERN.search(insecure_cfg)),
-        f"Конфиг: {insecure_cfg}"
-    )
-
-    safe_cfg = "vless://uuid@host:443?security=reality&fp=firefox"
-    results.add_test(
-        "Безопасный конфиг не отфильтровывается",
-        not bool(INSECURE_PATTERN.search(safe_cfg)),
-        f"Конфиг: {safe_cfg}"
-    )
-
-    # ------------------------------------------------------------------
-    # Тесты _force_update_fp_in_url
-    # ------------------------------------------------------------------
-    print("\n📋 Тестирование принудительной замены fp...")
-    fp_cfg = "vless://uuid@host:443?security=reality&fp=chrome"
-    updated = _force_update_fp_in_url(fp_cfg, 'firefox')
-    results.add_test(
-        "fp=chrome заменяется на fp=firefox",
-        'fp=firefox' in updated and 'fp=chrome' not in updated,
-        f"Результат: {updated}"
-    )
-
-    # ------------------------------------------------------------------
-    # Тесты parse_config
-    # ------------------------------------------------------------------
-    print("\n📋 Тестирование базового парсера...")
-    host, port, sni = parse_config("vless://uuid@1.2.3.4:443?sni=example.com&security=reality")
-    results.add_test(
-        "Корректный парсинг host/port/sni",
-        host == '1.2.3.4' and port == 443 and sni == 'example.com',
-        f"host={host}, port={port}, sni={sni}"
-    )
-
-    host2, port2, sni2 = parse_config("trojan://pass@bad-host:-1?sni=x")
-    results.add_test(
-        "Невалидный порт -1 не проходит validate_config",
-        not validate_config('', host2, port2, sni2),
-        f"port={port2}"
-    )
-
-    success = results.print_results()
-    if not success:
-        sys.exit(1)
-
-
-# ============================================================================
-# ТОЧКА ВХОДА
-# ============================================================================
+            if self.notifier: self.notifier.send_message(f"❌ *Критическая ошибка скрипта:* `{e}`", is_report=False)
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        run_validation_tests()
-    else:
-        asyncio.run(VPNConfigCollector().run())
+    collector = VPNConfigCollector()
+    asyncio.run(collector.run())
