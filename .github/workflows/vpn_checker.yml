@@ -25,7 +25,18 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r sources/requirements.txt
+          pip install aiohttp requests PyGithub async-lru
+
+      - name: Install Sing-Box (Core Validation)
+        run: |
+          # Автоматически стягиваем последнюю стабильную версию sing-box для Linux amd64
+          VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          echo "Installing sing-box v$VERSION..."
+          curl -Lo sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz"
+          tar -xzf sing-box.tar.gz
+          mv sing-box-*-linux-amd64/sing-box ./sing-box
+          chmod +x ./sing-box
+          ./sing-box version
 
       - name: Run VPN Collector
         env:
