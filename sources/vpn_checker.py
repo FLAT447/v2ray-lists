@@ -186,7 +186,195 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
     return True
 
 # ============================================================================
-# ИСПРАВЛЕННЫЙ ОБОЛОЧЕЧНЫЙ ВАЛИДАТОР С ВЫЗОВОМ SING-BOX FORMAT
+# РУЧНОЙ ПАРСЕР SHARE-ССЫЛОК В OUTBOUND ДЛЯ SING-BOX
+#
+# ВАЖНО: команда `sing-box format` в актуальных версиях бинарника поддерживает
+# ТОЛЬКО форматирование уже существующего JSON-конфига через флаг -c/--config
+# (например: sing-box format -c config.json -w). Флага типа `-f sray` для
+# конвертации share-ссылки (vless://, vmess://, ss://, trojan://) в outbound
+# НЕ СУЩЕСТВУЕТ — это вызывало `unknown shorthand flag: 'f'` и 100% провал
+# валидации (0 успешных конфигов). Поэтому конвертация теперь делается вручную
+# в Python, без вызова внешней команды.
+# ============================================================================
+
+def _parse_share_link_to_outbound(url: str) -> Optional[Dict[str, Any]]:
+    """Парсит share-ссылку (vless/vmess/trojan/ss) в JSON outbound для sing-box."""
+    try:
+        if url.startswith('vless://'):
+            parsed = urlparse(url)
+            uuid = parsed.username
+            host = parsed.hostname
+            port = parsed.port
+            if not uuid or not host or not port:
+                return None
+            q = parse_qs(parsed.query)
+            security = q.get('security', ['none'])[0]
+            outbound: Dict[str, Any] = {
+                "type": "vless",
+                "tag": "proxy",
+                "server": host,
+                "server_port": port,
+                "uuid": uuid,
+                "packet_encoding": "xudp",
+            }
+            flow = q.get('flow', [''])[0]
+            if flow:
+                outbound["flow"] = flow
+            net_type = q.get('type', ['tcp'])[0]
+            if net_type == 'ws':
+                outbound["transport"] = {
+                    "type": "ws",
+                    "path": q.get('path', ['/'])[0],
+                    "headers": {"Host": q.get('host', [host])[0]}
+                }
+            elif net_type == 'grpc':
+                outbound["transport"] = {
+                    "type": "grpc",
+                    "service_name": q.get('serviceName', [''])[0]
+                }
+            elif net_type == 'httpupgrade':
+                outbound["transport"] = {
+                    "type": "httpupgrade",
+                    "path": q.get('path', ['/'])[0],
+                    "host": q.get('host', [host])[0]
+                }
+            if security in ('tls', 'reality'):
+                tls: Dict[str, Any] = {
+                    "enabled": True,
+                    "server_name": q.get('sni', [q.get('peer', [host])[0]])[0],
+                    "insecure": False,
+                }
+                fp = q.get('fp', [''])[0]
+                if fp:
+                    tls["utls"] = {"enabled": True, "fingerprint": fp}
+                if security == 'reality':
+                    tls["reality"] = {
+                        "enabled": True,
+                        "public_key": q.get('pbk', [''])[0],
+                        "short_id": q.get('sid', [''])[0]
+                    }
+                outbound["tls"] = tls
+            return outbound
+
+        elif url.startswith('vmess://'):
+            rem = url[8:].split('#')[0].strip()
+            b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
+            data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
+            host = data.get('add')
+            port = data.get('port')
+            uuid = data.get('id')
+            if not host or not port or not uuid:
+                return None
+            outbound = {
+                "type": "vmess",
+                "tag": "proxy",
+                "server": host,
+                "server_port": int(port),
+                "uuid": uuid,
+                "security": data.get('scy', 'auto') or "auto",
+                "alter_id": int(data.get('aid', 0) or 0),
+            }
+            net = data.get('net', 'tcp')
+            if net == 'ws':
+                outbound["transport"] = {
+                    "type": "ws",
+                    "path": data.get('path', '/') or '/',
+                    "headers": {"Host": data.get('host') or host}
+                }
+            elif net == 'grpc':
+                outbound["transport"] = {
+                    "type": "grpc",
+                    "service_name": data.get('path', '') or ''
+                }
+            if str(data.get('tls', '')).lower() == 'tls':
+                outbound["tls"] = {
+                    "enabled": True,
+                    "server_name": data.get('sni') or data.get('host') or host,
+                    "insecure": False
+                }
+            return outbound
+
+        elif url.startswith('trojan://'):
+            parsed = urlparse(url)
+            password = parsed.username
+            host = parsed.hostname
+            port = parsed.port
+            if not password or not host or not port:
+                return None
+            q = parse_qs(parsed.query)
+            outbound = {
+                "type": "trojan",
+                "tag": "proxy",
+                "server": host,
+                "server_port": port,
+                "password": password,
+            }
+            net_type = q.get('type', ['tcp'])[0]
+            if net_type == 'ws':
+                outbound["transport"] = {
+                    "type": "ws",
+                    "path": q.get('path', ['/'])[0],
+                    "headers": {"Host": q.get('host', [host])[0]}
+                }
+            elif net_type == 'grpc':
+                outbound["transport"] = {
+                    "type": "grpc",
+                    "service_name": q.get('serviceName', [''])[0]
+                }
+            sni = q.get('sni', [q.get('peer', [host])[0]])[0]
+            outbound["tls"] = {"enabled": True, "server_name": sni, "insecure": False}
+            return outbound
+
+        elif url.startswith('ss://'):
+            rem = url[5:].split('#')[0]
+            method, password, host, port = None, None, None, None
+            if '@' in rem:
+                userinfo, hostport = rem.rsplit('@', 1)
+                if '?' in hostport:
+                    hostport = hostport.split('?')[0]
+                if '/' in hostport:
+                    hostport = hostport.split('/')[0]
+                try:
+                    padded = userinfo + "=" * ((4 - len(userinfo) % 4) % 4)
+                    decoded_userinfo = base64.urlsafe_b64decode(padded).decode('utf-8', errors='ignore')
+                    if ':' in decoded_userinfo:
+                        userinfo = decoded_userinfo
+                except Exception:
+                    pass
+                if ':' not in userinfo:
+                    return None
+                method, password = userinfo.split(':', 1)
+                if ':' not in hostport:
+                    return None
+                host, port_str = hostport.rsplit(':', 1)
+                port = int(port_str)
+            else:
+                plain = rem.split('?')[0].split('/')[0]
+                padded = plain + "=" * ((4 - len(plain) % 4) % 4)
+                decoded = base64.urlsafe_b64decode(padded).decode('utf-8', errors='ignore')
+                if '@' not in decoded or ':' not in decoded:
+                    return None
+                method_pass, hostport = decoded.rsplit('@', 1)
+                method, password = method_pass.split(':', 1)
+                host, port_str = hostport.split(':', 1)
+                port = int(port_str)
+            if not (method and password and host and port):
+                return None
+            return {
+                "type": "shadowsocks",
+                "tag": "proxy",
+                "server": host,
+                "server_port": port,
+                "method": method,
+                "password": password,
+            }
+    except Exception as e:
+        logger.debug(f"parse_share_link failed for url={url[:60]}...: {e}")
+        return None
+    return None
+
+# ============================================================================
+# ИСПРАВЛЕННЫЙ ОБОЛОЧЕЧНЫЙ ВАЛИДАТОР (РУЧНОЙ ПАРСИНГ + SING-BOX RUN)
 # ============================================================================
 
 class SingBoxValidator:
@@ -195,6 +383,8 @@ class SingBoxValidator:
         self.singbox_path = './sing-box' if os.path.exists('./sing-box') else shutil.which('sing-box')
         if not self.singbox_path:
             logger.error("❌ КРИТИЧЕСКАЯ ОШИБКА: Бинарник sing-box не найден в системе!")
+        else:
+            logger.info(f"✅ sing-box найден: {self.singbox_path}")
 
     async def _wait_for_port(self, port: int, attempts: int = 20, delay: float = 0.05) -> bool:
         for _ in range(attempts):
@@ -209,36 +399,23 @@ class SingBoxValidator:
             await asyncio.sleep(delay)
         return False
 
-    async def _convert_url_to_outbound(self, url: str) -> Optional[Dict[str, Any]]:
-        """Использует команду sing-box format для парсинга vless/vmess/ss/trojan строки в JSON outbound"""
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                self.singbox_path, 'format', '-f', 'sray', url,
-                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL
-            )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2.0)
-            if proc.returncode == 0 and stdout:
-                formatted_json = json.loads(stdout.decode('utf-8'))
-                # Извлекаем первый outbound блок из сгенерированного sing-box конфига
-                if "outbounds" in formatted_json and len(formatted_json["outbounds"]) > 0:
-                    outbound = formatted_json["outbounds"][0]
-                    return outbound
-        except Exception: pass
-        return None
+    def _convert_url_to_outbound(self, url: str) -> Optional[Dict[str, Any]]:
+        """Ручной парсинг share-ссылки в JSON outbound (без вызова внешней команды,
+        т.к. `sing-box format` не умеет конвертировать share-ссылки)."""
+        return _parse_share_link_to_outbound(url)
 
     async def check_l7(self, config_url: str) -> bool:
         if not self.singbox_path:
             return False
 
         async with self.semaphore:
-            # Превращаем URI ссылку в нативный JSON-блок аутбаунда sing-box
-            outbound_data = await self._convert_url_to_outbound(config_url)
+            outbound_data = self._convert_url_to_outbound(config_url)
             if not outbound_data:
                 return False
 
             local_port = random.randint(23000, 45000)
             temp_config_path = f"temp_{local_port}.json"
-            
+
             sb_config = {
                 "log": {"level": "silent"},
                 "inbounds": [{
@@ -247,11 +424,12 @@ class SingBoxValidator:
                     "listen_port": local_port
                 }],
                 "outbounds": [
-                    outbound_data,  # Нативный рабочий JSON
+                    outbound_data,
                     {"type": "direct", "tag": "direct"}
                 ]
             }
-            
+
+            proc = None
             try:
                 with open(temp_config_path, 'w') as f:
                     json.dump(sb_config, f)
@@ -260,10 +438,10 @@ class SingBoxValidator:
                     self.singbox_path, 'run', '-c', temp_config_path,
                     stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
                 )
-                
+
                 if not await self._wait_for_port(local_port):
                     raise RuntimeError("Core timeout")
-                
+
                 connector = aiohttp.TCPConnector(ssl=False)
                 async with aiohttp.ClientSession(connector=connector) as session:
                     proxy_url = f"http://127.0.0.1:{local_port}"
@@ -274,7 +452,7 @@ class SingBoxValidator:
                             return True
             except Exception: pass
             finally:
-                if 'proc' in locals() and proc.returncode is None:
+                if proc is not None and proc.returncode is None:
                     try:
                         proc.kill()
                         await proc.wait()
@@ -332,20 +510,19 @@ class GithubManager:
                 except Exception: old_data['configs'] = files['stats.json']
                 files['stats.json'] = json.dumps(old_data, indent=2, ensure_ascii=False)
 
-            # Передаем элементы напрямую без виртуальных путей для безопасного мёржа дерева коммита
             element_list = []
             for path, content in files.items():
                 element_list.append(InputGitTreeElement(path=path, mode='100644', type='blob', content=content))
 
             tree = repo.create_git_tree(element_list, base_tree)
             time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
-            
+
             new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree.sha, [old_commit])
             ref.edit(new_commit.sha)
             logger.info("⚡ Все файлы успешно синхронизированы с GitHub.")
             return True
         except Exception as e:
-            logger.error(f"GitHub Manager критический сбой API: {str(e)}")
+            logger.error(f"GitHub Manager критический сбой API: {str(e)}", exc_info=True)
             return False
 
     async def push_files(self, files: Dict[str, str]) -> bool:
@@ -420,12 +597,14 @@ class ConfigFetcher:
 class ConfigPinger:
     def __init__(self):
         self.sb_validator = SingBoxValidator()
+        self._unsupported_count = 0
+        self._total_checked = 0
 
     async def _check_config(self, config: str) -> Optional[str]:
         host, port, sni = parse_config(config)
         if not validate_config(config, host, port, sni): return None
-        
-        # Честная L7 Sing-Box проверка
+
+        self._total_checked += 1
         if await self.sb_validator.check_l7(config):
             return config
         return None
@@ -435,7 +614,7 @@ class ConfigPinger:
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         res = [r for r in results if r is not None]
-        logger.info(f"Успешно прошли полную валидацию: {len(res)}")
+        logger.info(f"Успешно прошли полную валидацию: {len(res)} из {self._total_checked} проверенных")
         return res
 
 class ConfigFilter:
@@ -450,7 +629,7 @@ class ConfigFilter:
         async def process_single(config: str):
             host, port, sni = parse_config(config)
             resolved_ip = await _global_resolve_doh(host, self.doh_servers)
-            
+
             if resolved_ip and _is_cloudflare_ip(resolved_ip):
                 return None
 
@@ -529,11 +708,10 @@ class VPNConfigCollector:
             white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
             white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
 
-            # Передаем файлы (подкаталог BASE64 упразднен для исключения конфликтов веток Git API)
             files_to_push = {
-                'BLACK_FULL.txt': black_txt, 
-                'BLACK_LTE.txt': black_lte_txt, 
-                'WHITE_FULL.txt': white_full_txt, 
+                'BLACK_FULL.txt': black_txt,
+                'BLACK_LTE.txt': black_lte_txt,
+                'WHITE_FULL.txt': white_full_txt,
                 'WHITE_LITE.txt': white_lite_txt,
                 'BLACK_FULL_B64.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
                 'BLACK_LTE_B64.txt': base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8'),
@@ -550,7 +728,7 @@ class VPNConfigCollector:
                 self.notifier.send_message(msg_channel, is_report=True)
                 self.notifier.send_message(f"✅ *Сбор завершен успешно за {duration:.1f} сек!*", is_report=False)
         except Exception as e:
-            logger.critical(f"Критический сбой: {e}")
+            logger.critical(f"Критический сбой: {e}", exc_info=True)
             if self.notifier: self.notifier.send_message(f"❌ *Критическая ошибка скрипта:* `{e}`", is_report=False)
 
 if __name__ == '__main__':
