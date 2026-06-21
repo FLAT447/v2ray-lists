@@ -385,6 +385,13 @@ class SingBoxValidator:
             logger.error("❌ КРИТИЧЕСКАЯ ОШИБКА: Бинарник sing-box не найден в системе!")
         else:
             logger.info(f"✅ sing-box найден: {self.singbox_path}")
+        # Диагностические счётчики — помогают понять, на каком этапе массово проваливается проверка
+        self.stat_parse_fail = 0
+        self.stat_proc_start_fail = 0
+        self.stat_port_timeout = 0
+        self.stat_http_fail = 0
+        self.stat_success = 0
+        self._sample_logged = 0
 
     async def _wait_for_port(self, port: int, attempts: int = 20, delay: float = 0.05) -> bool:
         for _ in range(attempts):
@@ -411,13 +418,14 @@ class SingBoxValidator:
         async with self.semaphore:
             outbound_data = self._convert_url_to_outbound(config_url)
             if not outbound_data:
+                self.stat_parse_fail += 1
                 return False
 
             local_port = random.randint(23000, 45000)
             temp_config_path = f"temp_{local_port}.json"
 
             sb_config = {
-                "log": {"level": "silent"},
+                "log": {"level": "warn"},
                 "inbounds": [{
                     "type": "mixed",
                     "listen": "127.0.0.1",
@@ -430,27 +438,61 @@ class SingBoxValidator:
             }
 
             proc = None
+            stderr_capture = b""
             try:
                 with open(temp_config_path, 'w') as f:
                     json.dump(sb_config, f)
 
                 proc = await asyncio.create_subprocess_exec(
                     self.singbox_path, 'run', '-c', temp_config_path,
-                    stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
 
                 if not await self._wait_for_port(local_port):
+                    self.stat_port_timeout += 1
+                    # Процесс не успел поднять порт — посмотрим, не упал ли он сразу с ошибкой
+                    if proc.returncode is not None:
+                        try:
+                            _, stderr_capture = await asyncio.wait_for(proc.communicate(), timeout=0.5)
+                        except Exception:
+                            pass
+                        if self._sample_logged < 10:
+                            self._sample_logged += 1
+                            logger.warning(f"[SAMPLE] sing-box завершился до открытия порта (rc={proc.returncode}): "
+                                            f"{stderr_capture.decode(errors='ignore')[:300]} | outbound_type={outbound_data.get('type')}")
+                    elif self._sample_logged < 10:
+                        self._sample_logged += 1
+                        logger.warning(f"[SAMPLE] sing-box не открыл порт за отведённое время (процесс жив) | "
+                                        f"outbound_type={outbound_data.get('type')} server={outbound_data.get('server')}")
                     raise RuntimeError("Core timeout")
 
                 connector = aiohttp.TCPConnector(ssl=False)
                 async with aiohttp.ClientSession(connector=connector) as session:
                     proxy_url = f"http://127.0.0.1:{local_port}"
-                    async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=6.0) as resp:
-                        if resp.status in [200, 204]:
-                            proc.terminate()
-                            await proc.wait()
-                            return True
-            except Exception: pass
+                    try:
+                        async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=6.0) as resp:
+                            if resp.status in [200, 204]:
+                                self.stat_success += 1
+                                proc.terminate()
+                                await proc.wait()
+                                return True
+                            else:
+                                self.stat_http_fail += 1
+                                if self._sample_logged < 10:
+                                    self._sample_logged += 1
+                                    logger.warning(f"[SAMPLE] HTTP через proxy вернул status={resp.status} | "
+                                                    f"outbound_type={outbound_data.get('type')}")
+                    except Exception as http_err:
+                        self.stat_http_fail += 1
+                        if self._sample_logged < 10:
+                            self._sample_logged += 1
+                            logger.warning(f"[SAMPLE] Ошибка HTTP-запроса через proxy: {http_err} | "
+                                            f"outbound_type={outbound_data.get('type')} server={outbound_data.get('server')}")
+            except Exception as e:
+                self.stat_proc_start_fail += 1
+                if self._sample_logged < 10:
+                    self._sample_logged += 1
+                    logger.warning(f"[SAMPLE] Общая ошибка check_l7: {e} | outbound_type={outbound_data.get('type') if outbound_data else 'N/A'}")
             finally:
                 if proc is not None and proc.returncode is None:
                     try:
@@ -517,7 +559,7 @@ class GithubManager:
             tree = repo.create_git_tree(element_list, base_tree)
             time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
 
-            new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree.sha, [old_commit])
+            new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree, [old_commit])
             ref.edit(new_commit.sha)
             logger.info("⚡ Все файлы успешно синхронизированы с GitHub.")
             return True
@@ -614,7 +656,16 @@ class ConfigPinger:
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         res = [r for r in results if r is not None]
+        v = self.sb_validator
         logger.info(f"Успешно прошли полную валидацию: {len(res)} из {self._total_checked} проверенных")
+        logger.info(
+            f"📊 Диагностика причин провала: "
+            f"parse_fail={v.stat_parse_fail}, "
+            f"proc_start_fail={v.stat_proc_start_fail}, "
+            f"port_timeout={v.stat_port_timeout}, "
+            f"http_fail={v.stat_http_fail}, "
+            f"success={v.stat_success}"
+        )
         return res
 
 class ConfigFilter:
