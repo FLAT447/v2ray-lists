@@ -8,12 +8,13 @@ import asyncio
 import ipaddress
 import random
 import shutil
+import socket
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import aiohttp
 import requests
-from github import Github, InputGitTreeElement
+from github import Github, Auth, InputGitTreeElement
 from async_lru import alru_cache
 
 # ============================================================================
@@ -32,7 +33,6 @@ logger = logging.getLogger(__name__)
 INSECURE_PATTERN = re.compile(r'(?:allowinsecure|allow_insecure|insecure)[%3B]*=(?:1|true|yes)', re.IGNORECASE)
 ALLOWED_FPS = ['qq', 'firefox', 'edge']
 
-# Подсети Cloudflare для фильтрации прокси-мусора
 CLOUDFLARE_NETWORKS = [
     ipaddress.ip_network("173.245.48.0/20"), ipaddress.ip_network("103.21.244.0/22"),
     ipaddress.ip_network("103.22.200.0/22"), ipaddress.ip_network("103.31.4.0/22"),
@@ -190,22 +190,35 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
 # ============================================================================
 
 class SingBoxValidator:
-    """Проверка прохождения реального трафика через локальный бинарник sing-box"""
-    def __init__(self, max_concurrent: int = 40):
+    def __init__(self, max_concurrent: int = 30):
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.singbox_path = './sing-box' if os.path.exists('./sing-box') else shutil.which('sing-box')
         if not self.singbox_path:
-            logger.warning("⚠️ sing-box не найден! Валидация L7 отключена, откат к TCP пингу.")
+            logger.warning("⚠️ sing-box не найден! Откат к чистому TCP.")
+
+    async def _wait_for_port(self, port: int, attempts: int = 15, delay: float = 0.1) -> bool:
+        """Динамическое ожидание открытия локального входящего порта sing-box"""
+        for _ in range(attempts):
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(0.05)
+                result = sock.connect_ex(('127.0.0.1', port))
+                sock.close()
+                if result == 0:
+                    return True
+            except Exception:
+                pass
+            await asyncio.sleep(delay)
+        return False
 
     async def check_l7(self, config_url: str) -> bool:
         if not self.singbox_path:
-            return True # Без бинарника пропускаем все, прошедшие TCP
+            return True
 
         async with self.semaphore:
-            local_port = random.randint(20000, 40000)
+            local_port = random.randint(22000, 42000)
             temp_config_path = f"temp_{local_port}.json"
             
-            # Генерация временной конфигурации sing-box (mixed-inbound -> outbound proxy)
             sb_config = {
                 "log": {"level": "silent"},
                 "inbounds": [{
@@ -229,19 +242,20 @@ class SingBoxValidator:
                 with open(temp_config_path, 'w') as f:
                     json.dump(sb_config, f)
 
-                # Запускаем sing-box в фоне
                 proc = await asyncio.create_subprocess_exec(
                     self.singbox_path, 'run', '-c', temp_config_path,
                     stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
                 )
                 
-                await asyncio.sleep(0.4) # Даем ядру инициализироваться
+                # Ждем пока sing-box действительно забиндит порт
+                if not await self._wait_for_port(local_port):
+                    raise RuntimeError("Sing-box core port timeout")
                 
-                # Тестируем прохождение трафика через созданный SOCKS/HTTP прокси к Google
+                # Запрос к Google через развернутый инстанс прокси (увеличенный таймаут)
                 connector = aiohttp.TCPConnector(ssl=False)
                 async with aiohttp.ClientSession(connector=connector) as session:
                     proxy_url = f"http://127.0.0.1:{local_port}"
-                    async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=4.5) as resp:
+                    async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=7.0) as resp:
                         if resp.status in [200, 204]:
                             proc.terminate()
                             await proc.wait()
@@ -288,12 +302,16 @@ class TelegramNotifier:
 
 class GithubManager:
     def __init__(self, token: str):
-        self.gh = Github(token)
+        # Исправление DeprecationWarning
+        auth = Auth.Token(token)
+        self.gh = Github(auth=auth)
         self.repo_name = os.getenv('GITHUB_REPOSITORY', 'FLAT447/v2ray-lists')
 
     def _push_sync(self, files: Dict[str, str]) -> bool:
         try:
             repo = self.gh.get_repo(self.repo_name)
+            
+            # Избегаем race condition: берем самую свежую ветку напрямую с сервера API
             ref = repo.get_git_ref("heads/main")
             old_commit = repo.get_git_commit(ref.object.sha)
             base_tree = repo.get_git_tree(old_commit.tree.sha)
@@ -310,6 +328,8 @@ class GithubManager:
             element_list = [InputGitTreeElement(path=fp, mode='100644', type='blob', content=co) for fp, co in files.items()]
             tree = repo.create_git_tree(element_list, base_tree)
             time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
+            
+            # Пересобираем коммит
             new_commit = repo.create_git_commit(f"🔄 Автоматическое обновление подписок [{time_str_msk}]", tree.sha, [old_commit])
             ref.edit(new_commit.sha)
             logger.info("⚡ Все коммиты атомарно отправлены на GitHub.")
@@ -378,7 +398,6 @@ class ConfigFetcher:
             results = await asyncio.gather(*tasks)
             for config_list in results: all_configs.extend(config_list)
 
-        # Жесткая дедупликация по паре (host, port)
         unique_nodes = {}
         for cfg in all_configs:
             host, port, _ = parse_config(cfg)
@@ -389,22 +408,20 @@ class ConfigFetcher:
         return list(unique_nodes.values())
 
 class ConfigPinger:
-    def __init__(self, max_concurrent: int = 150):
+    def __init__(self, max_concurrent: int = 100):
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.sb_validator = SingBoxValidator()
 
-    async def _check_config(self, config: str, timeout: float = 1.5) -> Optional[str]:
+    async def _check_config(self, config: str, timeout: float = 2.0) -> Optional[str]:
         host, port, sni = parse_config(config)
         if not validate_config(config, host, port, sni): return None
 
         async with self.semaphore:
             try:
-                # Шаг 1: Быстрый TCP пинг порта
                 reader, writer = await asyncio.wait_for(asyncio.open_connection(host.strip('[]'), port), timeout=timeout)
                 writer.close()
                 await writer.wait_closed()
                 
-                # Шаг 2: Глубокая L7 Handshake проверка через sing-box
                 if await self.sb_validator.check_l7(config):
                     return config
             except Exception:
@@ -432,7 +449,6 @@ class ConfigFilter:
             host, port, sni = parse_config(config)
             resolved_ip = await _global_resolve_doh(host, self.doh_servers)
             
-            # Улучшение: моментальный дроп CDN Cloudflare
             if resolved_ip and _is_cloudflare_ip(resolved_ip):
                 return None
 
