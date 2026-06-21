@@ -224,8 +224,11 @@ python proxy_checker.py                # генерирует файлы whiteli
 # 📜 Поддержать автора
 
 TON: UQBRZI9s95gtehUkm_NESZ-HJOmhJlHn025uu_Uqn1xfhlCR
+
 USDT (TRC20): TUadZfsYhCsCEje852r4mWichUWvGcvY5E
+
 ETH: 0x08DCB85468d46E1D48094d8945B762fCF6F3AD64
+
 BTC: bc1q485z2g5gan0qmdyrg2r672ua2tukk08ns92s56
 
 ---
