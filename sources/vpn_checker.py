@@ -187,14 +187,6 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
 
 # ============================================================================
 # РУЧНОЙ ПАРСЕР SHARE-ССЫЛОК В OUTBOUND ДЛЯ SING-BOX
-#
-# ВАЖНО: команда `sing-box format` в актуальных версиях бинарника поддерживает
-# ТОЛЬКО форматирование уже существующего JSON-конфига через флаг -c/--config
-# (например: sing-box format -c config.json -w). Флага типа `-f sray` для
-# конвертации share-ссылки (vless://, vmess://, ss://, trojan://) в outbound
-# НЕ СУЩЕСТВУЕТ — это вызывало `unknown shorthand flag: 'f'` и 100% провал
-# валидации (0 успешных конфигов). Поэтому конвертация теперь делается вручную
-# в Python, без вызова внешней команды.
 # ============================================================================
 
 def _parse_share_link_to_outbound(url: str) -> Optional[Dict[str, Any]]:
@@ -385,7 +377,6 @@ class SingBoxValidator:
             logger.error("❌ КРИТИЧЕСКАЯ ОШИБКА: Бинарник sing-box не найден в системе!")
         else:
             logger.info(f"✅ sing-box найден: {self.singbox_path}")
-        # Диагностические счётчики — помогают понять, на каком этапе массово проваливается проверка
         self.stat_parse_fail = 0
         self.stat_proc_start_fail = 0
         self.stat_port_timeout = 0
@@ -407,8 +398,6 @@ class SingBoxValidator:
         return False
 
     def _convert_url_to_outbound(self, url: str) -> Optional[Dict[str, Any]]:
-        """Ручной парсинг share-ссылки в JSON outbound (без вызова внешней команды,
-        т.к. `sing-box format` не умеет конвертировать share-ссылки)."""
         return _parse_share_link_to_outbound(url)
 
     async def check_l7(self, config_url: str) -> bool:
@@ -450,7 +439,6 @@ class SingBoxValidator:
 
                 if not await self._wait_for_port(local_port):
                     self.stat_port_timeout += 1
-                    # Процесс не успел поднять порт — посмотрим, не упал ли он сразу с ошибкой
                     if proc.returncode is not None:
                         try:
                             _, stderr_capture = await asyncio.wait_for(proc.communicate(), timeout=0.5)
@@ -573,30 +561,21 @@ class GithubManager:
 class ConfigFetcher:
     def __init__(self):
         self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        self.sources: List[str] = [
-            "https://mifa.world/hysteria", "https://subrostunnel.vercel.app/gen.txt",
-            "https://github.com/igareck/vpn-configs-for-russia/raw/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-            "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-            "https://raw.githubusercontent.com/zieng2/wl/refs/heads/main/vless_universal.txt",
-            "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt",
-            "https://raw.githubusercontent.com/EtoNeYaProject/etoneyaproject.github.io/refs/heads/main/2",
-            "https://raw.githubusercontent.com/ByeWhiteLists/ByeWhiteLists2/refs/heads/main/ByeWhiteLists2.txt",
-            "https://gitverse.ru/api/repos/cid-uskoritel/cid-white/raw/branch/master/whitelist.txt",
-            "https://etoneya.su/1", "https://etoneya.su/whitelist",
-            "https://gist.github.com/DestroyST6767/f4dd6f12e5ba9d04ff8d19db0396e310.txt",
-            "https://mifa.world/ss", "https://mifa.world/vless", "https://mifa.world/trojan",
-            "https://raw.githubusercontent.com/RKPchannel/RKP_bypass_configs/refs/heads/main/configs/url_work.txt",
-            "https://vpn.yzewe.ru/sub", "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/26.txt",
-            "https://raw.githubusercontent.com/prominbro/sub/refs/heads/main/212.txt", "https://obwl.obprojects.lol/configs/selected.txt",
-            "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/bypass/bypass-all.txt",
-            "https://raw.githubusercontent.com/AirLinkVPN1/AirLinkVPN/refs/heads/main/rkn_white_list",
-            "https://raw.githubusercontent.com/dequar/deqwl/refs/heads/main/deray.txt",
-            "https://raw.githubusercontent.com/ewecross78-gif/whitelist1/main/list.txt",
-            "https://raw.githubusercontent.com/ShatakVPN/ConfigForge-V2Ray/main/configs/ru/vless.txt",
-            "https://subrostunnel.vercel.app/wl.txt", "https://rostunnel.vercel.app/mega.txt",
-            "https://raw.githubusercontent.com/kort0881/vpn-checker-backend/refs/heads/main/checked/RU_Best/ru_white_all_WHITE.txt",
-            "https://raw.githubusercontent.com/Ilyacom4ik/free-v2ray-2026/main/subscriptions/FreeCFGHub1.txt"
-        ]
+        self.sources: List[str] = []
+        
+        # Чтение источников подписок из локального файла subscriptions.txt
+        try:
+            with open('subscriptions.txt', 'r', encoding='utf-8') as f:
+                for line in f:
+                    url = line.strip()
+                    # Пропускаем пустые строки и комментарии
+                    if url and not url.startswith('#'):
+                        self.sources.append(url)
+            logger.info(f"✅ Успешно загружено {len(self.sources)} ссылок на подписки из subscriptions.txt")
+        except FileNotFoundError:
+            logger.error("❌ Файл subscriptions.txt не найден в текущей директории!")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при чтении файла subscriptions.txt: {e}")
 
     async def fetch_source(self, session: aiohttp.ClientSession, url: str) -> List[str]:
         try:
@@ -719,7 +698,7 @@ class VPNConfigCollector:
 
     def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
         meta = [
-            f"#announce: 🔰 Нативная проверка Sing-Box L7 Core.",
+            f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
             f"#profile-title: {title}", f"#support-url: https://t.me/flat447", f"#profile-update-interval: 1\n"
         ]
