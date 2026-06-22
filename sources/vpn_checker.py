@@ -565,7 +565,7 @@ class ConfigFetcher:
         
         # Чтение источников подписок из локального файла subscriptions.txt
         try:
-            with open('subscriptions.txt', 'r', encoding='utf-8') as f:
+            with open('sources/subscriptions.txt', 'r', encoding='utf-8') as f:
                 for line in f:
                     url = line.strip()
                     # Пропускаем пустые строки и комментарии
