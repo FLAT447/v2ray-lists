@@ -569,7 +569,7 @@ class GitVerseManager:
     Tree API от GitHub тут неприменим — используем обычный git по HTTPS с токеном.
     """
     def __init__(self, token: Optional[str], repo: Optional[str],
-                 host: str = "gitverse.ru", branch: str = "main"):
+                 host: str = "gitverse.ru", branch: str = "master"):
         self.token = token
         self.repo = repo  # формат "owner/repo"
         self.host = host
