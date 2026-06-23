@@ -9,6 +9,8 @@ import ipaddress
 import random
 import shutil
 import socket
+import subprocess
+import tempfile
 from datetime import datetime, timezone, timedelta
 from typing import List, Set, Dict, Tuple, Any, Optional
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
@@ -558,6 +560,93 @@ class GithubManager:
     async def push_files(self, files: Dict[str, str]) -> bool:
         return await asyncio.to_thread(self._push_sync, files)
 
+
+class GitVerseManager:
+    """
+    Пуш файлов в GitVerse одним коммитом через нативный git CLI
+    (clone --depth=1 -> запись файлов -> commit -> push).
+    GitVerse работает на движке Gitea/собственном git-сервере, поэтому
+    Tree API от GitHub тут неприменим — используем обычный git по HTTPS с токеном.
+    """
+    def __init__(self, token: Optional[str], repo: Optional[str],
+                 host: str = "gitverse.ru", branch: str = "main"):
+        self.token = token
+        self.repo = repo  # формат "owner/repo"
+        self.host = host
+        self.branch = branch
+        self.enabled = bool(token and repo)
+        if not self.enabled:
+            logger.warning("⚠️ GitVerse: GITVERSE_TOKEN не заданы — синхронизация с GitVerse отключена.")
+
+    def _run(self, args: List[str], cwd: str, env: Optional[Dict[str, str]] = None) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            args, cwd=cwd, env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, timeout=120
+        )
+
+    def _push_sync(self, files: Dict[str, str]) -> bool:
+        if not self.enabled:
+            return False
+
+        # Токен передаём через окружение, а не в URL, чтобы не светить его в логах git
+        remote_url = f"https://oauth2:{self.token}@{self.host}/{self.repo}.git"
+        safe_remote_for_log = f"https://{self.host}/{self.repo}.git"
+
+        with tempfile.TemporaryDirectory(prefix="gitverse_") as tmp_dir:
+            clone_dir = os.path.join(tmp_dir, "repo")
+            try:
+                clone_res = self._run(
+                    ["git", "clone", "--depth", "1", "--branch", self.branch, remote_url, clone_dir],
+                    cwd=tmp_dir
+                )
+                if clone_res.returncode != 0:
+                    logger.error(f"GitVerse: ошибка клонирования {safe_remote_for_log}: {clone_res.stderr.strip()[:500]}")
+                    return False
+
+                self._run(["git", "config", "user.name", "v2ray-collector-bot"], cwd=clone_dir)
+                self._run(["git", "config", "user.email", "v2ray-collector-bot@users.noreply.gitverse.ru"], cwd=clone_dir)
+
+                for rel_path, content in files.items():
+                    abs_path = os.path.join(clone_dir, rel_path)
+                    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                    with open(abs_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+
+                self._run(["git", "add", "-A"], cwd=clone_dir)
+
+                status_res = self._run(["git", "status", "--porcelain"], cwd=clone_dir)
+                if not status_res.stdout.strip():
+                    logger.info("ℹ️ GitVerse: изменений нет, коммит не требуется.")
+                    return True
+
+                time_str_msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y %H:%M:%S MSK")
+                commit_res = self._run(
+                    ["git", "commit", "-m", f"🔄 Автоматическое обновление подписок [{time_str_msk}]"],
+                    cwd=clone_dir
+                )
+                if commit_res.returncode != 0:
+                    logger.error(f"GitVerse: ошибка коммита: {commit_res.stderr.strip()[:500]}")
+                    return False
+
+                push_res = self._run(["git", "push", "origin", self.branch], cwd=clone_dir)
+                if push_res.returncode != 0:
+                    logger.error(f"GitVerse: ошибка push в {safe_remote_for_log}: {push_res.stderr.strip()[:500]}")
+                    return False
+
+                logger.info(f"⚡ GitVerse: файлы успешно запушены в {safe_remote_for_log} ({self.branch}).")
+                return True
+            except subprocess.TimeoutExpired:
+                logger.error("GitVerse: операция git превысила лимит времени.")
+                return False
+            except Exception as e:
+                logger.error(f"GitVerse: критический сбой синхронизации: {e}", exc_info=True)
+                return False
+
+    async def push_files(self, files: Dict[str, str]) -> bool:
+        return await asyncio.to_thread(self._push_sync, files)
+
+
 class ConfigFetcher:
     def __init__(self):
         self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -690,6 +779,12 @@ class VPNConfigCollector:
         self.config_filter = ConfigFilter()
         self.config_pinger = ConfigPinger()
         self.github_manager = GithubManager(os.getenv('GITHUB_TOKEN'))
+        self.gitverse_manager = GitVerseManager(
+            os.getenv('GITVERSE_TOKEN'),
+            os.getenv('GITVERSE_REPOSITORY', 'FLAT447/my-repo'),
+            host=os.getenv('GITVERSE_HOST', 'gitverse.ru'),
+            branch=os.getenv('GITVERSE_BRANCH', 'main')
+        )
         t_token, t_chat, t_chan = os.getenv('TELEGRAM_BOT_TOKEN'), os.getenv('TELEGRAM_CHAT_ID'), os.getenv('TELEGRAM_CHANNEL_ID')
         self.notifier = TelegramNotifier(t_token, t_chat, t_chan) if t_token and t_chat else None
 
@@ -750,13 +845,31 @@ class VPNConfigCollector:
                 'stats.json': json.dumps(stats, indent=2, ensure_ascii=False)
             }
 
-            await self.github_manager.push_files(files_to_push)
+            # GitHub использует Tree API (отдельный словарь, т.к. _push_sync мутирует stats.json
+            # добавляя историю в поле 'configs' — для GitVerse это поведение не нужно,
+            # туда пишем тот же контент файлов "как есть").
+            files_for_gitverse = dict(files_to_push)
+
+            github_result, gitverse_result = await asyncio.gather(
+                self.github_manager.push_files(files_to_push),
+                self.gitverse_manager.push_files(files_for_gitverse),
+                return_exceptions=True
+            )
+
+            if isinstance(github_result, Exception):
+                logger.error(f"GitHub push исключение: {github_result}", exc_info=True)
+                github_result = False
+            if isinstance(gitverse_result, Exception):
+                logger.error(f"GitVerse push исключение: {gitverse_result}", exc_info=True)
+                gitverse_result = False
+
             duration = (datetime.now(tz_msk) - start_time).total_seconds()
 
             if self.notifier:
                 msg_channel = f"black: {len(black)}\nblack_lte: {len(black_lte)}\nwhite_full: {len(white_full)}\nwhite_lite: {len(white_lite)}"
                 self.notifier.send_message(msg_channel, is_report=True)
-                self.notifier.send_message(f"✅ *Сбор завершен успешно за {duration:.1f} сек!*", is_report=False)
+                sync_status = f"GitHub: {'✅' if github_result else '❌'} | GitVerse: {'✅' if gitverse_result else '❌'}"
+                self.notifier.send_message(f"✅ *Сбор завершен за {duration:.1f} сек!*\n{sync_status}", is_report=False)
         except Exception as e:
             logger.critical(f"Критический сбой: {e}", exc_info=True)
             if self.notifier: self.notifier.send_message(f"❌ *Критическая ошибка скрипта:* `{e}`", is_report=False)
