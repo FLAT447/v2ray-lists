@@ -783,7 +783,7 @@ class VPNConfigCollector:
             os.getenv('GITVERSE_TOKEN'),
             os.getenv('GITVERSE_REPOSITORY', 'FLAT447/my-repo'),
             host=os.getenv('GITVERSE_HOST', 'gitverse.ru'),
-            branch=os.getenv('GITVERSE_BRANCH', 'main')
+            branch=os.getenv('GITVERSE_BRANCH', 'master')
         )
         t_token, t_chat, t_chan = os.getenv('TELEGRAM_BOT_TOKEN'), os.getenv('TELEGRAM_CHAT_ID'), os.getenv('TELEGRAM_CHANNEL_ID')
         self.notifier = TelegramNotifier(t_token, t_chat, t_chan) if t_token and t_chat else None
