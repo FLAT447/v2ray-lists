@@ -560,16 +560,19 @@ class GithubManager:
     async def push_files(self, files: Dict[str, str]) -> bool:
         return await asyncio.to_thread(self._push_sync, files)
 
-
 class GitVerseManager:
     """
     Пуш файлов в GitVerse одним коммитом через нативный git CLI
-    (clone --depth=1 -> запись файлов -> commit -> push).
+    (clone -> запись файлов -> commit -> push).
     GitVerse работает на движке Gitea/собственном git-сервере, поэтому
     Tree API от GitHub тут неприменим — используем обычный git по HTTPS с токеном.
+
+    Если удалённый репозиторий пустой (нет ни одной ветки/коммита),
+    git clone с этим репо не сработает в принципе — в таком случае
+    локально инициализируем репозиторий и делаем первый коммит сами.
     """
     def __init__(self, token: Optional[str], repo: Optional[str],
-                 host: str = "gitverse.ru", branch: str = "master"):
+                 host: str = "gitverse.ru", branch: str = "main"):
         self.token = token
         self.repo = repo  # формат "owner/repo"
         self.host = host
@@ -589,20 +592,64 @@ class GitVerseManager:
         if not self.enabled:
             return False
 
-        # Токен передаём через окружение, а не в URL, чтобы не светить его в логах git
+        # Токен передаём через URL в виде oauth2:<token>, чтобы не настраивать
+        # отдельный credential helper. В логи попадает только "безопасный" вариант URL.
         remote_url = f"https://oauth2:{self.token}@{self.host}/{self.repo}.git"
         safe_remote_for_log = f"https://{self.host}/{self.repo}.git"
 
         with tempfile.TemporaryDirectory(prefix="gitverse_") as tmp_dir:
             clone_dir = os.path.join(tmp_dir, "repo")
             try:
+                # Клонируем без --branch: если репозиторий не пустой, но ветка
+                # называется иначе (main/master/иное), git сам выберет HEAD по умолчанию.
                 clone_res = self._run(
-                    ["git", "clone", "--depth", "1", "--branch", self.branch, remote_url, clone_dir],
+                    ["git", "clone", "--depth", "1", remote_url, clone_dir],
                     cwd=tmp_dir
                 )
+
+                repo_is_empty = False
+
                 if clone_res.returncode != 0:
-                    logger.error(f"GitVerse: ошибка клонирования {safe_remote_for_log}: {clone_res.stderr.strip()[:500]}")
-                    return False
+                    stderr_low = clone_res.stderr.lower()
+                    # Типичные сообщения git при пустом удалённом репозитории
+                    if "you appear to have cloned an empty repository" in stderr_low or \
+                       "remote head" in stderr_low or \
+                       "couldn't find remote ref" in stderr_low:
+                        repo_is_empty = True
+                        logger.warning(
+                            f"GitVerse: похоже, репозиторий {safe_remote_for_log} пустой "
+                            f"(нет коммитов/веток). Инициализируем локально."
+                        )
+                    else:
+                        logger.error(
+                            f"GitVerse: ошибка клонирования {safe_remote_for_log}: "
+                            f"{clone_res.stderr.strip()[:500]}"
+                        )
+                        return False
+
+                if repo_is_empty:
+                    os.makedirs(clone_dir, exist_ok=True)
+                    init_res = self._run(["git", "init", "-b", self.branch], cwd=clone_dir)
+                    if init_res.returncode != 0:
+                        # Старые версии git не знают флаг -b у init
+                        init_res = self._run(["git", "init"], cwd=clone_dir)
+                        if init_res.returncode != 0:
+                            logger.error(f"GitVerse: ошибка git init: {init_res.stderr.strip()[:500]}")
+                            return False
+                        self._run(["git", "checkout", "-b", self.branch], cwd=clone_dir)
+                    self._run(["git", "remote", "add", "origin", remote_url], cwd=clone_dir)
+                else:
+                    # Репозиторий не пустой — переключаемся на нужную ветку
+                    # (создаём локально, если её не было среди тех, что подтянул --depth=1 clone)
+                    checkout_res = self._run(["git", "checkout", self.branch], cwd=clone_dir)
+                    if checkout_res.returncode != 0:
+                        checkout_res = self._run(["git", "checkout", "-b", self.branch], cwd=clone_dir)
+                        if checkout_res.returncode != 0:
+                            logger.error(
+                                f"GitVerse: не удалось переключиться на ветку '{self.branch}': "
+                                f"{checkout_res.stderr.strip()[:500]}"
+                            )
+                            return False
 
                 self._run(["git", "config", "user.name", "v2ray-collector-bot"], cwd=clone_dir)
                 self._run(["git", "config", "user.email", "v2ray-collector-bot@users.noreply.gitverse.ru"], cwd=clone_dir)
@@ -629,7 +676,9 @@ class GitVerseManager:
                     logger.error(f"GitVerse: ошибка коммита: {commit_res.stderr.strip()[:500]}")
                     return False
 
-                push_res = self._run(["git", "push", "origin", self.branch], cwd=clone_dir)
+                # -u нужен, чтобы создать ветку на сервере, если её там ещё нет
+                # (актуально и для пустого репо, и для новой локальной ветки)
+                push_res = self._run(["git", "push", "-u", "origin", self.branch], cwd=clone_dir)
                 if push_res.returncode != 0:
                     logger.error(f"GitVerse: ошибка push в {safe_remote_for_log}: {push_res.stderr.strip()[:500]}")
                     return False
@@ -645,7 +694,6 @@ class GitVerseManager:
 
     async def push_files(self, files: Dict[str, str]) -> bool:
         return await asyncio.to_thread(self._push_sync, files)
-
 
 class ConfigFetcher:
     def __init__(self):
@@ -783,7 +831,7 @@ class VPNConfigCollector:
             os.getenv('GITVERSE_TOKEN'),
             os.getenv('GITVERSE_REPOSITORY', 'FLAT447/my-repo'),
             host=os.getenv('GITVERSE_HOST', 'gitverse.ru'),
-            branch=os.getenv('GITVERSE_BRANCH', 'master')
+            branch=os.getenv('GITVERSE_BRANCH', 'main')
         )
         t_token, t_chat, t_chan = os.getenv('TELEGRAM_BOT_TOKEN'), os.getenv('TELEGRAM_CHAT_ID'), os.getenv('TELEGRAM_CHANNEL_ID')
         self.notifier = TelegramNotifier(t_token, t_chat, t_chan) if t_token and t_chat else None
