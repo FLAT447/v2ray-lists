@@ -18,6 +18,12 @@ import aiohttp
 import requests
 from github import Github, Auth, InputGitTreeElement
 from async_lru import alru_cache
+try:
+    import maxminddb
+    HAS_MAXMINDDB = True
+except ImportError:
+    HAS_MAXMINDDB = False
+    maxminddb = None
 
 # ============================================================================
 # НАСТРОЙКА ЛОГИРОВАНИЯ И ГЛОБАЛЬНЫЕ ПАТТЕРНЫ
@@ -45,6 +51,39 @@ CLOUDFLARE_NETWORKS = [
     ipaddress.ip_network("104.24.0.0/14"), ipaddress.ip_network("172.64.0.0/13"),
     ipaddress.ip_network("131.0.72.0/22")
 ]
+
+COUNTRY_NAMES_RU = {
+    'RU': 'Россия', 'US': 'США', 'GB': 'Великобритания', 'DE': 'Германия',
+    'FR': 'Франция', 'NL': 'Нидерланды', 'SG': 'Сингапур', 'HK': 'Гонконг',
+    'JP': 'Япония', 'KR': 'Южная Корея', 'CA': 'Канада', 'AU': 'Австралия',
+    'CH': 'Швейцария', 'SE': 'Швеция', 'NO': 'Норвегия', 'DK': 'Дания',
+    'FI': 'Финляндия', 'IT': 'Италия', 'ES': 'Испания', 'PT': 'Португалия',
+    'PL': 'Польша', 'CZ': 'Чехия', 'SK': 'Словакия', 'HU': 'Венгрия',
+    'RO': 'Румыния', 'BG': 'Болгария', 'GR': 'Греция', 'TR': 'Турция',
+    'AE': 'ОАЭ', 'IL': 'Израиль', 'IN': 'Индия', 'TH': 'Таиланд',
+    'VN': 'Вьетнам', 'ID': 'Индонезия', 'PH': 'Филиппины', 'MY': 'Малайзия',
+    'TW': 'Тайвань', 'CN': 'Китай', 'BR': 'Бразилия', 'MX': 'Мексика',
+    'ZA': 'ЮАР', 'EG': 'Египет', 'UA': 'Украина', 'KZ': 'Казахстан',
+    'GE': 'Грузия', 'AM': 'Армения', 'AZ': 'Азербайджан', 'BY': 'Беларусь',
+    'LT': 'Литва', 'LV': 'Латвия', 'EE': 'Эстония', 'IE': 'Ирландия',
+    'AT': 'Австрия', 'BE': 'Бельгия', 'LU': 'Люксембург', 'CY': 'Кипр',
+    'MT': 'Мальта', 'CR': 'Коста-Рика', 'PA': 'Панама', 'SA': 'Саудовская Аравия',
+    'QA': 'Катар', 'KW': 'Кувейт', 'BD': 'Бангладеш', 'NP': 'Непал',
+    'LK': 'Шри-Ланка', 'KH': 'Камбоджа', 'MN': 'Монголия', 'UZ': 'Узбекистан',
+    'KG': 'Кыргызстан', 'TJ': 'Таджикистан', 'RS': 'Сербия', 'HR': 'Хорватия',
+    'SI': 'Словения', 'BA': 'Босния и Герцеговина', 'AL': 'Албания',
+    'PE': 'Перу', 'EC': 'Эквадор', 'VE': 'Венесуэла', 'UY': 'Уругвай',
+    'PY': 'Парагвай', 'BO': 'Боливия', 'CL': 'Чили', 'CO': 'Колумбия',
+    'AR': 'Аргентина', 'NZ': 'Новая Зеландия', 'NG': 'Нигерия', 'KE': 'Кения',
+    'PK': 'Пакистан', 'MM': 'Мьянма', 'LA': 'Лаос', 'MD': 'Молдова',
+    'IS': 'Исландия', 'LI': 'Лихтенштейн', 'MC': 'Монако',
+}
+
+def _code_to_flag(country_code: str) -> str:
+    if not country_code or len(country_code) != 2:
+        return ''
+    code = country_code.upper()
+    return chr(127462 + ord(code[0]) - ord('A')) + chr(127462 + ord(code[1]) - ord('A'))
 
 @alru_cache(maxsize=8192)
 async def _global_resolve_doh(hostname: str, servers: Tuple[str, ...]) -> Optional[str]:
@@ -821,6 +860,59 @@ class ConfigFilter:
             else: black.append(cfg)
         return white, black_lte, black
 
+# ============================================================================
+# ЗАГРУЗКА MMDB И ГЕОIP-РАЗРЕШЕНИЕ
+# ============================================================================
+
+MMDB_URLS = [
+    "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb",
+    "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-private.mmdb",
+]
+
+async def _download_mmdb(db_path: str = 'country.mmdb') -> bool:
+    for url in MMDB_URLS:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=60) as resp:
+                    if resp.status == 200:
+                        with open(db_path, 'wb') as f:
+                            f.write(await resp.read())
+                        logger.info(f"✅ GeoIP база загружена: {db_path}")
+                        return True
+        except Exception as e:
+            logger.warning(f"⚠️ Не удалось загрузить {url}: {e}")
+    logger.error("❌ Не удалось загрузить GeoIP базу ни с одного источника")
+    return False
+
+class GeoIPResolver:
+    def __init__(self, db_path: str = 'country.mmdb'):
+        self.db_path = db_path
+        self.reader = None
+        if HAS_MAXMINDDB and os.path.exists(db_path):
+            try:
+                self.reader = maxminddb.open_database(db_path)
+                logger.info(f"✅ GeoIP база загружена: {db_path}")
+            except Exception as e:
+                logger.error(f"❌ Ошибка загрузки GeoIP базы: {e}")
+
+    def lookup(self, ip: str) -> Optional[str]:
+        if not self.reader:
+            return None
+        try:
+            response = self.reader.get(ip)
+            if response:
+                if 'country' in response and 'iso_code' in response['country']:
+                    return response['country']['iso_code']
+                if 'registered_country' in response and 'iso_code' in response['registered_country']:
+                    return response['registered_country']['iso_code']
+        except Exception:
+            pass
+        return None
+
+    def close(self):
+        if self.reader:
+            self.reader.close()
+
 class VPNConfigCollector:
     def __init__(self):
         self.config_fetcher = ConfigFetcher()
@@ -839,7 +931,7 @@ class VPNConfigCollector:
     def _clean_config(self, config: str) -> str:
         return config.split('#')[0].strip() if "#" in config and '://' in config.split('#')[0] else config.strip()
 
-    def _generate_subscription_content(self, title: str, configs: List[str]) -> str:
+    def _generate_subscription_content(self, title: str, configs: List[str], config_countries: Dict[str, str] = None) -> str:
         meta = [
             f"#announce: 🔰 Нажми на спидометр или молнию, чтобы проверить соединение. Меньше ms - лучше | n/a - не работает. Если ВПН плохо работает, то нажмите на 🔄️.",
             f"#profile-web-page-url: https://flat447.github.io/v2ray-lists-site",
@@ -850,7 +942,11 @@ class VPNConfigCollector:
             cleaned = self._clean_config(cfg)
             if cleaned:
                 cleaned = _force_update_fp_in_url(cleaned, random.choice(ALLOWED_FPS))
-                cleaned_configs.append(f"{cleaned}#{title.replace('V2Ray Lists - ', '')} [{index}]")
+                country_code = config_countries.get(cfg, '') if config_countries else ''
+                flag = _code_to_flag(country_code) if country_code else ''
+                country_name = COUNTRY_NAMES_RU.get(country_code, '') if country_code else ''
+                prefix = f"{flag} {country_name} " if flag else ''
+                cleaned_configs.append(f"{cleaned}#{prefix}{title.replace('V2Ray Lists - ', '')} [{index}]")
         return '\n'.join(meta + cleaned_configs)
 
     async def run(self):
@@ -867,6 +963,22 @@ class VPNConfigCollector:
             if not all_configs: return
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
+
+            config_countries = {}
+            if HAS_MAXMINDDB:
+                if not os.path.exists('country.mmdb'):
+                    await _download_mmdb()
+                geo_resolver = GeoIPResolver()
+                if geo_resolver.reader:
+                    for cfg in alive_configs:
+                        host, _, _ = parse_config(cfg)
+                        ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
+                        if ip:
+                            code = geo_resolver.lookup(ip)
+                            if code:
+                                config_countries[cfg] = code
+                    geo_resolver.close()
+
             white_full, black_lte, black = await self.config_filter.filter_configs(alive_configs, whitelist_sni, whitelist_cidr)
             white_lite = white_full[:500]
             current_time_str = datetime.now(tz_msk).strftime("%H:%M | %d.%m.%Y")
@@ -876,10 +988,10 @@ class VPNConfigCollector:
                 "white_full": {"count": len(white_full), "updated": current_time_str}, "white_lite": {"count": len(white_lite), "updated": current_time_str}
             }
 
-            black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black)
-            black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte)
-            white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full)
-            white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite)
+            black_txt = self._generate_subscription_content('V2Ray Lists - BLACK FULL', black, config_countries)
+            black_lte_txt = self._generate_subscription_content('V2Ray Lists - BLACK LTE', black_lte, config_countries)
+            white_full_txt = self._generate_subscription_content('V2Ray Lists - WHITE FULL', white_full, config_countries)
+            white_lite_txt = self._generate_subscription_content('V2Ray Lists - WHITE LITE', white_lite, config_countries)
 
             files_to_push = {
                 'BLACK_FULL.txt': black_txt,
