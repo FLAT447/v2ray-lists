@@ -939,14 +939,25 @@ class VPNConfigCollector:
         ]
         cleaned_configs = []
         for index, cfg in enumerate(configs, start=1):
-            cleaned = self._clean_config(cfg)
-            if cleaned:
-                cleaned = _force_update_fp_in_url(cleaned, random.choice(ALLOWED_FPS))
-                country_code = config_countries.get(cfg, '') if config_countries else ''
-                flag = _code_to_flag(country_code) if country_code else ''
-                country_name = COUNTRY_NAMES_RU.get(country_code, '') if country_code else ''
-                prefix = f"{flag} {country_name} " if flag else ''
-                cleaned_configs.append(f"{cleaned}#{prefix}{title.replace('V2Ray Lists - ', '')} [{index}]")
+            # Получаем чистую конфигурацию (без хеша) - это ключ для поиска в config_countries
+            clean_key = self._clean_config(cfg)
+            if not clean_key:
+                continue
+
+            # Обновляем fingerprint в чистой конфигурации
+            clean_with_fp = _force_update_fp_in_url(clean_key, random.choice(ALLOWED_FPS))
+
+            # Ищем страну по ЧИСТОЙ конфигурации (без хеша!)
+            country_code = config_countries.get(clean_key, '') if config_countries else ''
+            flag = _code_to_flag(country_code) if country_code else ''
+            country_name = COUNTRY_NAMES_RU.get(country_code, '') if country_code else ''
+            prefix = f"{flag} {country_name} " if flag else ''
+
+            # Формируем итоговую строку: <конфиг с fp>#<флаг> <страна> <подписка> [номер]
+            display_name = f"{prefix}{title.replace('V2Ray Lists - ', '')} [{index}]"
+            final_line = f"{clean_with_fp}#{display_name}"
+            cleaned_configs.append(final_line)
+
         return '\n'.join(meta + cleaned_configs)
 
     async def run(self):
@@ -970,6 +981,7 @@ class VPNConfigCollector:
                     await _download_mmdb()
                 geo_resolver = GeoIPResolver()
                 if geo_resolver.reader:
+                    logger.info(f"🌍 Начинаем GeoIP-резолвинг для {len(alive_configs)} конфигов...")
                     for cfg in alive_configs:
                         host, _, _ = parse_config(cfg)
                         ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
@@ -977,7 +989,13 @@ class VPNConfigCollector:
                             code = geo_resolver.lookup(ip)
                             if code:
                                 config_countries[cfg] = code
+                                logger.debug(f"GeoIP: {host} -> {ip} -> {code}")
+                    logger.info(f"🌍 GeoIP: найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
                     geo_resolver.close()
+                else:
+                    logger.warning("⚠️ GeoIP: база не загружена, страны не будут определены")
+            else:
+                logger.warning("⚠️ GeoIP: модуль maxminddb не установлен, страны не будут определены")
 
             white_full, black_lte, black = await self.config_filter.filter_configs(alive_configs, whitelist_sni, whitelist_cidr)
             white_lite = white_full[:500]
@@ -1001,7 +1019,7 @@ class VPNConfigCollector:
                 'BASE64/BLACK_FULL.txt': base64.b64encode(black_txt.encode('utf-8')).decode('utf-8'),
                 'BASE64/BLACK_LTE.txt': base64.b64encode(black_lte_txt.encode('utf-8')).decode('utf-8'),
                 'BASE64/WHITE_FULL.txt': base64.b64encode(white_full_txt.encode('utf-8')).decode('utf-8'),
-                'BASE64/WHITE_LITE4.txt': base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8'),
+                'BASE64/WHITE_LITE.txt': base64.b64encode(white_lite_txt.encode('utf-8')).decode('utf-8'),
                 'stats.json': json.dumps(stats, indent=2, ensure_ascii=False)
             }
 
