@@ -18,12 +18,7 @@ import aiohttp
 import requests
 from github import Github, Auth, InputGitTreeElement
 from async_lru import alru_cache
-try:
-    import maxminddb
-    HAS_MAXMINDDB = True
-except ImportError:
-    HAS_MAXMINDDB = False
-    maxminddb = None
+import maxminddb
 
 # ============================================================================
 # НАСТРОЙКА ЛОГИРОВАНИЯ И ГЛОБАЛЬНЫЕ ПАТТЕРНЫ
@@ -866,7 +861,7 @@ class GeoIPResolver:
     def __init__(self, db_path: str = 'country.mmdb'):
         self.db_path = db_path
         self.reader = None
-        if HAS_MAXMINDDB and os.path.exists(db_path):
+        if os.path.exists(db_path):
             try:
                 self.reader = maxminddb.open_database(db_path)
                 logger.info(f"✅ GeoIP база загружена: {db_path}")
@@ -986,31 +981,26 @@ class VPNConfigCollector:
             config_countries = {}
             need_http_fallback = True
 
-            if HAS_MAXMINDDB:
-                if not os.path.exists('country.mmdb'):
-                    await _download_mmdb()
-                geo_resolver = GeoIPResolver()
-                if geo_resolver.reader:
-                    logger.info(f"🌍 Начинаем GeoIP-резолвинг (maxminddb) для {len(alive_configs)} конфигов...")
-                    for cfg in alive_configs:
-                        host, _, _ = parse_config(cfg)
-                        ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
-                        if ip:
-                            code = geo_resolver.lookup(ip)
-                            if code:
-                                config_countries[self._clean_config(cfg)] = code
-                                logger.debug(f"GeoIP: {host} -> {ip} -> {code}")
-                    logger.info(f"🌍 GeoIP (maxminddb): найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
+            if not os.path.exists('country.mmdb'):
+                await _download_mmdb()
+            geo_resolver = GeoIPResolver()
+            if geo_resolver.reader:
+                logger.info(f"🌍 Начинаем GeoIP-резолвинг (maxminddb) для {len(alive_configs)} конфигов...")
+                for cfg in alive_configs:
+                    host, _, _ = parse_config(cfg)
+                    ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
+                    if ip:
+                        code = geo_resolver.lookup(ip)
+                        if code:
+                            config_countries[self._clean_config(cfg)] = code
+                            logger.debug(f"GeoIP: {host} -> {ip} -> {code}")
+                logger.info(f"🌍 GeoIP (maxminddb): найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
 
-                    # Если maxminddb смог определить хотя бы некоторые страны — используем его,
-                    # но всё равно дозаполняем через HTTP для тех, что не определились.
-                    if len(config_countries) > 0:
-                        need_http_fallback = False
-                    geo_resolver.close()
-                else:
-                    logger.warning("⚠️ GeoIP: база не загружена, страны не будут определены через mmdb")
+                if len(config_countries) > 0:
+                    need_http_fallback = False
+                geo_resolver.close()
             else:
-                logger.warning("⚠️ GeoIP: модуль maxminddb не установлен")
+                logger.warning("⚠️ GeoIP: база не загружена, страны не будут определены через mmdb")
 
             # --- HTTP fallback GeoIP ---
             # Если maxminddb не дал результатов (или вообще недоступен) — используем ip-api.com
