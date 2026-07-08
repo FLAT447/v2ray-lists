@@ -600,20 +600,10 @@ class GithubManager:
         return await asyncio.to_thread(self._push_sync, files)
 
 class GitVerseManager:
-    """
-    Пуш файлов в GitVerse одним коммитом через нативный git CLI
-    (clone -> запись файлов -> commit -> push).
-    GitVerse работает на движке Gitea/собственном git-сервере, поэтому
-    Tree API от GitHub тут неприменим — используем обычный git по HTTPS с токеном.
-
-    Если удалённый репозиторий пустой (нет ни одной ветки/коммита),
-    git clone с этим репо не сработает в принципе — в таком случае
-    локально инициализируем репозиторий и делаем первый коммит сами.
-    """
     def __init__(self, token: Optional[str], repo: Optional[str],
                  host: str = "gitverse.ru", branch: str = "main"):
         self.token = token
-        self.repo = repo  # формат "owner/repo"
+        self.repo = repo
         self.host = host
         self.branch = branch
         self.enabled = bool(token and repo)
@@ -631,16 +621,12 @@ class GitVerseManager:
         if not self.enabled:
             return False
 
-        # Токен передаём через URL в виде oauth2:<token>, чтобы не настраивать
-        # отдельный credential helper. В логи попадает только "безопасный" вариант URL.
         remote_url = f"https://oauth2:{self.token}@{self.host}/{self.repo}.git"
         safe_remote_for_log = f"https://{self.host}/{self.repo}.git"
 
         with tempfile.TemporaryDirectory(prefix="gitverse_") as tmp_dir:
             clone_dir = os.path.join(tmp_dir, "repo")
             try:
-                # Клонируем без --branch: если репозиторий не пустой, но ветка
-                # называется иначе (main/master/иное), git сам выберет HEAD по умолчанию.
                 clone_res = self._run(
                     ["git", "clone", "--depth", "1", remote_url, clone_dir],
                     cwd=tmp_dir
@@ -650,7 +636,6 @@ class GitVerseManager:
 
                 if clone_res.returncode != 0:
                     stderr_low = clone_res.stderr.lower()
-                    # Типичные сообщения git при пустом удалённом репозитории
                     if "you appear to have cloned an empty repository" in stderr_low or \
                        "remote head" in stderr_low or \
                        "couldn't find remote ref" in stderr_low:
@@ -670,7 +655,6 @@ class GitVerseManager:
                     os.makedirs(clone_dir, exist_ok=True)
                     init_res = self._run(["git", "init", "-b", self.branch], cwd=clone_dir)
                     if init_res.returncode != 0:
-                        # Старые версии git не знают флаг -b у init
                         init_res = self._run(["git", "init"], cwd=clone_dir)
                         if init_res.returncode != 0:
                             logger.error(f"GitVerse: ошибка git init: {init_res.stderr.strip()[:500]}")
@@ -678,8 +662,6 @@ class GitVerseManager:
                         self._run(["git", "checkout", "-b", self.branch], cwd=clone_dir)
                     self._run(["git", "remote", "add", "origin", remote_url], cwd=clone_dir)
                 else:
-                    # Репозиторий не пустой — переключаемся на нужную ветку
-                    # (создаём локально, если её не было среди тех, что подтянул --depth=1 clone)
                     checkout_res = self._run(["git", "checkout", self.branch], cwd=clone_dir)
                     if checkout_res.returncode != 0:
                         checkout_res = self._run(["git", "checkout", "-b", self.branch], cwd=clone_dir)
@@ -715,8 +697,6 @@ class GitVerseManager:
                     logger.error(f"GitVerse: ошибка коммита: {commit_res.stderr.strip()[:500]}")
                     return False
 
-                # -u нужен, чтобы создать ветку на сервере, если её там ещё нет
-                # (актуально и для пустого репо, и для новой локальной ветки)
                 push_res = self._run(["git", "push", "-u", "origin", self.branch], cwd=clone_dir)
                 if push_res.returncode != 0:
                     logger.error(f"GitVerse: ошибка push в {safe_remote_for_log}: {push_res.stderr.strip()[:500]}")
@@ -738,13 +718,11 @@ class ConfigFetcher:
     def __init__(self):
         self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         self.sources: List[str] = []
-        
-        # Чтение источников подписок из локального файла subscriptions.txt
+
         try:
             with open('sources/subscriptions.txt', 'r', encoding='utf-8') as f:
                 for line in f:
                     url = line.strip()
-                    # Пропускаем пустые строки и комментарии
                     if url and not url.startswith('#'):
                         self.sources.append(url)
             logger.info(f"✅ Успешно загружено {len(self.sources)} ссылок на подписки из subscriptions.txt")
@@ -939,26 +917,55 @@ class VPNConfigCollector:
         ]
         cleaned_configs = []
         for index, cfg in enumerate(configs, start=1):
-            # Получаем чистую конфигурацию (без хеша) - это ключ для поиска в config_countries
             clean_key = self._clean_config(cfg)
             if not clean_key:
                 continue
 
-            # Обновляем fingerprint в чистой конфигурации
             clean_with_fp = _force_update_fp_in_url(clean_key, random.choice(ALLOWED_FPS))
 
-            # Ищем страну по ЧИСТОЙ конфигурации (без хеша!)
             country_code = config_countries.get(clean_key, '') if config_countries else ''
             flag = _code_to_flag(country_code) if country_code else ''
             country_name = COUNTRY_NAMES_RU.get(country_code, '') if country_code else ''
             prefix = f"{flag} {country_name} " if flag else ''
 
-            # Формируем итоговую строку: <конфиг с fp>#<флаг> <страна> <подписка> [номер]
             display_name = f"{prefix}{title.replace('V2Ray Lists - ', '')} [{index}]"
             final_line = f"{clean_with_fp}#{display_name}"
             cleaned_configs.append(final_line)
 
         return '\n'.join(meta + cleaned_configs)
+
+    async def _batch_http_geoip(self, ips: List[str]) -> Dict[str, Optional[str]]:
+        """Fallback GeoIP через ip-api.com batch API (free, 45 req/min, batch до 100 IP)."""
+        result = {}
+        valid_ips = []
+        for ip in ips:
+            try:
+                ipaddress.ip_address(ip.strip('[]'))
+                valid_ips.append(ip.strip('[]'))
+            except ValueError:
+                pass
+        if not valid_ips:
+            return result
+
+        for i in range(0, len(valid_ips), 100):
+            batch = valid_ips[i:i + 100]
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        'http://ip-api.com/batch',
+                        json=batch,
+                        headers={'Content-Type': 'application/json'},
+                        timeout=15
+                    ) as resp:
+                        if resp.status == 200:
+                            data = await resp.json()
+                            for entry in data:
+                                ip = entry.get('query', '')
+                                if entry.get('status') == 'success':
+                                    result[ip] = entry.get('countryCode', '')
+            except Exception as e:
+                logger.warning(f"HTTP GeoIP batch failed (batch {i // 100}): {e}")
+        return result
 
     async def run(self):
         tz_msk = timezone(timedelta(hours=3))
@@ -975,13 +982,16 @@ class VPNConfigCollector:
 
             alive_configs = await self.config_pinger.ping_configs(all_configs)
 
+            # --- GeoIP resolution (maxminddb + HTTP fallback) ---
             config_countries = {}
+            need_http_fallback = True
+
             if HAS_MAXMINDDB:
                 if not os.path.exists('country.mmdb'):
                     await _download_mmdb()
                 geo_resolver = GeoIPResolver()
                 if geo_resolver.reader:
-                    logger.info(f"🌍 Начинаем GeoIP-резолвинг для {len(alive_configs)} конфигов...")
+                    logger.info(f"🌍 Начинаем GeoIP-резолвинг (maxminddb) для {len(alive_configs)} конфигов...")
                     for cfg in alive_configs:
                         host, _, _ = parse_config(cfg)
                         ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
@@ -990,12 +1000,44 @@ class VPNConfigCollector:
                             if code:
                                 config_countries[cfg] = code
                                 logger.debug(f"GeoIP: {host} -> {ip} -> {code}")
-                    logger.info(f"🌍 GeoIP: найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
+                    logger.info(f"🌍 GeoIP (maxminddb): найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
+
+                    # Если maxminddb смог определить хотя бы некоторые страны — используем его,
+                    # но всё равно дозаполняем через HTTP для тех, что не определились.
+                    if len(config_countries) > 0:
+                        need_http_fallback = False
                     geo_resolver.close()
                 else:
-                    logger.warning("⚠️ GeoIP: база не загружена, страны не будут определены")
+                    logger.warning("⚠️ GeoIP: база не загружена, страны не будут определены через mmdb")
             else:
-                logger.warning("⚠️ GeoIP: модуль maxminddb не установлен, страны не будут определены")
+                logger.warning("⚠️ GeoIP: модуль maxminddb не установлен")
+
+            # --- HTTP fallback GeoIP ---
+            # Если maxminddb не дал результатов (или вообще недоступен) — используем ip-api.com
+            if need_http_fallback or len(config_countries) < len(alive_configs):
+                logger.info(f"🌍 Запускаем HTTP GeoIP fallback для конфигов без страны...")
+                unresolved_cfgs = [cfg for cfg in alive_configs if cfg not in config_countries]
+                if unresolved_cfgs:
+                    # Собираем уникальные IP для всех неразрешённых конфигов
+                    ip_to_cfgs: Dict[str, List[str]] = {}
+                    for cfg in unresolved_cfgs:
+                        host, _, _ = parse_config(cfg)
+                        ip = await _global_resolve_doh(host, self.config_filter.doh_servers)
+                        if ip:
+                            clean_ip = ip.strip('[]')
+                            ip_to_cfgs.setdefault(clean_ip, []).append(cfg)
+
+                    if ip_to_cfgs:
+                        http_results = await self._batch_http_geoip(list(ip_to_cfgs.keys()))
+                        resolved_count = 0
+                        for clean_ip, code in http_results.items():
+                            if code:
+                                for cfg in ip_to_cfgs.get(clean_ip, []):
+                                    config_countries[cfg] = code
+                                    resolved_count += 1
+                        logger.info(f"🌍 HTTP GeoIP fallback: resolved {resolved_count} конфигов")
+
+            logger.info(f"🌍 Итого GeoIP: определены страны для {len(config_countries)} из {len(alive_configs)} конфигов")
 
             white_full, black_lte, black = await self.config_filter.filter_configs(alive_configs, whitelist_sni, whitelist_cidr)
             white_lite = white_full[:500]
@@ -1023,9 +1065,6 @@ class VPNConfigCollector:
                 'stats.json': json.dumps(stats, indent=2, ensure_ascii=False)
             }
 
-            # GitHub использует Tree API (отдельный словарь, т.к. _push_sync мутирует stats.json
-            # добавляя историю в поле 'configs' — для GitVerse это поведение не нужно,
-            # туда пишем тот же контент файлов "как есть").
             files_for_gitverse = dict(files_to_push)
 
             github_result, gitverse_result = await asyncio.gather(
