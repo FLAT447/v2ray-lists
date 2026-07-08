@@ -998,7 +998,7 @@ class VPNConfigCollector:
                         if ip:
                             code = geo_resolver.lookup(ip)
                             if code:
-                                config_countries[cfg] = code
+                                config_countries[self._clean_config(cfg)] = code
                                 logger.debug(f"GeoIP: {host} -> {ip} -> {code}")
                     logger.info(f"🌍 GeoIP (maxminddb): найдено {len(config_countries)} стран для {len(alive_configs)} живых конфигов")
 
@@ -1016,7 +1016,7 @@ class VPNConfigCollector:
             # Если maxminddb не дал результатов (или вообще недоступен) — используем ip-api.com
             if need_http_fallback or len(config_countries) < len(alive_configs):
                 logger.info(f"🌍 Запускаем HTTP GeoIP fallback для конфигов без страны...")
-                unresolved_cfgs = [cfg for cfg in alive_configs if cfg not in config_countries]
+                unresolved_cfgs = [cfg for cfg in alive_configs if self._clean_config(cfg) not in config_countries]
                 if unresolved_cfgs:
                     # Собираем уникальные IP для всех неразрешённых конфигов
                     ip_to_cfgs: Dict[str, List[str]] = {}
@@ -1033,7 +1033,7 @@ class VPNConfigCollector:
                         for clean_ip, code in http_results.items():
                             if code:
                                 for cfg in ip_to_cfgs.get(clean_ip, []):
-                                    config_countries[cfg] = code
+                                    config_countries[self._clean_config(cfg)] = code
                                     resolved_count += 1
                         logger.info(f"🌍 HTTP GeoIP fallback: resolved {resolved_count} конфигов")
 
