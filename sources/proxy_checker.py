@@ -5,7 +5,6 @@ import ipaddress
 import re
 import logging
 import os
-import struct
 import time
 from datetime import datetime
 import zoneinfo
@@ -13,10 +12,7 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from github import Github, Auth
 from async_lru import alru_cache
 import json
-import base64 as b64mod
 import cloudscraper
-import requests as req_lib
-from telethon import TelegramClient
 
 MY_CHANNEL = "@flat447"
 TIMEOUT = 6
@@ -55,11 +51,6 @@ TG_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 TG_CHANNEL_ID = os.environ.get("TELEGRAM_CHANNEL_ID")
 GH_TOKEN = os.environ.get("MY_TOKEN")
-GITVERSE_TOKEN = os.environ.get("GITVERSE_TOKEN")
-GITVERSE_REPO = "FLAT447/my-repo"
-TG_API_ID = int(os.environ.get("TG_API_ID", 2040))
-TG_API_HASH = os.environ.get("TG_API_HASH", "b18441a1ff607e10a989891a5462e627")
-AUTH_KEY = os.environ.get("AUTH_KEY", "")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
@@ -189,89 +180,6 @@ async def check_proxy(session, link, networks, semaphore):
         except Exception:
             return None
 
-async def test_proxy_with_telethon(link):
-    """
-    Полный тест прокси через Telethon: MTProto handshake + FakeTLS.
-    Сначала пробует установить MTProto-соединение через Telethon,
-    затем проверяет на уровне протокола.
-    Требует TG_API_ID и TG_API_HASH в переменных окружения.
-    """
-    from telethon.sessions import StringSession
-
-    parsed = urlparse(link)
-    params = parse_qs(parsed.query)
-    server = params.get('server', [None])[0]
-    port = int(params.get('port', [0])[0])
-    secret = params.get('secret', [None])[0]
-
-    if not all([server, port, secret]):
-        return False
-
-    if not TG_API_ID or not TG_API_HASH or not AUTH_KEY:
-        logger.debug("TG_API_ID/TG_API_HASH/AUTH_KEY не заданы, пропуск Telethon-теста")
-        return False
-
-    client = None
-    try:
-        client = TelegramClient(
-            StringSession(AUTH_KEY),
-            TG_API_ID,
-            TG_API_HASH,
-            connection_retries=1,
-            timeout=TIMEOUT,
-            auto_reconnect=False
-        )
-        client._proxy = {
-            'proxy_type': 'mtproto',
-            'addr': server,
-            'port': port,
-            'secret': secret
-        }
-        await client.connect()
-        connected = client.is_connected()
-        if connected:
-            await client.disconnect()
-        return connected
-    except Exception:
-        if client and client.is_connected():
-            try:
-                await client.disconnect()
-            except:
-                pass
-
-    try:
-        ip = socket.gethostbyname(server)
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(ip, port), timeout=TIMEOUT
-        )
-
-        if secret.lower().startswith('ee'):
-            writer.write(b'\x16\x03\x01\x00\x05\x01\x00\x00\x01\x00')
-            await writer.drain()
-            try:
-                resp = await asyncio.wait_for(reader.read(1024), timeout=TIMEOUT)
-                if not resp or resp[0:1] != b'\x16':
-                    writer.close()
-                    await writer.wait_closed()
-                    return False
-            except asyncio.TimeoutError:
-                writer.close()
-                await writer.wait_closed()
-                return False
-
-        init_packet = b'\xef\xef\xef\xef' + struct.pack('>i', 1) + os.urandom(56)
-        writer.write(init_packet)
-        await writer.drain()
-
-        response = await asyncio.wait_for(reader.read(64), timeout=TIMEOUT)
-        writer.close()
-        await writer.wait_closed()
-
-        return len(response) > 0
-    except Exception as e:
-        logger.debug(f"MTProto handshake test failed: {e}")
-        return False
-
 def update_github(white_content, black_content):
     if not GH_TOKEN:
         return
@@ -315,57 +223,6 @@ def update_github(white_content, black_content):
 
     except Exception as e:
         logger.error(f"GitHub Error: {e}")
-
-def update_gitverse(white_content, black_content):
-    if not GITVERSE_TOKEN:
-        return
-    try:
-        base_url = f"https://gitverse.ru/api/repos/{GITVERSE_REPO}/contents"
-        headers = {"Authorization": f"token {GITVERSE_TOKEN}"}
-        now_str = datetime.now(TIMEZONE).strftime('%H:%M | %d.%m.%Y')
-
-        files = {"whitelist.txt": white_content, "blacklist.txt": black_content}
-        for path, content in files.items():
-            try:
-                resp = req_lib.get(f"{base_url}/{path}", headers=headers, timeout=10)
-                data = {"message": f"Обновление {path}: {now_str}",
-                        "content": b64mod.b64encode(content.encode()).decode()}
-                if resp.status_code == 200:
-                    data["sha"] = resp.json().get("sha")
-                req_lib.put(f"{base_url}/{path}", headers=headers, json=data, timeout=10)
-            except Exception as e:
-                logger.error(f"GitVerse Error ({path}): {e}")
-
-        stats_path = "stats.json"
-        sha = None
-        try:
-            resp = req_lib.get(f"{base_url}/{stats_path}", headers=headers, timeout=10)
-            if resp.status_code == 200:
-                stats = json.loads(b64mod.b64decode(resp.json()["content"]).decode())
-                sha = resp.json().get("sha")
-            else:
-                stats = {}
-        except:
-            stats = {}
-
-        stats["last_global_update"] = now_str
-        if "files" not in stats:
-            stats["files"] = {}
-        stats["files"]["mtproto"] = {
-            "white_count": len(white_content.splitlines()) if white_content else 0,
-            "black_count": len(black_content.splitlines()) if black_content else 0,
-            "updated": now_str
-        }
-
-        payload = {"message": f"Обновление статистики MTProto {now_str}",
-                    "content": b64mod.b64encode(json.dumps(stats, indent=2, ensure_ascii=False).encode()).decode()}
-        if sha:
-            payload["sha"] = sha
-        req_lib.put(f"{base_url}/{stats_path}", headers=headers, json=payload, timeout=10)
-
-        logger.info("GitVerse зеркалирование выполнено")
-    except Exception as e:
-        logger.error(f"GitVerse Error: {e}")
 
 async def send_telegram_msg(white_list, black_list):
     if not TG_BOT_TOKEN:
@@ -448,28 +305,12 @@ async def main():
             if pid not in unique_map or p['latency'] < unique_map[pid]['latency']:
                 unique_map[pid] = p
 
-        logger.info(f"TCP-тест пройден: {len(unique_map)} прокси")
-
-        telethon_sem = asyncio.Semaphore(50)
-        telethon_tasks = [
-            test_proxy_with_telethon(p['link'])
-            for p in unique_map.values()
-        ]
-        telethon_results = await asyncio.gather(*telethon_tasks)
-
-        verified_map = {}
-        for p, ok in zip(list(unique_map.values()), telethon_results):
-            if ok:
-                verified_map[p['id']] = p
-
-        logger.info(f"Telethon-тест пройден: {len(verified_map)} прокси")
-
         white_list = sorted(
-            [p for p in verified_map.values() if p['type'] == 'white'],
+            [p for p in unique_map.values() if p['type'] == 'white'],
             key=lambda x: (x['port'] != 443, x['latency'])
         )
         black_list = sorted(
-            [p for p in verified_map.values() if p['type'] == 'black'],
+            [p for p in unique_map.values() if p['type'] == 'black'],
             key=lambda x: (x['port'] != 443, x['latency'])
         )
 
@@ -477,11 +318,6 @@ async def main():
 
         await asyncio.to_thread(
             update_github,
-            "\n".join([p['link'] for p in white_list]),
-            "\n".join([p['link'] for p in black_list])
-        )
-        await asyncio.to_thread(
-            update_gitverse,
             "\n".join([p['link'] for p in white_list]),
             "\n".join([p['link'] for p in black_list])
         )
