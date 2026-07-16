@@ -7,8 +7,6 @@ import logging
 import asyncio
 import ipaddress
 import random
-import shutil
-import socket
 import subprocess
 import tempfile
 from datetime import datetime, timezone, timedelta
@@ -222,315 +220,49 @@ def validate_config(config: str, host: str, port: int, sni: str) -> bool:
     return True
 
 # ============================================================================
-# РУЧНОЙ ПАРСЕР SHARE-ССЫЛОК В OUTBOUND ДЛЯ SING-BOX
+# ТЕСТ ДОСТУПНОСТИ СЕРВЕРА ПО TCP (TCP PING)
 # ============================================================================
 
-def _parse_share_link_to_outbound(url: str) -> Optional[Dict[str, Any]]:
-    """Парсит share-ссылку (vless/vmess/trojan/ss) в JSON outbound для sing-box."""
+async def _tcp_ping(host: str, port: int, timeout: float = 3.0) -> bool:
+    """Проверка TCP-доступности сервера напрямую (host:port)."""
     try:
-        if url.startswith('vless://'):
-            parsed = urlparse(url)
-            uuid = parsed.username
-            host = parsed.hostname
-            port = parsed.port
-            if not uuid or not host or not port:
-                return None
-            q = parse_qs(parsed.query)
-            security = q.get('security', ['none'])[0]
-            outbound: Dict[str, Any] = {
-                "type": "vless",
-                "tag": "proxy",
-                "server": host,
-                "server_port": port,
-                "uuid": uuid,
-                "packet_encoding": "xudp",
-            }
-            flow = q.get('flow', [''])[0]
-            if flow:
-                outbound["flow"] = flow
-            net_type = q.get('type', ['tcp'])[0]
-            if net_type == 'ws':
-                outbound["transport"] = {
-                    "type": "ws",
-                    "path": q.get('path', ['/'])[0],
-                    "headers": {"Host": q.get('host', [host])[0]}
-                }
-            elif net_type == 'grpc':
-                outbound["transport"] = {
-                    "type": "grpc",
-                    "service_name": q.get('serviceName', [''])[0]
-                }
-            elif net_type == 'httpupgrade':
-                outbound["transport"] = {
-                    "type": "httpupgrade",
-                    "path": q.get('path', ['/'])[0],
-                    "host": q.get('host', [host])[0]
-                }
-            if security in ('tls', 'reality'):
-                tls: Dict[str, Any] = {
-                    "enabled": True,
-                    "server_name": q.get('sni', [q.get('peer', [host])[0]])[0],
-                    "insecure": False,
-                }
-                fp = q.get('fp', [''])[0]
-                if fp:
-                    tls["utls"] = {"enabled": True, "fingerprint": fp}
-                if security == 'reality':
-                    tls["reality"] = {
-                        "enabled": True,
-                        "public_key": q.get('pbk', [''])[0],
-                        "short_id": q.get('sid', [''])[0]
-                    }
-                outbound["tls"] = tls
-            return outbound
-
-        elif url.startswith('vmess://'):
-            rem = url[8:].split('#')[0].strip()
-            b64_str = rem + "=" * ((4 - len(rem) % 4) % 4)
-            data = json.loads(base64.b64decode(b64_str).decode('utf-8', errors='ignore'))
-            host = data.get('add')
-            port = data.get('port')
-            uuid = data.get('id')
-            if not host or not port or not uuid:
-                return None
-            outbound = {
-                "type": "vmess",
-                "tag": "proxy",
-                "server": host,
-                "server_port": int(port),
-                "uuid": uuid,
-                "security": data.get('scy', 'auto') or "auto",
-                "alter_id": int(data.get('aid', 0) or 0),
-            }
-            net = data.get('net', 'tcp')
-            if net == 'ws':
-                outbound["transport"] = {
-                    "type": "ws",
-                    "path": data.get('path', '/') or '/',
-                    "headers": {"Host": data.get('host') or host}
-                }
-            elif net == 'grpc':
-                outbound["transport"] = {
-                    "type": "grpc",
-                    "service_name": data.get('path', '') or ''
-                }
-            if str(data.get('tls', '')).lower() == 'tls':
-                outbound["tls"] = {
-                    "enabled": True,
-                    "server_name": data.get('sni') or data.get('host') or host,
-                    "insecure": False
-                }
-            return outbound
-
-        elif url.startswith('trojan://'):
-            parsed = urlparse(url)
-            password = parsed.username
-            host = parsed.hostname
-            port = parsed.port
-            if not password or not host or not port:
-                return None
-            q = parse_qs(parsed.query)
-            outbound = {
-                "type": "trojan",
-                "tag": "proxy",
-                "server": host,
-                "server_port": port,
-                "password": password,
-            }
-            net_type = q.get('type', ['tcp'])[0]
-            if net_type == 'ws':
-                outbound["transport"] = {
-                    "type": "ws",
-                    "path": q.get('path', ['/'])[0],
-                    "headers": {"Host": q.get('host', [host])[0]}
-                }
-            elif net_type == 'grpc':
-                outbound["transport"] = {
-                    "type": "grpc",
-                    "service_name": q.get('serviceName', [''])[0]
-                }
-            sni = q.get('sni', [q.get('peer', [host])[0]])[0]
-            outbound["tls"] = {"enabled": True, "server_name": sni, "insecure": False}
-            return outbound
-
-        elif url.startswith('ss://'):
-            rem = url[5:].split('#')[0]
-            method, password, host, port = None, None, None, None
-            if '@' in rem:
-                userinfo, hostport = rem.rsplit('@', 1)
-                if '?' in hostport:
-                    hostport = hostport.split('?')[0]
-                if '/' in hostport:
-                    hostport = hostport.split('/')[0]
-                try:
-                    padded = userinfo + "=" * ((4 - len(userinfo) % 4) % 4)
-                    decoded_userinfo = base64.urlsafe_b64decode(padded).decode('utf-8', errors='ignore')
-                    if ':' in decoded_userinfo:
-                        userinfo = decoded_userinfo
-                except Exception:
-                    pass
-                if ':' not in userinfo:
-                    return None
-                method, password = userinfo.split(':', 1)
-                if ':' not in hostport:
-                    return None
-                host, port_str = hostport.rsplit(':', 1)
-                port = int(port_str)
-            else:
-                plain = rem.split('?')[0].split('/')[0]
-                padded = plain + "=" * ((4 - len(plain) % 4) % 4)
-                decoded = base64.urlsafe_b64decode(padded).decode('utf-8', errors='ignore')
-                if '@' not in decoded or ':' not in decoded:
-                    return None
-                method_pass, hostport = decoded.rsplit('@', 1)
-                method, password = method_pass.split(':', 1)
-                host, port_str = hostport.split(':', 1)
-                port = int(port_str)
-            if not (method and password and host and port):
-                return None
-            return {
-                "type": "shadowsocks",
-                "tag": "proxy",
-                "server": host,
-                "server_port": port,
-                "method": method,
-                "password": password,
-            }
-    except Exception as e:
-        logger.debug(f"parse_share_link failed for url={url[:60]}...: {e}")
-        return None
-    return None
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port), timeout=timeout
+        )
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except Exception:
+            pass
+        return True
+    except Exception:
+        return False
 
 # ============================================================================
-# ИСПРАВЛЕННЫЙ ОБОЛОЧЕЧНЫЙ ВАЛИДАТОР (РУЧНОЙ ПАРСИНГ + SING-BOX RUN)
+# ВАЛИДАТОР ДОСТУПНОСТИ СЕРВЕРА (TCP PING, БЕЗ SING-BOX)
 # ============================================================================
 
-class SingBoxValidator:
-    def __init__(self, max_concurrent: int = 40):
+class TcpPingValidator:
+    """Проверяет доступность конфигов простым TCP-подключением к host:port,
+    без использования sing-box и без HTTP-запросов через туннель."""
+
+    def __init__(self, max_concurrent: int = 200):
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.singbox_path = './sing-box' if os.path.exists('./sing-box') else shutil.which('sing-box')
-        if not self.singbox_path:
-            logger.error("❌ КРИТИЧЕСКАЯ ОШИБКА: Бинарник sing-box не найден в системе!")
-        else:
-            logger.info(f"✅ sing-box найден: {self.singbox_path}")
-        self.stat_parse_fail = 0
-        self.stat_proc_start_fail = 0
-        self.stat_port_timeout = 0
-        self.stat_http_fail = 0
+        self.stat_tcp_ping_fail = 0
         self.stat_success = 0
         self._sample_logged = 0
 
-    async def _wait_for_port(self, port: int, attempts: int = 20, delay: float = 0.05) -> bool:
-        for _ in range(attempts):
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.04)
-                result = sock.connect_ex(('127.0.0.1', port))
-                sock.close()
-                if result == 0:
-                    return True
-            except Exception: pass
-            await asyncio.sleep(delay)
-        return False
-
-    def _convert_url_to_outbound(self, url: str) -> Optional[Dict[str, Any]]:
-        return _parse_share_link_to_outbound(url)
-
-    async def check_l7(self, config_url: str) -> bool:
-        if not self.singbox_path:
-            return False
-
+    async def check(self, host: str, port: int) -> bool:
         async with self.semaphore:
-            outbound_data = self._convert_url_to_outbound(config_url)
-            if not outbound_data:
-                self.stat_parse_fail += 1
-                return False
-
-            local_port = random.randint(23000, 45000)
-            temp_config_path = f"temp_{local_port}.json"
-
-            sb_config = {
-                "log": {"level": "warn"},
-                "inbounds": [{
-                    "type": "mixed",
-                    "listen": "127.0.0.1",
-                    "listen_port": local_port
-                }],
-                "outbounds": [
-                    outbound_data,
-                    {"type": "direct", "tag": "direct"}
-                ]
-            }
-
-            proc = None
-            stderr_capture = b""
-            try:
-                with open(temp_config_path, 'w') as f:
-                    json.dump(sb_config, f)
-
-                proc = await asyncio.create_subprocess_exec(
-                    self.singbox_path, 'run', '-c', temp_config_path,
-                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-
-                if not await self._wait_for_port(local_port):
-                    self.stat_port_timeout += 1
-                    if proc.returncode is not None:
-                        try:
-                            _, stderr_capture = await asyncio.wait_for(proc.communicate(), timeout=0.5)
-                        except Exception:
-                            pass
-                        if self._sample_logged < 10:
-                            self._sample_logged += 1
-                            logger.warning(f"[SAMPLE] sing-box завершился до открытия порта (rc={proc.returncode}): "
-                                            f"{stderr_capture.decode(errors='ignore')[:300]} | outbound_type={outbound_data.get('type')}")
-                    elif self._sample_logged < 10:
-                        self._sample_logged += 1
-                        logger.warning(f"[SAMPLE] sing-box не открыл порт за отведённое время (процесс жив) | "
-                                        f"outbound_type={outbound_data.get('type')} server={outbound_data.get('server')}")
-                    raise RuntimeError("Core timeout")
-
-                connector = aiohttp.TCPConnector(ssl=False)
-                async with aiohttp.ClientSession(connector=connector) as session:
-                    proxy_url = f"http://127.0.0.1:{local_port}"
-                    try:
-                        async with session.get('https://www.google.com/generate_204', proxy=proxy_url, timeout=6.0) as resp:
-                            if resp.status in [200, 204]:
-                                self.stat_success += 1
-                                proc.terminate()
-                                await proc.wait()
-                                return True
-                            else:
-                                self.stat_http_fail += 1
-                                if self._sample_logged < 10:
-                                    self._sample_logged += 1
-                                    logger.warning(f"[SAMPLE] HTTP через proxy вернул status={resp.status} | "
-                                                    f"outbound_type={outbound_data.get('type')}")
-                    except Exception as http_err:
-                        self.stat_http_fail += 1
-                        if self._sample_logged < 10:
-                            self._sample_logged += 1
-                            logger.warning(f"[SAMPLE] Ошибка HTTP-запроса через proxy: {http_err} | "
-                                            f"outbound_type={outbound_data.get('type')} server={outbound_data.get('server')}")
-            except Exception as e:
-                self.stat_proc_start_fail += 1
+            ok = await _tcp_ping(host, port)
+            if ok:
+                self.stat_success += 1
+            else:
+                self.stat_tcp_ping_fail += 1
                 if self._sample_logged < 10:
                     self._sample_logged += 1
-                    logger.warning(f"[SAMPLE] Общая ошибка check_l7: {e} | outbound_type={outbound_data.get('type') if outbound_data else 'N/A'}")
-            finally:
-                if proc is not None and proc.returncode is None:
-                    try:
-                        proc.kill()
-                        await proc.wait()
-                    except Exception: pass
-                if os.path.exists(temp_config_path):
-                    try: os.remove(temp_config_path)
-                    except Exception: pass
-            return False
-
-# ============================================================================
-# СБОРЩИК И ФИКС GITHUB API
-# ============================================================================
+                    logger.warning(f"[SAMPLE] TCP Ping не прошёл до {host}:{port}")
+            return ok
 
 class TelegramNotifier:
     def __init__(self, token: str, chat_id: str, channel_id: str = None):
@@ -766,7 +498,7 @@ class ConfigFetcher:
 
 class ConfigPinger:
     def __init__(self):
-        self.sb_validator = SingBoxValidator()
+        self.tcp_validator = TcpPingValidator()
         self._unsupported_count = 0
         self._total_checked = 0
 
@@ -775,23 +507,20 @@ class ConfigPinger:
         if not validate_config(config, host, port, sni): return None
 
         self._total_checked += 1
-        if await self.sb_validator.check_l7(config):
+        if await self.tcp_validator.check(host, port):
             return config
         return None
 
     async def ping_configs(self, configs: List[str]) -> List[str]:
-        logger.info(f"Проверка {len(configs)} уникальных серверов (TCP + L7 Sing-Box Core)...")
+        logger.info(f"Проверка {len(configs)} уникальных серверов (TCP Ping)...")
         tasks = [self._check_config(cfg) for cfg in configs]
         results = await asyncio.gather(*tasks)
         res = [r for r in results if r is not None]
-        v = self.sb_validator
-        logger.info(f"Успешно прошли полную валидацию: {len(res)} из {self._total_checked} проверенных")
+        v = self.tcp_validator
+        logger.info(f"Успешно прошли валидацию: {len(res)} из {self._total_checked} проверенных")
         logger.info(
             f"📊 Диагностика причин провала: "
-            f"parse_fail={v.stat_parse_fail}, "
-            f"proc_start_fail={v.stat_proc_start_fail}, "
-            f"port_timeout={v.stat_port_timeout}, "
-            f"http_fail={v.stat_http_fail}, "
+            f"tcp_ping_fail={v.stat_tcp_ping_fail}, "
             f"success={v.stat_success}"
         )
         return res
