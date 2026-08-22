@@ -61,13 +61,13 @@ rule-providers:
     type: http
     behavior: domain
     format: text
-    url: https://raw.githubusercontent.com/FLAT447/v2ray-lists/main/rules/blocked_full.txt
-    path: ./rules/blocked_full.txt
+    url: https://raw.githubusercontent.com/hxehex/russia-mobile-internet-whitelist/refs/heads/main/whitelist.txt
+    path: ./domestic_lite.txt
     interval: 86400
 rules:
-- RULE-SET,ru-rules,PROXY
+- RULE-SET,ru-rules,DIRECT
 - GEOIP,RU,DIRECT
 - DOMAIN-SUFFIX,ru,DIRECT
 - DOMAIN-SUFFIX,su,DIRECT
 - DOMAIN-SUFFIX,рф,DIRECT
-- MATCH,DIRECT
+- MATCH,PROXY

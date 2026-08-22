@@ -38,6 +38,13 @@ proxies:
   udp: true
   sni: example.com
   skip-cert-verify: true
+- name: 'Test-SS #004'
+  type: ss
+  server: example.com
+  port: 8388
+  cipher: aes-256-gcm
+  password: password123
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
@@ -47,6 +54,7 @@ proxy-groups:
   - 'Test-VLESS #001'
   - 'Test-TROJAN #002'
   - 'Test-HY2 #003'
+  - 'Test-SS #004'
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -56,18 +64,19 @@ proxy-groups:
   - 'Test-VLESS #001'
   - 'Test-TROJAN #002'
   - 'Test-HY2 #003'
+  - 'Test-SS #004'
 rule-providers:
   ru-rules:
     type: http
     behavior: domain
     format: text
-    url: https://raw.githubusercontent.com/FLAT447/v2ray-lists/main/rules/blocked_lite.txt
-    path: ./rules/blocked_lite.txt
+    url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Russia/inside-raw.lst
+    path: ./domestic_full.txt
     interval: 86400
 rules:
-- RULE-SET,ru-rules,PROXY
+- RULE-SET,ru-rules,DIRECT
 - GEOIP,RU,DIRECT
 - DOMAIN-SUFFIX,ru,DIRECT
 - DOMAIN-SUFFIX,su,DIRECT
 - DOMAIN-SUFFIX,рф,DIRECT
-- MATCH,DIRECT
+- MATCH,PROXY

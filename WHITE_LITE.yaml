@@ -1,0 +1,35 @@
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+ipv6: false
+proxies: []
+proxy-groups:
+- name: PROXY
+  type: select
+  proxies:
+  - AUTO
+  - DIRECT
+  - DIRECT
+- name: AUTO
+  type: url-test
+  url: https://www.gstatic.com/generate_204
+  interval: 300
+  tolerance: 50
+  proxies:
+  - DIRECT
+rule-providers:
+  ru-rules:
+    type: http
+    behavior: domain
+    format: text
+    url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Categories/geoblock.lst
+    path: ./blocked_lite.txt
+    interval: 86400
+rules:
+- RULE-SET,ru-rules,PROXY
+- GEOIP,RU,DIRECT
+- DOMAIN-SUFFIX,ru,DIRECT
+- DOMAIN-SUFFIX,su,DIRECT
+- DOMAIN-SUFFIX,рф,DIRECT
+- MATCH,DIRECT
