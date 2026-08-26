@@ -113,23 +113,44 @@ def safe_print(*a):
         print(*[str(x).encode("ascii", "ignore").decode() for x in a])
 
 
+def _own_github_path() -> str:
+    """Возвращает префикс пути собственного репозитория (напр. '/FLAT447/v2ray-lists'),
+       чтобы токен подставлялся только к своим URL, а не к чужим публичным источникам
+       (иначе GitHub отдаёт 404 на чужие репозитории при авторизации чужим токеном)."""
+    repo = (cfg.get("github") or {}).get("repo_url", "")
+    if not repo:
+        return ""
+    p = urllib.parse.urlparse(repo)
+    return p.path.removesuffix(".git").lower()
+
+
 def http_get(url: str, timeout: int = 20, binary: bool = False):
     headers = {"User-Agent": USER_AGENT}
-    if "github" in url and os.environ.get("GITHUB_TOKEN"):
+    # Токен подставляем ТОЛЬКО к URL своего репозитория. Чужие публичные
+    # источники на github.com грузим без авторизации (с токеном от чужого
+    # репозитория GitHub возвращает 404).
+    own = _own_github_path()
+    if own and url.lower().startswith(("https://github.com", "https://raw.githubusercontent.com")) \
+            and own in url.lower() and os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
-    try:
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            data = r.read()
-            return data if binary else data.decode("utf-8", errors="ignore")
-    except Exception:
-        if HAVE_REQUESTS:
-            try:
-                r = requests.get(url, timeout=timeout, headers=headers)
-                return r.content if binary else r.text
-            except Exception:
-                return None
-        return None
+    last_err = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                data = r.read()
+                return data if binary else data.decode("utf-8", errors="ignore")
+        except Exception as e:
+            last_err = e
+            time.sleep(1.5 * (attempt + 1))
+    if HAVE_REQUESTS:
+        try:
+            r = requests.get(url, timeout=timeout, headers=headers)
+            return r.content if binary else r.text
+        except Exception as e:
+            last_err = e
+    safe_print(f"[!] http_get не удалось ({type(last_err).__name__}): {url[:90]}")
+    return None
 
 
 def try_b64_decode(blob: str) -> Optional[str]:

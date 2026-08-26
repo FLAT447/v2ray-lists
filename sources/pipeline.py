@@ -312,6 +312,7 @@ def _ingest_file(filepath, black_list, white_list, black_mtproto, white_mtproto,
             # извлекаем конфиги; неподдерживаемые ссылки дадут 0 конфигов
             text = http_get(line, timeout=30)
             if not text:
+                safe_print(f"[!] Источник не загружен ({len(staging) if staging is not None else (len(black_list) + len(white_list))} собрано): {line[:90]}")
                 continue
             links = extract_links(text)
 
