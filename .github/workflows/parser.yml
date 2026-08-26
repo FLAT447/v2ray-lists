@@ -1,0 +1,36 @@
+name: Parser
+
+on: 
+  schedule:
+    - cron: '0 */1 * * *' 
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps: 
+      - name: Checkout Repository
+        uses: actions/checkout@v4 
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: sources/requirements.txt
+         
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r sources/requirements.txt
+
+      - name: Run Parser
+        env: 
+          GITVERSE_TOKEN: ${{ secrets.GITVERSE_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: python sources/parser.py
