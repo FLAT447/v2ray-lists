@@ -4,22 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия VLESS-46.8.209.137-001
-  type: vless
-  server: 46.8.209.137
-  port: 18083
-  uuid: 91aea941-b762-4f97-b89f-35835e739372
-  udp: true
-  encryption: none
-  tls: true
-  servername: royalehosting.net
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: xhttp
-  reality-opts:
-    public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
-    short-id: 5f6af0122209fc10
-- name: 🇷🇺 Россия VLESS-78.159.240.41-002
+- name: 🇷🇺 Россия VLESS-78.159.240.41-001
   type: vless
   server: 78.159.240.41
   port: 443
@@ -35,29 +20,60 @@ proxies:
     grpc-service-name: vless-grpc-reality
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇺🇸 США SS-31.76.82.131-003
+- name: 🇷🇺 Россия VLESS-79.174.92.85-002
+  type: vless
+  server: 79.174.92.85
+  port: 6443
+  uuid: 2324f230-0341-47c7-8aac-8974fd48f0a4
+  udp: true
+  encryption: none
+  tls: true
+  servername: iv.kommersant.ru
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+  reality-opts:
+    public-key: lU1yF2A1b0lM9DZbXWPpLfoU7_KQpXOYX0NFrPEIJy8
+    short-id: bad5722c72a0
+- name: 🇷🇺 Россия VLESS-46.8.209.137-003
+  type: vless
+  server: 46.8.209.137
+  port: 18083
+  uuid: ee82e0c3-3876-4802-8ea5-2b69ce085606
+  udp: true
+  encryption: none
+  tls: true
+  servername: royalehosting.net
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
+    short-id: 5f6af0122209fc10
+- name: 🇺🇸 США SS-31.76.82.131-004
   type: ss
   server: 31.76.82.131
   port: 34260
   cipher: chacha20-ietf-poly1305
   password: cTAObwg4OWWXkZJQs0ZdgC
   udp: true
-- name: 🇷🇺 Россия VLESS-178.72.167.151-004
-  type: vless
-  server: 178.72.167.151
+- name: 🇸🇨 SC SS-45.207.207.25-005
+  type: ss
+  server: 45.207.207.25
   port: 443
-  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
+  cipher: aes-256-gcm
+  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
   udp: true
-  encryption: none
-  tls: true
-  servername: 2gis.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  reality-opts:
-    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
-    short-id: d45603
-- name: 🇵🇱 Польша VLESS-94.183.209.33-005
+- name: 🇺🇸 США SS-65.49.217.190-006
+  type: ss
+  server: 65.49.217.190
+  port: 23456
+  cipher: aes-256-gcm
+  password: N2JiY2IxNjU3ZDg3
+  udp: true
+- name: 🇵🇱 Польша VLESS-94.183.209.33-007
   type: vless
   server: 94.183.209.33
   port: 8443
@@ -71,46 +87,32 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇺🇸 США SS-65.49.217.190-006
-  type: ss
-  server: 65.49.217.190
-  port: 23456
-  cipher: aes-256-gcm
-  password: N2JiY2IxNjU3ZDg3
-  udp: true
-- name: 🇨🇦 Канада SS-51.79.49.116-007
-  type: ss
-  server: 51.79.49.116
-  port: 8882
-  cipher: aes-256-gcm
-  password: kDWvXYZoTBcGkC4
-  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-46.8.209.137-001
-  - 🇷🇺 Россия VLESS-78.159.240.41-002
-  - 🇺🇸 США SS-31.76.82.131-003
-  - 🇷🇺 Россия VLESS-178.72.167.151-004
-  - 🇵🇱 Польша VLESS-94.183.209.33-005
+  - 🇷🇺 Россия VLESS-78.159.240.41-001
+  - 🇷🇺 Россия VLESS-79.174.92.85-002
+  - 🇷🇺 Россия VLESS-46.8.209.137-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇸🇨 SC SS-45.207.207.25-005
   - 🇺🇸 США SS-65.49.217.190-006
-  - 🇨🇦 Канада SS-51.79.49.116-007
+  - 🇵🇱 Польша VLESS-94.183.209.33-007
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-46.8.209.137-001
-  - 🇷🇺 Россия VLESS-78.159.240.41-002
-  - 🇺🇸 США SS-31.76.82.131-003
-  - 🇷🇺 Россия VLESS-178.72.167.151-004
-  - 🇵🇱 Польша VLESS-94.183.209.33-005
+  - 🇷🇺 Россия VLESS-78.159.240.41-001
+  - 🇷🇺 Россия VLESS-79.174.92.85-002
+  - 🇷🇺 Россия VLESS-46.8.209.137-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇸🇨 SC SS-45.207.207.25-005
   - 🇺🇸 США SS-65.49.217.190-006
-  - 🇨🇦 Канада SS-51.79.49.116-007
+  - 🇵🇱 Польша VLESS-94.183.209.33-007
 rule-providers:
   ru-rules:
     type: http

@@ -18,35 +18,38 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇺🇸 США VLESS-31.76.89.110-002
+- name: 🇷🇺 Россия VLESS-178.72.167.151-002
   type: vless
-  server: 31.76.89.110
-  port: 8443
-  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
+  server: 178.72.167.151
+  port: 443
+  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
   udp: true
   encryption: none
   tls: true
-  servername: wikihow.com
+  servername: 2gis.ru
   client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: xhttp
   reality-opts:
-    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
-- name: 🇺🇸 США VLESS-18.239.134.69-003
+    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
+    short-id: d45603
+- name: 🇷🇺 Россия VLESS-77.110.104.125-003
   type: vless
-  server: 18.239.134.69
-  port: 80
-  uuid: de27291c-15a9-4256-9ba7-ad517569877e
+  server: 77.110.104.125
+  port: 8443
+  uuid: e0b9fb0f-1bbd-478b-9580-c2294778338b
   udp: true
   encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: qq
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: d2e1v87ko56lyw.cloudfront.net:assets.opensignal.com
+  tls: true
+  servername: maps.apple.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: your-custom-path
+  reality-opts:
+    public-key: OMlQAFrCMZ3DX0xlnbEZiByLBFzpUE8XJHJsrBzLdlY
+    short-id: 2da4299da566b7
 - name: 🇷🇺 Россия VLESS-77.110.104.125-004
   type: vless
   server: 77.110.104.125
@@ -71,8 +74,8 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇵🇱 Польша VLESS-94.183.209.33-001
-  - 🇺🇸 США VLESS-31.76.89.110-002
-  - 🇺🇸 США VLESS-18.239.134.69-003
+  - 🇷🇺 Россия VLESS-178.72.167.151-002
+  - 🇷🇺 Россия VLESS-77.110.104.125-003
   - 🇷🇺 Россия VLESS-77.110.104.125-004
 - name: AUTO
   type: url-test
@@ -81,8 +84,8 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇵🇱 Польша VLESS-94.183.209.33-001
-  - 🇺🇸 США VLESS-31.76.89.110-002
-  - 🇺🇸 США VLESS-18.239.134.69-003
+  - 🇷🇺 Россия VLESS-178.72.167.151-002
+  - 🇷🇺 Россия VLESS-77.110.104.125-003
   - 🇷🇺 Россия VLESS-77.110.104.125-004
 rule-providers:
   ru-rules:

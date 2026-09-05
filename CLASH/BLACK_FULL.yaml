@@ -4,7 +4,22 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇵🇱 Польша VLESS-94.183.209.33-001
+- name: 🇺🇸 США VLESS-18.239.134.69-001
+  type: vless
+  server: 18.239.134.69
+  port: 80
+  uuid: de27291c-15a9-4256-9ba7-ad517569877e
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: edge
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: d2e1v87ko56lyw.cloudfront.net:assets.opensignal.com
+- name: 🇵🇱 Польша VLESS-94.183.209.33-002
   type: vless
   server: 94.183.209.33
   port: 8443
@@ -18,7 +33,22 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇺🇸 США VLESS-2.27.201.153-002
+- name: 🇷🇺 Россия VLESS-178.72.167.151-003
+  type: vless
+  server: 178.72.167.151
+  port: 443
+  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
+  udp: true
+  encryption: none
+  tls: true
+  servername: 2gis.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
+    short-id: d45603
+- name: 🇺🇸 США VLESS-2.27.201.153-004
   type: vless
   server: 2.27.201.153
   port: 443
@@ -32,7 +62,7 @@ proxies:
   reality-opts:
     public-key: lbktagkdektK-9Ow1gSqCtQcd_Xo7oYH3WJ-gOHUpwQ
     short-id: d6733d5eb4acca42
-- name: 🇺🇸 США VLESS-31.76.89.110-003
+- name: 🇺🇸 США VLESS-31.76.89.110-005
   type: vless
   server: 31.76.89.110
   port: 8443
@@ -46,38 +76,6 @@ proxies:
   network: xhttp
   reality-opts:
     public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
-- name: 🇺🇸 США VLESS-18.239.134.69-004
-  type: vless
-  server: 18.239.134.69
-  port: 80
-  uuid: de27291c-15a9-4256-9ba7-ad517569877e
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: qq
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: d2e1v87ko56lyw.cloudfront.net:assets.opensignal.com
-- name: 🇷🇺 Россия VLESS-77.110.104.125-005
-  type: vless
-  server: 77.110.104.125
-  port: 443
-  uuid: e0b9fb0f-1bbd-478b-9580-c2294778338b
-  udp: true
-  encryption: none
-  tls: true
-  servername: maps.apple.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: your-custom-path
-  reality-opts:
-    public-key: gr7DAOBqoNiHEUhWZQh3nSqBOmg6QwmRC0HKj7TOsUk
-    short-id: 2da4299da566b7
 - name: 🇷🇺 Россия VLESS-77.110.104.125-006
   type: vless
   server: 77.110.104.125
@@ -95,30 +93,49 @@ proxies:
   reality-opts:
     public-key: OMlQAFrCMZ3DX0xlnbEZiByLBFzpUE8XJHJsrBzLdlY
     short-id: 2da4299da566b7
+- name: 🇷🇺 Россия VLESS-77.110.104.125-007
+  type: vless
+  server: 77.110.104.125
+  port: 443
+  uuid: e0b9fb0f-1bbd-478b-9580-c2294778338b
+  udp: true
+  encryption: none
+  tls: true
+  servername: maps.apple.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: your-custom-path
+  reality-opts:
+    public-key: gr7DAOBqoNiHEUhWZQh3nSqBOmg6QwmRC0HKj7TOsUk
+    short-id: 2da4299da566b7
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇵🇱 Польша VLESS-94.183.209.33-001
-  - 🇺🇸 США VLESS-2.27.201.153-002
-  - 🇺🇸 США VLESS-31.76.89.110-003
-  - 🇺🇸 США VLESS-18.239.134.69-004
-  - 🇷🇺 Россия VLESS-77.110.104.125-005
+  - 🇺🇸 США VLESS-18.239.134.69-001
+  - 🇵🇱 Польша VLESS-94.183.209.33-002
+  - 🇷🇺 Россия VLESS-178.72.167.151-003
+  - 🇺🇸 США VLESS-2.27.201.153-004
+  - 🇺🇸 США VLESS-31.76.89.110-005
   - 🇷🇺 Россия VLESS-77.110.104.125-006
+  - 🇷🇺 Россия VLESS-77.110.104.125-007
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇵🇱 Польша VLESS-94.183.209.33-001
-  - 🇺🇸 США VLESS-2.27.201.153-002
-  - 🇺🇸 США VLESS-31.76.89.110-003
-  - 🇺🇸 США VLESS-18.239.134.69-004
-  - 🇷🇺 Россия VLESS-77.110.104.125-005
+  - 🇺🇸 США VLESS-18.239.134.69-001
+  - 🇵🇱 Польша VLESS-94.183.209.33-002
+  - 🇷🇺 Россия VLESS-178.72.167.151-003
+  - 🇺🇸 США VLESS-2.27.201.153-004
+  - 🇺🇸 США VLESS-31.76.89.110-005
   - 🇷🇺 Россия VLESS-77.110.104.125-006
+  - 🇷🇺 Россия VLESS-77.110.104.125-007
 rule-providers:
   ru-rules:
     type: http
