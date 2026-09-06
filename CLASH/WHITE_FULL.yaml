@@ -12,15 +12,15 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: fedora.ubuntuhosting.host
+  servername: manjaro.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: dAzTVezR-Q0P42QeJb-LDlYdqkGKSuMgIZcvSQSF3EE
-    short-id: 3a2c
+    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
+    short-id: b6549e
 - name: 🇷🇺 Россия VLESS-5.182.5.43-002
   type: vless
   server: 5.182.5.43
@@ -29,22 +29,37 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: ubuntu.ubuntuhosting.host
+  servername: centos.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: dEdb0K8U-uTlYx8OAyuaFFbwiL0eS7ZuVsPAYdZUvyk
-    short-id: da56c61d54d9cc0d
-- name: 🇸🇨 SC SS-45.207.207.25-003
+    public-key: xSBUeRP0UXGevxr3zKTskWvYG6vJSjlZYc4lYIIurmU
+    short-id: f21efdb93dac057d
+- name: 🇺🇸 США SS-65.49.217.190-003
   type: ss
-  server: 45.207.207.25
-  port: 443
+  server: 65.49.217.190
+  port: 23456
   cipher: aes-256-gcm
-  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
+  password: N2JiY2IxNjU3ZDg3
   udp: true
+- name: 🇷🇺 Россия VLESS-178.72.167.151-004
+  type: vless
+  server: 178.72.167.151
+  port: 443
+  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
+  udp: true
+  encryption: none
+  tls: true
+  servername: 2gis.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
+    short-id: d45603
 proxy-groups:
 - name: PROXY
   type: select
@@ -53,7 +68,8 @@ proxy-groups:
   - DIRECT
   - 🇷🇺 Россия VLESS-5.182.5.25-001
   - 🇷🇺 Россия VLESS-5.182.5.43-002
-  - 🇸🇨 SC SS-45.207.207.25-003
+  - 🇺🇸 США SS-65.49.217.190-003
+  - 🇷🇺 Россия VLESS-178.72.167.151-004
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -62,7 +78,8 @@ proxy-groups:
   proxies:
   - 🇷🇺 Россия VLESS-5.182.5.25-001
   - 🇷🇺 Россия VLESS-5.182.5.43-002
-  - 🇸🇨 SC SS-45.207.207.25-003
+  - 🇺🇸 США SS-65.49.217.190-003
+  - 🇷🇺 Россия VLESS-178.72.167.151-004
 rule-providers:
   ru-rules:
     type: http

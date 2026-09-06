@@ -3,21 +3,45 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies: []
+proxies:
+- name: 🇺🇸 США SS-65.49.217.190-001
+  type: ss
+  server: 65.49.217.190
+  port: 23456
+  cipher: aes-256-gcm
+  password: N2JiY2IxNjU3ZDg3
+  udp: true
+- name: 🇷🇺 Россия VLESS-178.72.167.151-002
+  type: vless
+  server: 178.72.167.151
+  port: 443
+  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
+  udp: true
+  encryption: none
+  tls: true
+  servername: 2gis.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
+    short-id: d45603
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - DIRECT
+  - 🇺🇸 США SS-65.49.217.190-001
+  - 🇷🇺 Россия VLESS-178.72.167.151-002
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - DIRECT
+  - 🇺🇸 США SS-65.49.217.190-001
+  - 🇷🇺 Россия VLESS-178.72.167.151-002
 rule-providers:
   ru-rules:
     type: http
