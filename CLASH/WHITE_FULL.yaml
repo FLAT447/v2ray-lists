@@ -3,21 +3,66 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies: []
+proxies:
+- name: 🇷🇺 Россия VLESS-5.182.5.25-001
+  type: vless
+  server: 5.182.5.25
+  port: 443
+  uuid: d7430ae7-320c-4658-808b-3006d0627d82
+  udp: true
+  encryption: none
+  tls: true
+  servername: fedora.ubuntuhosting.host
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: gun
+  reality-opts:
+    public-key: dAzTVezR-Q0P42QeJb-LDlYdqkGKSuMgIZcvSQSF3EE
+    short-id: 3a2c
+- name: 🇷🇺 Россия VLESS-5.182.5.43-002
+  type: vless
+  server: 5.182.5.43
+  port: 443
+  uuid: d7430ae7-320c-4658-808b-3006d0627d82
+  udp: true
+  encryption: none
+  tls: true
+  servername: ubuntu.ubuntuhosting.host
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: gun
+  reality-opts:
+    public-key: dEdb0K8U-uTlYx8OAyuaFFbwiL0eS7ZuVsPAYdZUvyk
+    short-id: da56c61d54d9cc0d
+- name: 🇸🇨 SC SS-45.207.207.25-003
+  type: ss
+  server: 45.207.207.25
+  port: 443
+  cipher: aes-256-gcm
+  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - DIRECT
+  - 🇷🇺 Россия VLESS-5.182.5.25-001
+  - 🇷🇺 Россия VLESS-5.182.5.43-002
+  - 🇸🇨 SC SS-45.207.207.25-003
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - DIRECT
+  - 🇷🇺 Россия VLESS-5.182.5.25-001
+  - 🇷🇺 Россия VLESS-5.182.5.43-002
+  - 🇸🇨 SC SS-45.207.207.25-003
 rule-providers:
   ru-rules:
     type: http

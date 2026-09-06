@@ -3,21 +3,153 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies: []
+proxies:
+- name: 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+  type: vless
+  server: nld-0001.api.packet-drop-society.net
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
+- name: 🇺🇸 США VLESS-2.27.201.153-002
+  type: vless
+  server: 2.27.201.153
+  port: 443
+  uuid: b89196b1-7b72-4b81-83d0-e4d4df79f678
+  udp: true
+  encryption: none
+  tls: true
+  servername: nl.yabloko.top
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: lbktagkdektK-9Ow1gSqCtQcd_Xo7oYH3WJ-gOHUpwQ
+    short-id: d6733d5eb4acca42
+- name: 🇺🇸 США VLESS-31.76.89.110-003
+  type: vless
+  server: 31.76.89.110
+  port: 8443
+  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
+  udp: true
+  encryption: none
+  tls: true
+  servername: wikihow.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
+- name: 🇺🇸 США SS-31.76.82.131-004
+  type: ss
+  server: 31.76.82.131
+  port: 34260
+  cipher: chacha20-ietf-poly1305
+  password: cTAObwg4OWWXkZJQs0ZdgC
+  udp: true
+- name: 🇺🇸 США VLESS-31.76.2.148-005
+  type: vless
+  server: 31.76.2.148
+  port: 7443
+  uuid: 7b13a810-7b04-4c3e-83c6-552cdf9c923f
+  udp: true
+  encryption: none
+  tls: true
+  servername: fi-6.kihsuyhf8jkiugsxb.cfd
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc.health.v1.Health
+  reality-opts:
+    public-key: TnNb64tHXkmbV_aHN8g976zEWs4oKPk1iCPkiqnn6AQ
+    short-id: 6b7da59c
+- name: 🇺🇸 США VLESS-31.76.83.145-006
+  type: vless
+  server: 31.76.83.145
+  port: 7443
+  uuid: 7b13a810-7b04-4c3e-83c6-552cdf9c923f
+  udp: true
+  encryption: none
+  tls: true
+  servername: lt-4.kihsuyhf8jkiugsxb.cfd
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc.health.v1.Health
+  reality-opts:
+    public-key: UZGsrm1YEIYM5D_YFQte6xuaId8VSgtd_xZeXGieLDE
+    short-id: 64511bcb
+- name: 🇷🇺 Россия VLESS-77.110.104.125-007
+  type: vless
+  server: 77.110.104.125
+  port: 443
+  uuid: e0b9fb0f-1bbd-478b-9580-c2294778338b
+  udp: true
+  encryption: none
+  tls: true
+  servername: maps.apple.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: your-custom-path
+  reality-opts:
+    public-key: gr7DAOBqoNiHEUhWZQh3nSqBOmg6QwmRC0HKj7TOsUk
+    short-id: 2da4299da566b7
+- name: 🇸🇪 Швеция VLESS-31.77.111.31-008
+  type: vless
+  server: 31.77.111.31
+  port: 43435
+  uuid: 2feda6f7-8baa-4591-a851-1e2037a58572
+  udp: true
+  encryption: none
+  tls: true
+  servername: cdn.higames.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: api
+  reality-opts:
+    public-key: mc5GFUALNT1V4TgYZ4OWJHB2DQ-G-b4qLYsRlgWB-VQ
+    short-id: 37dc4f92a7470fa0
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - DIRECT
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+  - 🇺🇸 США VLESS-2.27.201.153-002
+  - 🇺🇸 США VLESS-31.76.89.110-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇺🇸 США VLESS-31.76.2.148-005
+  - 🇺🇸 США VLESS-31.76.83.145-006
+  - 🇷🇺 Россия VLESS-77.110.104.125-007
+  - 🇸🇪 Швеция VLESS-31.77.111.31-008
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - DIRECT
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+  - 🇺🇸 США VLESS-2.27.201.153-002
+  - 🇺🇸 США VLESS-31.76.89.110-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇺🇸 США VLESS-31.76.2.148-005
+  - 🇺🇸 США VLESS-31.76.83.145-006
+  - 🇷🇺 Россия VLESS-77.110.104.125-007
+  - 🇸🇪 Швеция VLESS-31.77.111.31-008
 rule-providers:
   ru-rules:
     type: http
