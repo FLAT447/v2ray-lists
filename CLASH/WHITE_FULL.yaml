@@ -11,23 +11,13 @@ proxies:
   cipher: aes-256-gcm
   password: N2JiY2IxNjU3ZDg3
   udp: true
-- name: 🇷🇺 Россия VLESS-79.174.92.85-002
-  type: vless
-  server: 79.174.92.85
-  port: 6443
-  uuid: 2324f230-0341-47c7-8aac-8974fd48f0a4
+- name: 🇸🇨 SC SS-45.207.207.25-002
+  type: ss
+  server: 45.207.207.25
+  port: 443
+  cipher: aes-256-gcm
+  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
   udp: true
-  encryption: none
-  tls: true
-  servername: iv.kommersant.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-  reality-opts:
-    public-key: lU1yF2A1b0lM9DZbXWPpLfoU7_KQpXOYX0NFrPEIJy8
-    short-id: bad5722c72a0
 - name: 🇷🇺 Россия VLESS-5.182.5.25-003
   type: vless
   server: 5.182.5.25
@@ -36,15 +26,15 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: manjaro.ubuntuhosting.host
+  servername: slackware.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
-    short-id: b6549e
+    public-key: A4EFCXsK2opMGKRuAAOfUZuj11Vi2O9rdPDk6gpynF4
+    short-id: 3a2c
 - name: 🇷🇺 Россия VLESS-5.182.5.43-004
   type: vless
   server: 5.182.5.43
@@ -53,15 +43,15 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: manjaro.ubuntuhosting.host
+  servername: centos.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
-    short-id: 707c8615b9
+    public-key: xSBUeRP0UXGevxr3zKTskWvYG6vJSjlZYc4lYIIurmU
+    short-id: f21efdb93dac057d
 - name: 🇷🇺 Россия VLESS-178.72.167.151-005
   type: vless
   server: 178.72.167.151
@@ -77,14 +67,7 @@ proxies:
   reality-opts:
     public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
     short-id: d45603
-- name: 🇸🇨 SC SS-45.207.207.25-006
-  type: ss
-  server: 45.207.207.25
-  port: 443
-  cipher: aes-256-gcm
-  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
-  udp: true
-- name: 🇵🇱 Польша VLESS-94.183.209.33-007
+- name: 🇵🇱 Польша VLESS-94.183.209.33-006
   type: vless
   server: 94.183.209.33
   port: 8443
@@ -98,23 +81,6 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇷🇺 Россия VLESS-188.68.216.203-008
-  type: vless
-  server: 188.68.216.203
-  port: 9894
-  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
-  udp: true
-  encryption: none
-  tls: true
-  servername: dl.google.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-tunnel
-  reality-opts:
-    public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
-    short-id: aa
 proxy-groups:
 - name: PROXY
   type: select
@@ -122,13 +88,11 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇺🇸 США SS-65.49.217.190-001
-  - 🇷🇺 Россия VLESS-79.174.92.85-002
+  - 🇸🇨 SC SS-45.207.207.25-002
   - 🇷🇺 Россия VLESS-5.182.5.25-003
   - 🇷🇺 Россия VLESS-5.182.5.43-004
   - 🇷🇺 Россия VLESS-178.72.167.151-005
-  - 🇸🇨 SC SS-45.207.207.25-006
-  - 🇵🇱 Польша VLESS-94.183.209.33-007
-  - 🇷🇺 Россия VLESS-188.68.216.203-008
+  - 🇵🇱 Польша VLESS-94.183.209.33-006
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -136,13 +100,11 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇺🇸 США SS-65.49.217.190-001
-  - 🇷🇺 Россия VLESS-79.174.92.85-002
+  - 🇸🇨 SC SS-45.207.207.25-002
   - 🇷🇺 Россия VLESS-5.182.5.25-003
   - 🇷🇺 Россия VLESS-5.182.5.43-004
   - 🇷🇺 Россия VLESS-178.72.167.151-005
-  - 🇸🇨 SC SS-45.207.207.25-006
-  - 🇵🇱 Польша VLESS-94.183.209.33-007
-  - 🇷🇺 Россия VLESS-188.68.216.203-008
+  - 🇵🇱 Польша VLESS-94.183.209.33-006
 rule-providers:
   ru-rules:
     type: http
