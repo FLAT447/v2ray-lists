@@ -4,30 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США SS-31.76.82.131-001
-  type: ss
-  server: 31.76.82.131
-  port: 34260
-  cipher: chacha20-ietf-poly1305
-  password: cTAObwg4OWWXkZJQs0ZdgC
-  udp: true
-- name: 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-002
-  type: hysteria2
-  server: 31.57.248.176
-  port: 50160
-  password: b0917015b656b3dd2286b5633af0c5c1
-  udp: true
-  sni: 31.57.248.176
-  skip-cert-verify: true
-- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-003
-  type: hysteria2
-  server: vpn-ca-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
-  udp: true
-  sni: vpn-ca-002.fastervpn.world
-  skip-cert-verify: true
-- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
+- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
   type: hysteria2
   server: de-tg.fastlanehosting.ru
   port: 443
@@ -35,33 +12,7 @@ proxies:
   udp: true
   sni: de-tg.fastlanehosting.ru
   skip-cert-verify: true
-- name: 🇺🇸 США VLESS-147.189.129.144-005
-  type: vless
-  server: 147.189.129.144
-  port: 2087
-  uuid: 090a3fa8-973f-4812-9b69-ed982082a933
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /4ad49ed0a3d5
-- name: 🇺🇸 США VLESS-147.189.129.155-006
-  type: vless
-  server: 147.189.129.155
-  port: 2087
-  uuid: 090a3fa8-973f-4812-9b69-ed982082a933
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /4ad49ed0a3d5
-- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-007
+- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-002
   type: vless
   server: 51.158.236.122
   port: 8080
@@ -74,7 +25,7 @@ proxies:
   network: ws
   ws-opts:
     path: /?ed=2048
-- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-008
+- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
   type: hysteria2
   server: cdncache.pleiades.codes
   port: 8443
@@ -88,28 +39,18 @@ proxy-groups:
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США SS-31.76.82.131-001
-  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-002
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-003
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
-  - 🇺🇸 США VLESS-147.189.129.144-005
-  - 🇺🇸 США VLESS-147.189.129.155-006
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-007
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-008
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-002
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США SS-31.76.82.131-001
-  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-002
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-003
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
-  - 🇺🇸 США VLESS-147.189.129.144-005
-  - 🇺🇸 США VLESS-147.189.129.155-006
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-007
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-008
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-002
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
 rule-providers:
   ru-rules:
     type: http
