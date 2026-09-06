@@ -12,7 +12,15 @@ proxies:
   udp: true
   sni: de-tg.fastlanehosting.ru
   skip-cert-verify: true
-- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-002
+- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
+  type: hysteria2
+  server: cdncache.pleiades.codes
+  port: 8443
+  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
+  udp: true
+  sni: cdncache.pleiades.codes
+  skip-cert-verify: true
+- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-003
   type: vless
   server: 51.158.236.122
   port: 8080
@@ -25,14 +33,6 @@ proxies:
   network: ws
   ws-opts:
     path: /?ed=2048
-- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
-  type: hysteria2
-  server: cdncache.pleiades.codes
-  port: 8443
-  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
-  udp: true
-  sni: cdncache.pleiades.codes
-  skip-cert-verify: true
 proxy-groups:
 - name: PROXY
   type: select
@@ -40,8 +40,8 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-002
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-003
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -49,8 +49,8 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-002
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-003
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-003
 rule-providers:
   ru-rules:
     type: http

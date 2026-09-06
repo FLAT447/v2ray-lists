@@ -4,13 +4,24 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США SS-31.76.82.131-001
-  type: ss
-  server: 31.76.82.131
-  port: 34260
-  cipher: chacha20-ietf-poly1305
-  password: cTAObwg4OWWXkZJQs0ZdgC
+- name: 🇷🇺 Россия VLESS-46.8.209.137-001
+  type: vless
+  server: 46.8.209.137
+  port: 18083
+  uuid: 7f124cbb-d34c-4f70-b19f-7096a654c30a
   udp: true
+  encryption: none
+  tls: true
+  servername: royalehosting.net
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /api/v3/events/
+    host: royalehosting.net
+  reality-opts:
+    public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
+    short-id: 5f6af0122209fc10
 - name: 🇷🇺 Россия VLESS-84.201.142.221-002
   type: vless
   server: 84.201.142.221
@@ -27,25 +38,49 @@ proxies:
     grpc-service-name: TunService
   reality-opts:
     public-key: wGMBs7bvzyzA0-OUiwSkOOTDEMdxEOsSdRzxiP8GGQY
-- name: 🇷🇺 Россия VLESS-46.8.209.137-003
+- name: 🇷🇺 Россия VLESS-79.174.92.85-003
   type: vless
-  server: 46.8.209.137
-  port: 18083
-  uuid: b9a6cc75-40ac-4bc6-8af5-3dcc1e21c0c4
+  server: 79.174.92.85
+  port: 6443
+  uuid: b7797db2-27fa-4127-a9f7-18ae181a1cb7
   udp: true
   encryption: none
   tls: true
-  servername: royalehosting.net
-  client-fingerprint: edge
+  servername: iv.kommersant.ru
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+  reality-opts:
+    public-key: lU1yF2A1b0lM9DZbXWPpLfoU7_KQpXOYX0NFrPEIJy8
+    short-id: bad5722c72a0
+- name: 🇺🇸 США SS-31.76.82.131-004
+  type: ss
+  server: 31.76.82.131
+  port: 34260
+  cipher: chacha20-ietf-poly1305
+  password: cTAObwg4OWWXkZJQs0ZdgC
+  udp: true
+- name: 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-005
+  type: vless
+  server: nld-0001.api.packet-drop-society.net
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: xhttp
   xhttp-opts:
-    path: /api/v3/events/
-    host: royalehosting.net
+    path: /assets/v2/pkg
+    host: sstats.vk-portal.net
   reality-opts:
-    public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
-    short-id: 5f6af0122209fc10
-- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
+- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-006
   type: hysteria2
   server: de-tg.fastlanehosting.ru
   port: 443
@@ -53,7 +88,15 @@ proxies:
   udp: true
   sni: de-tg.fastlanehosting.ru
   skip-cert-verify: true
-- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-005
+- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-007
+  type: hysteria2
+  server: cdncache.pleiades.codes
+  port: 8443
+  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
+  udp: true
+  sni: cdncache.pleiades.codes
+  skip-cert-verify: true
+- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-008
   type: vless
   server: 51.158.236.122
   port: 8080
@@ -66,15 +109,7 @@ proxies:
   network: ws
   ws-opts:
     path: /?ed=2048
-- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
-  type: hysteria2
-  server: cdncache.pleiades.codes
-  port: 8443
-  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
-  udp: true
-  sni: cdncache.pleiades.codes
-  skip-cert-verify: true
-- name: 🇺🇸 США VLESS-147.189.129.155-007
+- name: 🇺🇸 США VLESS-147.189.129.155-009
   type: vless
   server: 147.189.129.155
   port: 2087
@@ -93,26 +128,30 @@ proxy-groups:
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇷🇺 Россия VLESS-46.8.209.137-001
   - 🇷🇺 Россия VLESS-84.201.142.221-002
-  - 🇷🇺 Россия VLESS-46.8.209.137-003
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-005
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
-  - 🇺🇸 США VLESS-147.189.129.155-007
+  - 🇷🇺 Россия VLESS-79.174.92.85-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-005
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-006
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-007
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-008
+  - 🇺🇸 США VLESS-147.189.129.155-009
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇷🇺 Россия VLESS-46.8.209.137-001
   - 🇷🇺 Россия VLESS-84.201.142.221-002
-  - 🇷🇺 Россия VLESS-46.8.209.137-003
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-004
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-005
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
-  - 🇺🇸 США VLESS-147.189.129.155-007
+  - 🇷🇺 Россия VLESS-79.174.92.85-003
+  - 🇺🇸 США SS-31.76.82.131-004
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-005
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-006
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-007
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-008
+  - 🇺🇸 США VLESS-147.189.129.155-009
 rule-providers:
   ru-rules:
     type: http
