@@ -4,62 +4,44 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США SS-65.49.217.190-001
-  type: ss
-  server: 65.49.217.190
-  port: 23456
-  cipher: aes-256-gcm
-  password: N2JiY2IxNjU3ZDg3
-  udp: true
-- name: 🇷🇺 Россия VLESS-5.182.5.25-002
-  type: vless
-  server: 5.182.5.25
-  port: 443
-  uuid: d7430ae7-320c-4658-808b-3006d0627d82
-  udp: true
-  encryption: none
-  tls: true
-  servername: slackware.ubuntuhosting.host
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gun
-  reality-opts:
-    public-key: A4EFCXsK2opMGKRuAAOfUZuj11Vi2O9rdPDk6gpynF4
-    short-id: 3a2c
-- name: 🇷🇺 Россия SS-130.49.189.158-003
-  type: ss
-  server: 130.49.189.158
-  port: 43558
-  cipher: chacha20-ietf-poly1305
-  password: nEefHwLLpCcvZliayaa1+t/VHJgVt8nP7TxiPOJM6IE=
-  udp: true
-- name: 🇷🇺 Россия VLESS-5.182.5.43-004
-  type: vless
-  server: 5.182.5.43
-  port: 443
-  uuid: d7430ae7-320c-4658-808b-3006d0627d82
-  udp: true
-  encryption: none
-  tls: true
-  servername: centos.ubuntuhosting.host
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gun
-  reality-opts:
-    public-key: xSBUeRP0UXGevxr3zKTskWvYG6vJSjlZYc4lYIIurmU
-    short-id: f21efdb93dac057d
-- name: 🇺🇸 США SS-31.76.82.131-005
+- name: 🇺🇸 США SS-31.76.82.131-001
   type: ss
   server: 31.76.82.131
   port: 34260
   cipher: chacha20-ietf-poly1305
   password: cTAObwg4OWWXkZJQs0ZdgC
   udp: true
-- name: 🇵🇱 Польша VLESS-94.183.209.33-006
+- name: 🇳🇱 Нидерланды VLESS-94.228.219.175-002
+  type: vless
+  server: 94.228.219.175
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
+- name: 🇳🇱 Нидерланды VLESS-94.228.219.183-003
+  type: vless
+  server: 94.228.219.183
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
+- name: 🇵🇱 Польша VLESS-94.183.209.33-004
   type: vless
   server: 94.183.209.33
   port: 8443
@@ -73,30 +55,35 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
+- name: 🇷🇺 Россия SS-130.49.189.158-005
+  type: ss
+  server: 130.49.189.158
+  port: 43558
+  cipher: chacha20-ietf-poly1305
+  password: nEefHwLLpCcvZliayaa1+t/VHJgVt8nP7TxiPOJM6IE=
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇷🇺 Россия VLESS-5.182.5.25-002
-  - 🇷🇺 Россия SS-130.49.189.158-003
-  - 🇷🇺 Россия VLESS-5.182.5.43-004
-  - 🇺🇸 США SS-31.76.82.131-005
-  - 🇵🇱 Польша VLESS-94.183.209.33-006
+  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇳🇱 Нидерланды VLESS-94.228.219.175-002
+  - 🇳🇱 Нидерланды VLESS-94.228.219.183-003
+  - 🇵🇱 Польша VLESS-94.183.209.33-004
+  - 🇷🇺 Россия SS-130.49.189.158-005
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇷🇺 Россия VLESS-5.182.5.25-002
-  - 🇷🇺 Россия SS-130.49.189.158-003
-  - 🇷🇺 Россия VLESS-5.182.5.43-004
-  - 🇺🇸 США SS-31.76.82.131-005
-  - 🇵🇱 Польша VLESS-94.183.209.33-006
+  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇳🇱 Нидерланды VLESS-94.228.219.175-002
+  - 🇳🇱 Нидерланды VLESS-94.228.219.183-003
+  - 🇵🇱 Польша VLESS-94.183.209.33-004
+  - 🇷🇺 Россия SS-130.49.189.158-005
 rule-providers:
   ru-rules:
     type: http

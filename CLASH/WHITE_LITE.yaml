@@ -4,20 +4,28 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США SS-65.49.217.190-001
-  type: ss
-  server: 65.49.217.190
-  port: 23456
-  cipher: aes-256-gcm
-  password: N2JiY2IxNjU3ZDg3
-  udp: true
-- name: 🇺🇸 США SS-31.76.82.131-002
+- name: 🇺🇸 США SS-31.76.82.131-001
   type: ss
   server: 31.76.82.131
   port: 34260
   cipher: chacha20-ietf-poly1305
   password: cTAObwg4OWWXkZJQs0ZdgC
   udp: true
+- name: 🇳🇱 Нидерланды VLESS-94.228.219.183-002
+  type: vless
+  server: 94.228.219.183
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
 - name: 🇵🇱 Польша VLESS-94.183.209.33-003
   type: vless
   server: 94.183.209.33
@@ -32,24 +40,33 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
+- name: 🇷🇺 Россия SS-130.49.189.158-004
+  type: ss
+  server: 130.49.189.158
+  port: 43558
+  cipher: chacha20-ietf-poly1305
+  password: nEefHwLLpCcvZliayaa1+t/VHJgVt8nP7TxiPOJM6IE=
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇺🇸 США SS-31.76.82.131-002
+  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇳🇱 Нидерланды VLESS-94.228.219.183-002
   - 🇵🇱 Польша VLESS-94.183.209.33-003
+  - 🇷🇺 Россия SS-130.49.189.158-004
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇺🇸 США SS-31.76.82.131-002
+  - 🇺🇸 США SS-31.76.82.131-001
+  - 🇳🇱 Нидерланды VLESS-94.228.219.183-002
   - 🇵🇱 Польша VLESS-94.183.209.33-003
+  - 🇷🇺 Россия SS-130.49.189.158-004
 rule-providers:
   ru-rules:
     type: http
