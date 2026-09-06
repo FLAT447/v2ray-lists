@@ -19,16 +19,23 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: fedora.ubuntuhosting.host
+  servername: slackware.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: dAzTVezR-Q0P42QeJb-LDlYdqkGKSuMgIZcvSQSF3EE
+    public-key: A4EFCXsK2opMGKRuAAOfUZuj11Vi2O9rdPDk6gpynF4
     short-id: 3a2c
-- name: 🇷🇺 Россия VLESS-5.182.5.43-003
+- name: 🇷🇺 Россия SS-130.49.189.158-003
+  type: ss
+  server: 130.49.189.158
+  port: 43558
+  cipher: chacha20-ietf-poly1305
+  password: nEefHwLLpCcvZliayaa1+t/VHJgVt8nP7TxiPOJM6IE=
+  udp: true
+- name: 🇷🇺 Россия VLESS-5.182.5.43-004
   type: vless
   server: 5.182.5.43
   port: 443
@@ -36,23 +43,23 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: manjaro.ubuntuhosting.host
-  client-fingerprint: edge
+  servername: centos.ubuntuhosting.host
+  client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
-    short-id: 707c8615b9
-- name: 🇷🇺 Россия SS-130.49.189.158-004
+    public-key: xSBUeRP0UXGevxr3zKTskWvYG6vJSjlZYc4lYIIurmU
+    short-id: f21efdb93dac057d
+- name: 🇺🇸 США SS-31.76.82.131-005
   type: ss
-  server: 130.49.189.158
-  port: 43558
+  server: 31.76.82.131
+  port: 34260
   cipher: chacha20-ietf-poly1305
-  password: nEefHwLLpCcvZliayaa1+t/VHJgVt8nP7TxiPOJM6IE=
+  password: cTAObwg4OWWXkZJQs0ZdgC
   udp: true
-- name: 🇵🇱 Польша VLESS-94.183.209.33-005
+- name: 🇵🇱 Польша VLESS-94.183.209.33-006
   type: vless
   server: 94.183.209.33
   port: 8443
@@ -66,13 +73,6 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇺🇸 США SS-31.76.82.131-006
-  type: ss
-  server: 31.76.82.131
-  port: 34260
-  cipher: chacha20-ietf-poly1305
-  password: cTAObwg4OWWXkZJQs0ZdgC
-  udp: true
 proxy-groups:
 - name: PROXY
   type: select
@@ -81,10 +81,10 @@ proxy-groups:
   - DIRECT
   - 🇺🇸 США SS-65.49.217.190-001
   - 🇷🇺 Россия VLESS-5.182.5.25-002
-  - 🇷🇺 Россия VLESS-5.182.5.43-003
-  - 🇷🇺 Россия SS-130.49.189.158-004
-  - 🇵🇱 Польша VLESS-94.183.209.33-005
-  - 🇺🇸 США SS-31.76.82.131-006
+  - 🇷🇺 Россия SS-130.49.189.158-003
+  - 🇷🇺 Россия VLESS-5.182.5.43-004
+  - 🇺🇸 США SS-31.76.82.131-005
+  - 🇵🇱 Польша VLESS-94.183.209.33-006
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -93,10 +93,10 @@ proxy-groups:
   proxies:
   - 🇺🇸 США SS-65.49.217.190-001
   - 🇷🇺 Россия VLESS-5.182.5.25-002
-  - 🇷🇺 Россия VLESS-5.182.5.43-003
-  - 🇷🇺 Россия SS-130.49.189.158-004
-  - 🇵🇱 Польша VLESS-94.183.209.33-005
-  - 🇺🇸 США SS-31.76.82.131-006
+  - 🇷🇺 Россия SS-130.49.189.158-003
+  - 🇷🇺 Россия VLESS-5.182.5.43-004
+  - 🇺🇸 США SS-31.76.82.131-005
+  - 🇵🇱 Польша VLESS-94.183.209.33-006
 rule-providers:
   ru-rules:
     type: http

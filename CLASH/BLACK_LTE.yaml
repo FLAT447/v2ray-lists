@@ -4,21 +4,20 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+- name: 🇺🇸 США VLESS-31.76.89.110-001
   type: vless
-  server: nld-0001.api.packet-drop-society.net
-  port: 443
-  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  server: 31.76.89.110
+  port: 8443
+  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
   udp: true
   encryption: none
   tls: true
-  servername: sstats.vk-portal.net
-  client-fingerprint: edge
+  servername: wikihow.com
+  client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: xhttp
   reality-opts:
-    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
-    short-id: f79448a30d
+    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
 - name: 🇵🇱 Польша VLESS-94.183.209.33-002
   type: vless
   server: 94.183.209.33
@@ -33,21 +32,7 @@ proxies:
   reality-opts:
     public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
     short-id: bafa6f22a3
-- name: 🇺🇸 США VLESS-31.76.89.110-003
-  type: vless
-  server: 31.76.89.110
-  port: 8443
-  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
-  udp: true
-  encryption: none
-  tls: true
-  servername: wikihow.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  reality-opts:
-    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
-- name: 🇷🇺 Россия VLESS-46.8.209.137-004
+- name: 🇷🇺 Россия VLESS-46.8.209.137-003
   type: vless
   server: 46.8.209.137
   port: 18083
@@ -62,26 +47,41 @@ proxies:
   reality-opts:
     public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
     short-id: 5f6af0122209fc10
-- name: 🇺🇸 США VLESS-31.76.2.148-005
+- name: 🇳🇱 Нидерланды VLESS-94.228.219.175-004
   type: vless
-  server: 31.76.2.148
+  server: 94.228.219.175
+  port: 443
+  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
+  udp: true
+  encryption: none
+  tls: true
+  servername: sstats.vk-portal.net
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: xhttp
+  reality-opts:
+    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
+    short-id: f79448a30d
+- name: 🇺🇸 США VLESS-31.76.83.145-005
+  type: vless
+  server: 31.76.83.145
   port: 7443
   uuid: 7b13a810-7b04-4c3e-83c6-552cdf9c923f
   udp: true
   encryption: none
   tls: true
-  servername: fi-6.kihsuyhf8jkiugsxb.cfd
+  servername: lt-4.kihsuyhf8jkiugsxb.cfd
   client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: grpc.health.v1.Health
   reality-opts:
-    public-key: TnNb64tHXkmbV_aHN8g976zEWs4oKPk1iCPkiqnn6AQ
-    short-id: 6b7da59c
-- name: 🇳🇱 Нидерланды VLESS-94.228.219.175-006
+    public-key: UZGsrm1YEIYM5D_YFQte6xuaId8VSgtd_xZeXGieLDE
+    short-id: 64511bcb
+- name: 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-006
   type: vless
-  server: 94.228.219.175
+  server: nld-0001.api.packet-drop-society.net
   port: 443
   uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
   udp: true
@@ -94,30 +94,49 @@ proxies:
   reality-opts:
     public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
     short-id: f79448a30d
+- name: 🇳🇱 Нидерланды VLESS-217.177.73.152-007
+  type: vless
+  server: 217.177.73.152
+  port: 7443
+  uuid: 7b13a810-7b04-4c3e-83c6-552cdf9c923f
+  udp: true
+  encryption: none
+  tls: true
+  servername: gemini.kihsuyhf8jkiugsxb.cfd
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc.health.v1.Health
+  reality-opts:
+    public-key: MHjbx9fLVGn-iphhITMRv2u7KaT_em2sR862l1cGNF0
+    short-id: bccbd1a6
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+  - 🇺🇸 США VLESS-31.76.89.110-001
   - 🇵🇱 Польша VLESS-94.183.209.33-002
-  - 🇺🇸 США VLESS-31.76.89.110-003
-  - 🇷🇺 Россия VLESS-46.8.209.137-004
-  - 🇺🇸 США VLESS-31.76.2.148-005
-  - 🇳🇱 Нидерланды VLESS-94.228.219.175-006
+  - 🇷🇺 Россия VLESS-46.8.209.137-003
+  - 🇳🇱 Нидерланды VLESS-94.228.219.175-004
+  - 🇺🇸 США VLESS-31.76.83.145-005
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-006
+  - 🇳🇱 Нидерланды VLESS-217.177.73.152-007
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-001
+  - 🇺🇸 США VLESS-31.76.89.110-001
   - 🇵🇱 Польша VLESS-94.183.209.33-002
-  - 🇺🇸 США VLESS-31.76.89.110-003
-  - 🇷🇺 Россия VLESS-46.8.209.137-004
-  - 🇺🇸 США VLESS-31.76.2.148-005
-  - 🇳🇱 Нидерланды VLESS-94.228.219.175-006
+  - 🇷🇺 Россия VLESS-46.8.209.137-003
+  - 🇳🇱 Нидерланды VLESS-94.228.219.175-004
+  - 🇺🇸 США VLESS-31.76.83.145-005
+  - 🇳🇱 Нидерланды VLESS-nld-0001.api.packet-drop-society.net-006
+  - 🇳🇱 Нидерланды VLESS-217.177.73.152-007
 rule-providers:
   ru-rules:
     type: http
