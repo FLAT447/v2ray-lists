@@ -3,108 +3,21 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies:
-- name: 🇸🇨 SC SS-45.207.207.25-001
-  type: ss
-  server: 45.207.207.25
-  port: 443
-  cipher: aes-256-gcm
-  password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
-  udp: true
-- name: 🇺🇸 США SS-65.49.217.190-002
-  type: ss
-  server: 65.49.217.190
-  port: 23456
-  cipher: aes-256-gcm
-  password: N2JiY2IxNjU3ZDg3
-  udp: true
-- name: 🇷🇺 Россия VLESS-5.182.5.25-003
-  type: vless
-  server: 5.182.5.25
-  port: 443
-  uuid: d7430ae7-320c-4658-808b-3006d0627d82
-  udp: true
-  encryption: none
-  tls: true
-  servername: manjaro.ubuntuhosting.host
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gun
-  reality-opts:
-    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
-    short-id: b6549e
-- name: 🇷🇺 Россия VLESS-5.182.5.43-004
-  type: vless
-  server: 5.182.5.43
-  port: 443
-  uuid: d7430ae7-320c-4658-808b-3006d0627d82
-  udp: true
-  encryption: none
-  tls: true
-  servername: manjaro.ubuntuhosting.host
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gun
-  reality-opts:
-    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
-    short-id: 707c8615b9
-- name: 🇷🇺 Россия VLESS-178.72.167.151-005
-  type: vless
-  server: 178.72.167.151
-  port: 443
-  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
-  udp: true
-  encryption: none
-  tls: true
-  servername: 2gis.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  reality-opts:
-    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
-    short-id: d45603
-- name: 🇵🇱 Польша VLESS-94.183.209.33-006
-  type: vless
-  server: 94.183.209.33
-  port: 8443
-  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
-  udp: true
-  encryption: none
-  tls: true
-  servername: timeline.www.cloudflare.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
-    short-id: bafa6f22a3
+proxies: []
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇸🇨 SC SS-45.207.207.25-001
-  - 🇺🇸 США SS-65.49.217.190-002
-  - 🇷🇺 Россия VLESS-5.182.5.25-003
-  - 🇷🇺 Россия VLESS-5.182.5.43-004
-  - 🇷🇺 Россия VLESS-178.72.167.151-005
-  - 🇵🇱 Польша VLESS-94.183.209.33-006
+  - DIRECT
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇸🇨 SC SS-45.207.207.25-001
-  - 🇺🇸 США SS-65.49.217.190-002
-  - 🇷🇺 Россия VLESS-5.182.5.25-003
-  - 🇷🇺 Россия VLESS-5.182.5.43-004
-  - 🇷🇺 Россия VLESS-178.72.167.151-005
-  - 🇵🇱 Польша VLESS-94.183.209.33-006
+  - DIRECT
 rule-providers:
   ru-rules:
     type: http

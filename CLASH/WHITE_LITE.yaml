@@ -3,52 +3,21 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies:
-- name: 🇷🇺 Россия VLESS-178.72.167.151-001
-  type: vless
-  server: 178.72.167.151
-  port: 443
-  uuid: d7ff1a6d-529e-4260-aa46-3c8a7fd681f4
-  udp: true
-  encryption: none
-  tls: true
-  servername: 2gis.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  reality-opts:
-    public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
-    short-id: d45603
-- name: 🇵🇱 Польша VLESS-94.183.209.33-002
-  type: vless
-  server: 94.183.209.33
-  port: 8443
-  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
-  udp: true
-  encryption: none
-  tls: true
-  servername: timeline.www.cloudflare.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
-    short-id: bafa6f22a3
+proxies: []
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-178.72.167.151-001
-  - 🇵🇱 Польша VLESS-94.183.209.33-002
+  - DIRECT
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-178.72.167.151-001
-  - 🇵🇱 Польша VLESS-94.183.209.33-002
+  - DIRECT
 rule-providers:
   ru-rules:
     type: http
