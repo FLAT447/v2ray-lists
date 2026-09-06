@@ -4,19 +4,19 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США SS-65.49.217.190-001
-  type: ss
-  server: 65.49.217.190
-  port: 23456
-  cipher: aes-256-gcm
-  password: N2JiY2IxNjU3ZDg3
-  udp: true
-- name: 🇸🇨 SC SS-45.207.207.25-002
+- name: 🇸🇨 SC SS-45.207.207.25-001
   type: ss
   server: 45.207.207.25
   port: 443
   cipher: aes-256-gcm
   password: gj1+XKulKV0nmw6IThckOkkJh5DSM7+C
+  udp: true
+- name: 🇺🇸 США SS-65.49.217.190-002
+  type: ss
+  server: 65.49.217.190
+  port: 23456
+  cipher: aes-256-gcm
+  password: N2JiY2IxNjU3ZDg3
   udp: true
 - name: 🇷🇺 Россия VLESS-5.182.5.25-003
   type: vless
@@ -26,15 +26,15 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: slackware.ubuntuhosting.host
+  servername: manjaro.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: A4EFCXsK2opMGKRuAAOfUZuj11Vi2O9rdPDk6gpynF4
-    short-id: 3a2c
+    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
+    short-id: b6549e
 - name: 🇷🇺 Россия VLESS-5.182.5.43-004
   type: vless
   server: 5.182.5.43
@@ -43,15 +43,15 @@ proxies:
   udp: true
   encryption: none
   tls: true
-  servername: centos.ubuntuhosting.host
+  servername: manjaro.ubuntuhosting.host
   client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
     grpc-service-name: gun
   reality-opts:
-    public-key: xSBUeRP0UXGevxr3zKTskWvYG6vJSjlZYc4lYIIurmU
-    short-id: f21efdb93dac057d
+    public-key: zf3ef0JigS7_dPvUs19tqLTznInJdI1KH1vRE15f3Fk
+    short-id: 707c8615b9
 - name: 🇷🇺 Россия VLESS-178.72.167.151-005
   type: vless
   server: 178.72.167.151
@@ -87,8 +87,8 @@ proxy-groups:
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇸🇨 SC SS-45.207.207.25-002
+  - 🇸🇨 SC SS-45.207.207.25-001
+  - 🇺🇸 США SS-65.49.217.190-002
   - 🇷🇺 Россия VLESS-5.182.5.25-003
   - 🇷🇺 Россия VLESS-5.182.5.43-004
   - 🇷🇺 Россия VLESS-178.72.167.151-005
@@ -99,8 +99,8 @@ proxy-groups:
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США SS-65.49.217.190-001
-  - 🇸🇨 SC SS-45.207.207.25-002
+  - 🇸🇨 SC SS-45.207.207.25-001
+  - 🇺🇸 США SS-65.49.217.190-002
   - 🇷🇺 Россия VLESS-5.182.5.25-003
   - 🇷🇺 Россия VLESS-5.182.5.43-004
   - 🇷🇺 Россия VLESS-178.72.167.151-005
