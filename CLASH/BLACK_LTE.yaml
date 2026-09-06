@@ -13,7 +13,7 @@ proxies:
   encryption: none
   tls: true
   servername: iv.kommersant.ru
-  client-fingerprint: firefox
+  client-fingerprint: qq
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
@@ -50,20 +50,20 @@ proxies:
   reality-opts:
     public-key: 54p7hD_YYV5f2ATL7rTBk4NG_KhStO76-1_tSKmXah8
     short-id: d45603
-- name: 🇺🇸 США VLESS-2.27.201.153-004
+- name: 🇺🇸 США VLESS-31.76.89.110-004
   type: vless
-  server: 2.27.201.153
-  port: 443
-  uuid: b89196b1-7b72-4b81-83d0-e4d4df79f678
+  server: 31.76.89.110
+  port: 8443
+  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
   udp: true
   encryption: none
   tls: true
-  servername: nl.yabloko.top
+  servername: wikihow.com
   client-fingerprint: firefox
   flow: xtls-rprx-vision
+  network: xhttp
   reality-opts:
-    public-key: lbktagkdektK-9Ow1gSqCtQcd_Xo7oYH3WJ-gOHUpwQ
-    short-id: d6733d5eb4acca42
+    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
 - name: 🇺🇸 США SS-31.76.82.131-005
   type: ss
   server: 31.76.82.131
@@ -71,23 +71,7 @@ proxies:
   cipher: chacha20-ietf-poly1305
   password: cTAObwg4OWWXkZJQs0ZdgC
   udp: true
-- name: 🇷🇺 Россия VLESS-78.159.240.41-006
-  type: vless
-  server: 78.159.240.41
-  port: 443
-  uuid: 39d927a4-b8c7-4dc7-91f1-8b2e05d8b6b6
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-77.110.104.125-007
+- name: 🇷🇺 Россия VLESS-77.110.104.125-006
   type: vless
   server: 77.110.104.125
   port: 443
@@ -104,6 +88,22 @@ proxies:
   reality-opts:
     public-key: gr7DAOBqoNiHEUhWZQh3nSqBOmg6QwmRC0HKj7TOsUk
     short-id: 2da4299da566b7
+- name: 🇷🇺 Россия VLESS-46.149.71.232-007
+  type: vless
+  server: 46.149.71.232
+  port: 9458
+  uuid: b3a11068-1a7e-4643-85de-7c82cce46943
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.google.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: TunService
+  reality-opts:
+    public-key: wGMBs7bvzyzA0-OUiwSkOOTDEMdxEOsSdRzxiP8GGQY
 proxy-groups:
 - name: PROXY
   type: select
@@ -113,10 +113,10 @@ proxy-groups:
   - 🇷🇺 Россия VLESS-79.174.92.85-001
   - 🇵🇱 Польша VLESS-94.183.209.33-002
   - 🇷🇺 Россия VLESS-178.72.167.151-003
-  - 🇺🇸 США VLESS-2.27.201.153-004
+  - 🇺🇸 США VLESS-31.76.89.110-004
   - 🇺🇸 США SS-31.76.82.131-005
-  - 🇷🇺 Россия VLESS-78.159.240.41-006
-  - 🇷🇺 Россия VLESS-77.110.104.125-007
+  - 🇷🇺 Россия VLESS-77.110.104.125-006
+  - 🇷🇺 Россия VLESS-46.149.71.232-007
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -126,10 +126,10 @@ proxy-groups:
   - 🇷🇺 Россия VLESS-79.174.92.85-001
   - 🇵🇱 Польша VLESS-94.183.209.33-002
   - 🇷🇺 Россия VLESS-178.72.167.151-003
-  - 🇺🇸 США VLESS-2.27.201.153-004
+  - 🇺🇸 США VLESS-31.76.89.110-004
   - 🇺🇸 США SS-31.76.82.131-005
-  - 🇷🇺 Россия VLESS-78.159.240.41-006
-  - 🇷🇺 Россия VLESS-77.110.104.125-007
+  - 🇷🇺 Россия VLESS-77.110.104.125-006
+  - 🇷🇺 Россия VLESS-46.149.71.232-007
 rule-providers:
   ru-rules:
     type: http
