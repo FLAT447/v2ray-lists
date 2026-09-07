@@ -4,15 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-001
-  type: hysteria2
-  server: ru1.xiaoliyu.cyou
-  port: 4433
-  password: 19f72087-4591-4d72-930b-2697078ec2be
-  udp: true
-  sni: ru1.xiaoliyu.cyou
-  skip-cert-verify: true
-- name: 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-002
+- name: 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-001
   type: hysteria2
   server: vpn-au-002.fastervpn.world
   port: 443
@@ -22,35 +14,32 @@ proxies:
   skip-cert-verify: true
   up: '10'
   down: '50'
-- name: 🇬🇧 Великобритания VLESS-188.220.67.140-003
-  type: vless
-  server: 188.220.67.140
-  port: 2087
-  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
+- name: 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-002
+  type: hysteria2
+  server: ru1.xiaoliyu.cyou
+  port: 4433
+  password: 19f72087-4591-4d72-930b-2697078ec2be
   udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /8f2690e2d016
-- name: 🇦🇪 ОАЭ VLESS-151.243.182.249-004
+  sni: ru1.xiaoliyu.cyou
+  skip-cert-verify: true
+- name: 🇭🇰 Гонконг VLESS-58.153.149.33-003
   type: vless
-  server: 151.243.182.249
+  server: 58.153.149.33
   port: 443
-  uuid: 98673856-cd6f-4aa0-b2c9-d2ec90c0f47b
+  uuid: 3085fcf8-a69c-11ec-bd7c-f23c913c8d2b
   udp: true
   encryption: none
-  tls: false
-  servername: ''
+  tls: true
+  servername: updates.cdn-apple.com
   client-fingerprint: firefox
-  network: ws
-- name: 🇬🇧 Великобритания VLESS-188.220.67.224-005
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: bE6ws6dFPflj8WVJMGwtso0WOaiSmBOHM2muQO2Uul4
+- name: 🇳🇱 Нидерланды VLESS-163.172.214.188-004
   type: vless
-  server: 188.220.67.224
-  port: 2087
-  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
+  server: 163.172.214.188
+  port: 80
+  uuid: 40cc9b52-25b8-4cd5-8b45-715ae26e6baf
   udp: true
   encryption: none
   tls: false
@@ -58,8 +47,8 @@ proxies:
   client-fingerprint: firefox
   network: ws
   ws-opts:
-    path: /8f2690e2d016
-- name: 🇱🇻 Латвия VLESS-89.36.161.222-006
+    path: /vless/
+- name: 🇱🇻 Латвия VLESS-89.36.161.222-005
   type: vless
   server: 89.36.161.222
   port: 2096
@@ -74,20 +63,7 @@ proxies:
     path: /
     headers:
       Host: laoye.in-gect.fun
-- name: 🇭🇰 Гонконг VLESS-58.153.149.33-007
-  type: vless
-  server: 58.153.149.33
-  port: 443
-  uuid: 3085fcf8-a69c-11ec-bd7c-f23c913c8d2b
-  udp: true
-  encryption: none
-  tls: true
-  servername: updates.cdn-apple.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: bE6ws6dFPflj8WVJMGwtso0WOaiSmBOHM2muQO2Uul4
-- name: 🇱🇻 Латвия VLESS-89.36.161.222-008
+- name: 🇱🇻 Латвия VLESS-89.36.161.222-006
   type: vless
   server: 89.36.161.222
   port: 2096
@@ -100,33 +76,7 @@ proxies:
   network: ws
   ws-opts:
     path: /
-- name: 🇳🇱 Нидерланды VLESS-163.172.214.188-009
-  type: vless
-  server: 163.172.214.188
-  port: 80
-  uuid: 40cc9b52-25b8-4cd5-8b45-715ae26e6baf
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /vless/
-- name: 🇳🇱 Нидерланды VLESS-31.76.76.28-010
-  type: vless
-  server: 31.76.76.28
-  port: 443
-  uuid: de5906f3-df38-4463-aa9d-2b01320cc6ea
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /
-- name: 🇦🇪 ОАЭ VLESS-151.243.182.249-011
+- name: 🇦🇪 ОАЭ VLESS-151.243.182.249-007
   type: vless
   server: 151.243.182.249
   port: 443
@@ -137,20 +87,20 @@ proxies:
   servername: ''
   client-fingerprint: firefox
   network: ws
-  ws-opts:
-    path: /
-- name: 🇫🇷 Франция VLESS-45.144.28.39-012
+- name: 🇩🇪 Германия VLESS-163.8.195.241-008
   type: vless
-  server: 45.144.28.39
-  port: 2096
-  uuid: 70e20b2e-3b1f-4c25-9a3d-9240570391bb
+  server: 163.8.195.241
+  port: 2087
+  uuid: 56ba5d34-ef22-4ba6-8090-4188b807df54
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
   network: ws
-- name: 🇮🇹 Италия VLESS-57.131.32.191-013
+  ws-opts:
+    path: /29c8fed7ca22
+- name: 🇮🇹 Италия VLESS-57.131.32.191-009
   type: vless
   server: 57.131.32.191
   port: 80
@@ -165,7 +115,7 @@ proxies:
     path: /vless/
     headers:
       Host: OV-Italy1.09vpn.com
-- name: 🇵🇭 Филиппины VLESS-149.104.109.17-014
+- name: 🇵🇭 Филиппины VLESS-149.104.109.17-010
   type: vless
   server: 149.104.109.17
   port: 2087
@@ -178,35 +128,7 @@ proxies:
   network: ws
   ws-opts:
     path: /04461917b179
-- name: 🇩🇪 Германия VLESS-163.8.195.241-015
-  type: vless
-  server: 163.8.195.241
-  port: 2087
-  uuid: 56ba5d34-ef22-4ba6-8090-4188b807df54
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /29c8fed7ca22
-- name: 🇩🇪 Германия VLESS-163.8.195.241-016
-  type: vless
-  server: 163.8.195.241
-  port: 2087
-  uuid: 56ba5d34-ef22-4ba6-8090-4188b807df54
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /29c8fed7ca22
-    headers:
-      Host: /?--v2rayNplus--v2rayNplus--v2rayNplus--
-- name: 🇬🇧 Великобритания VLESS-82.24.203.70-017
+- name: 🇬🇧 Великобритания VLESS-82.24.203.70-011
   type: vless
   server: 82.24.203.70
   port: 2087
@@ -219,7 +141,44 @@ proxies:
   network: ws
   ws-opts:
     path: /d51f7fbe4da2
-- name: 🇳🇱 Нидерланды VLESS-163.172.213.174-018
+- name: 🇫🇷 Франция VLESS-45.144.28.39-012
+  type: vless
+  server: 45.144.28.39
+  port: 2096
+  uuid: 70e20b2e-3b1f-4c25-9a3d-9240570391bb
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇬🇧 Великобритания VLESS-188.220.67.140-013
+  type: vless
+  server: 188.220.67.140
+  port: 2087
+  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /8f2690e2d016
+- name: 🇦🇪 ОАЭ VLESS-151.243.182.249-014
+  type: vless
+  server: 151.243.182.249
+  port: 443
+  uuid: 98673856-cd6f-4aa0-b2c9-d2ec90c0f47b
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /
+- name: 🇳🇱 Нидерланды VLESS-163.172.213.174-015
   type: vless
   server: 163.172.213.174
   port: 80
@@ -232,7 +191,7 @@ proxies:
   network: ws
   ws-opts:
     path: /vless/
-- name: 🇨🇦 Канада VLESS-130.94.115.231-019
+- name: 🇨🇦 Канада VLESS-130.94.115.231-016
   type: vless
   server: 130.94.115.231
   port: 2087
@@ -245,11 +204,11 @@ proxies:
   network: ws
   ws-opts:
     path: /721740e567c7
-- name: 🇬🇧 Великобритания VLESS-82.24.203.9-020
+- name: 🇳🇱 Нидерланды VLESS-31.76.76.28-017
   type: vless
-  server: 82.24.203.9
-  port: 2087
-  uuid: 3165b4d0-40f7-4df0-9f59-4c89ccdac92d
+  server: 31.76.76.28
+  port: 443
+  uuid: de5906f3-df38-4463-aa9d-2b01320cc6ea
   udp: true
   encryption: none
   tls: false
@@ -257,8 +216,86 @@ proxies:
   client-fingerprint: firefox
   network: ws
   ws-opts:
-    path: /3bfc3e3ed603
-- name: 🇳🇱 Нидерланды VLESS-51.158.238.49-021
+    path: /
+- name: 🇬🇧 Великобритания VLESS-188.220.67.224-018
+  type: vless
+  server: 188.220.67.224
+  port: 2087
+  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /8f2690e2d016
+- name: 🇵🇱 Польша VLESS-94.183.209.42-019
+  type: vless
+  server: 94.183.209.42
+  port: 443
+  uuid: 84c898c4-6990-4121-ae51-27d989f5ce39
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /
+- name: 🇨🇾 Кипр VLESS-www.csgo.net-020
+  type: vless
+  server: www.csgo.net
+  port: 2095
+  uuid: 86c50e3a-5b87-49dd-bd20-03c7f2735e40
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: fangbinxingnmsl.fuckingnigga.eu.cc
+- name: 🇫🇷 Франция VLESS-ov-france1.09vpn.com-021
+  type: vless
+  server: ov-france1.09vpn.com
+  port: 80
+  uuid: f5c47e9c-914a-4a91-a81e-a5a77bc10fc1
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-france1.09vpn.com
+- name: 🇫🇷 Франция VLESS-45.144.28.39-022
+  type: vless
+  server: 45.144.28.39
+  port: 2096
+  uuid: 70e20b2e-3b1f-4c25-9a3d-9240570391bb
+  udp: true
+  encryption: none
+  tls: false
+  servername: usejh2.neobo-tooth.ru
+  client-fingerprint: firefox
+  network: ws
+- name: 🇵🇱 Польша VLESS-94.183.209.59-023
+  type: vless
+  server: 94.183.209.59
+  port: 443
+  uuid: d23cb516-40db-4aa4-8142-6b45ff882f90
+  udp: true
+  encryption: none
+  tls: false
+  servername: pl4.lckdwn.ru
+  client-fingerprint: firefox
+  network: ws
+- name: 🇳🇱 Нидерланды VLESS-51.158.238.49-024
   type: vless
   server: 51.158.238.49
   port: 8080
@@ -269,60 +306,79 @@ proxies:
   servername: 51.158.238.49
   client-fingerprint: firefox
   network: ws
+- name: 🇦🇪 ОАЭ VLESS-151.243.182.249-025
+  type: vless
+  server: 151.243.182.249
+  port: 443
+  uuid: 98673856-cd6f-4aa0-b2c9-d2ec90c0f47b
+  udp: true
+  encryption: none
+  tls: false
+  servername: pl5.lckdwn.ru
+  client-fingerprint: firefox
+  network: ws
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-001
-  - 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-002
-  - 🇬🇧 Великобритания VLESS-188.220.67.140-003
-  - 🇦🇪 ОАЭ VLESS-151.243.182.249-004
-  - 🇬🇧 Великобритания VLESS-188.220.67.224-005
+  - 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-001
+  - 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-002
+  - 🇭🇰 Гонконг VLESS-58.153.149.33-003
+  - 🇳🇱 Нидерланды VLESS-163.172.214.188-004
+  - 🇱🇻 Латвия VLESS-89.36.161.222-005
   - 🇱🇻 Латвия VLESS-89.36.161.222-006
-  - 🇭🇰 Гонконг VLESS-58.153.149.33-007
-  - 🇱🇻 Латвия VLESS-89.36.161.222-008
-  - 🇳🇱 Нидерланды VLESS-163.172.214.188-009
-  - 🇳🇱 Нидерланды VLESS-31.76.76.28-010
-  - 🇦🇪 ОАЭ VLESS-151.243.182.249-011
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-007
+  - 🇩🇪 Германия VLESS-163.8.195.241-008
+  - 🇮🇹 Италия VLESS-57.131.32.191-009
+  - 🇵🇭 Филиппины VLESS-149.104.109.17-010
+  - 🇬🇧 Великобритания VLESS-82.24.203.70-011
   - 🇫🇷 Франция VLESS-45.144.28.39-012
-  - 🇮🇹 Италия VLESS-57.131.32.191-013
-  - 🇵🇭 Филиппины VLESS-149.104.109.17-014
-  - 🇩🇪 Германия VLESS-163.8.195.241-015
-  - 🇩🇪 Германия VLESS-163.8.195.241-016
-  - 🇬🇧 Великобритания VLESS-82.24.203.70-017
-  - 🇳🇱 Нидерланды VLESS-163.172.213.174-018
-  - 🇨🇦 Канада VLESS-130.94.115.231-019
-  - 🇬🇧 Великобритания VLESS-82.24.203.9-020
-  - 🇳🇱 Нидерланды VLESS-51.158.238.49-021
+  - 🇬🇧 Великобритания VLESS-188.220.67.140-013
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-014
+  - 🇳🇱 Нидерланды VLESS-163.172.213.174-015
+  - 🇨🇦 Канада VLESS-130.94.115.231-016
+  - 🇳🇱 Нидерланды VLESS-31.76.76.28-017
+  - 🇬🇧 Великобритания VLESS-188.220.67.224-018
+  - 🇵🇱 Польша VLESS-94.183.209.42-019
+  - 🇨🇾 Кипр VLESS-www.csgo.net-020
+  - 🇫🇷 Франция VLESS-ov-france1.09vpn.com-021
+  - 🇫🇷 Франция VLESS-45.144.28.39-022
+  - 🇵🇱 Польша VLESS-94.183.209.59-023
+  - 🇳🇱 Нидерланды VLESS-51.158.238.49-024
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-025
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-001
-  - 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-002
-  - 🇬🇧 Великобритания VLESS-188.220.67.140-003
-  - 🇦🇪 ОАЭ VLESS-151.243.182.249-004
-  - 🇬🇧 Великобритания VLESS-188.220.67.224-005
+  - 🇦🇺 Австралия HYSTERIA2-vpn-au-002.fastervpn.world-001
+  - 🇷🇺 Россия HYSTERIA2-ru1.xiaoliyu.cyou-002
+  - 🇭🇰 Гонконг VLESS-58.153.149.33-003
+  - 🇳🇱 Нидерланды VLESS-163.172.214.188-004
+  - 🇱🇻 Латвия VLESS-89.36.161.222-005
   - 🇱🇻 Латвия VLESS-89.36.161.222-006
-  - 🇭🇰 Гонконг VLESS-58.153.149.33-007
-  - 🇱🇻 Латвия VLESS-89.36.161.222-008
-  - 🇳🇱 Нидерланды VLESS-163.172.214.188-009
-  - 🇳🇱 Нидерланды VLESS-31.76.76.28-010
-  - 🇦🇪 ОАЭ VLESS-151.243.182.249-011
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-007
+  - 🇩🇪 Германия VLESS-163.8.195.241-008
+  - 🇮🇹 Италия VLESS-57.131.32.191-009
+  - 🇵🇭 Филиппины VLESS-149.104.109.17-010
+  - 🇬🇧 Великобритания VLESS-82.24.203.70-011
   - 🇫🇷 Франция VLESS-45.144.28.39-012
-  - 🇮🇹 Италия VLESS-57.131.32.191-013
-  - 🇵🇭 Филиппины VLESS-149.104.109.17-014
-  - 🇩🇪 Германия VLESS-163.8.195.241-015
-  - 🇩🇪 Германия VLESS-163.8.195.241-016
-  - 🇬🇧 Великобритания VLESS-82.24.203.70-017
-  - 🇳🇱 Нидерланды VLESS-163.172.213.174-018
-  - 🇨🇦 Канада VLESS-130.94.115.231-019
-  - 🇬🇧 Великобритания VLESS-82.24.203.9-020
-  - 🇳🇱 Нидерланды VLESS-51.158.238.49-021
+  - 🇬🇧 Великобритания VLESS-188.220.67.140-013
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-014
+  - 🇳🇱 Нидерланды VLESS-163.172.213.174-015
+  - 🇨🇦 Канада VLESS-130.94.115.231-016
+  - 🇳🇱 Нидерланды VLESS-31.76.76.28-017
+  - 🇬🇧 Великобритания VLESS-188.220.67.224-018
+  - 🇵🇱 Польша VLESS-94.183.209.42-019
+  - 🇨🇾 Кипр VLESS-www.csgo.net-020
+  - 🇫🇷 Франция VLESS-ov-france1.09vpn.com-021
+  - 🇫🇷 Франция VLESS-45.144.28.39-022
+  - 🇵🇱 Польша VLESS-94.183.209.59-023
+  - 🇳🇱 Нидерланды VLESS-51.158.238.49-024
+  - 🇦🇪 ОАЭ VLESS-151.243.182.249-025
 rule-providers:
   ru-rules:
     type: http

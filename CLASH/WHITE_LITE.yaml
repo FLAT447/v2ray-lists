@@ -12,7 +12,61 @@ proxies:
   udp: true
   sni: de-tg.fastlanehosting.ru
   skip-cert-verify: true
-- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
+- name: 🇬🇧 Великобритания VLESS-82.24.203.2-002
+  type: vless
+  server: 82.24.203.2
+  port: 2087
+  uuid: 3165b4d0-40f7-4df0-9f59-4c89ccdac92d
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /3bfc3e3ed603
+- name: 🇬🇧 Великобритания VLESS-57.129.132.223-003
+  type: vless
+  server: 57.129.132.223
+  port: 80
+  uuid: 9e20b04d-5a81-4e16-b421-01e502f0aac6
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /vless/
+- name: 🇩🇪 Германия VLESS-163.8.195.241-004
+  type: vless
+  server: 163.8.195.241
+  port: 2087
+  uuid: 56ba5d34-ef22-4ba6-8090-4188b807df54
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /29c8fed7ca22
+    headers:
+      Host: /?--v2rayNplus--v2rayNplus--v2rayNplus--
+- name: 🇵🇱 Польша VLESS-94.183.209.42-005
+  type: vless
+  server: 94.183.209.42
+  port: 443
+  uuid: 84c898c4-6990-4121-ae51-27d989f5ce39
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /
+- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
   type: hysteria2
   server: cdncache.pleiades.codes
   port: 8443
@@ -20,7 +74,20 @@ proxies:
   udp: true
   sni: cdncache.pleiades.codes
   skip-cert-verify: true
-- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-003
+- name: 🇬🇧 Великобритания VLESS-82.24.203.9-007
+  type: vless
+  server: 82.24.203.9
+  port: 2087
+  uuid: 3165b4d0-40f7-4df0-9f59-4c89ccdac92d
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /3bfc3e3ed603
+- name: 🇳🇱 Нидерланды VLESS-51.158.236.122-008
   type: vless
   server: 51.158.236.122
   port: 8080
@@ -33,6 +100,45 @@ proxies:
   network: ws
   ws-opts:
     path: /?ed=2048
+- name: 🇩🇪 Германия VLESS-OV-Germany1.09vpn.com-009
+  type: vless
+  server: OV-Germany1.09vpn.com
+  port: 80
+  uuid: 7d74eae4-8a06-4306-a923-ad686f30bf26
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /vless/
+- name: 🇬🇧 Великобритания VLESS-82.24.203.70-010
+  type: vless
+  server: 82.24.203.70
+  port: 2087
+  uuid: 90715c6b-6c65-4466-a50c-234660f1f531
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /d51f7fbe4da2
+- name: 🇬🇧 Великобритания VLESS-188.220.67.198-011
+  type: vless
+  server: 188.220.67.198
+  port: 2087
+  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /8f2690e2d016
 proxy-groups:
 - name: PROXY
   type: select
@@ -40,8 +146,16 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-003
+  - 🇬🇧 Великобритания VLESS-82.24.203.2-002
+  - 🇬🇧 Великобритания VLESS-57.129.132.223-003
+  - 🇩🇪 Германия VLESS-163.8.195.241-004
+  - 🇵🇱 Польша VLESS-94.183.209.42-005
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
+  - 🇬🇧 Великобритания VLESS-82.24.203.9-007
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-008
+  - 🇩🇪 Германия VLESS-OV-Germany1.09vpn.com-009
+  - 🇬🇧 Великобритания VLESS-82.24.203.70-010
+  - 🇬🇧 Великобритания VLESS-188.220.67.198-011
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -49,8 +163,16 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-001
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-002
-  - 🇳🇱 Нидерланды VLESS-51.158.236.122-003
+  - 🇬🇧 Великобритания VLESS-82.24.203.2-002
+  - 🇬🇧 Великобритания VLESS-57.129.132.223-003
+  - 🇩🇪 Германия VLESS-163.8.195.241-004
+  - 🇵🇱 Польша VLESS-94.183.209.42-005
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-006
+  - 🇬🇧 Великобритания VLESS-82.24.203.9-007
+  - 🇳🇱 Нидерланды VLESS-51.158.236.122-008
+  - 🇩🇪 Германия VLESS-OV-Germany1.09vpn.com-009
+  - 🇬🇧 Великобритания VLESS-82.24.203.70-010
+  - 🇬🇧 Великобритания VLESS-188.220.67.198-011
 rule-providers:
   ru-rules:
     type: http
