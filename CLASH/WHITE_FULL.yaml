@@ -4,7 +4,80 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия VLESS-46.8.209.137-001
+- name: 🇨🇦 Канада SS-51.79.64.198-001
+  type: ss
+  server: 51.79.64.198
+  port: 8119
+  cipher: aes-256-gcm
+  password: cdBIDV42DCwnfIN
+  udp: true
+- name: 🇺🇸 США SS-15.204.247.175-002
+  type: ss
+  server: 15.204.247.175
+  port: 8008
+  cipher: aes-256-gcm
+  password: XKFKl2rULjIp74
+  udp: true
+- name: 🇳🇱 Нидерланды VLESS-193.123.36.228-003
+  type: vless
+  server: 193.123.36.228
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇨🇦 Канада SS-51.222.155.113-004
+  type: ss
+  server: 51.222.155.113
+  port: 5601
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇨🇦 Канада SS-51.222.200.165-005
+  type: ss
+  server: 51.222.200.165
+  port: 5000
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇺🇸 США SS-15.204.247.244-006
+  type: ss
+  server: 15.204.247.244
+  port: 4444
+  cipher: aes-256-gcm
+  password: pKEW8JPByTVTLtM
+  udp: true
+- name: 🇳🇱 Нидерланды VLESS-152.70.56.139-007
+  type: vless
+  server: 152.70.56.139
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇷🇺 Россия VLESS-95.163.214.43-008
+  type: vless
+  server: 95.163.214.43
+  port: 443
+  uuid: 88ce17fc-7c6c-43a7-98a4-33fb59697b17
+  udp: true
+  encryption: none
+  tls: true
+  servername: ok.ru
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /api/v1/e0163615
+    host: vk.com
+  reality-opts:
+    public-key: VdG4ntV15FfNWV4rvSny2mvOTSXfOUVKHNC0dOyXY2s
+    short-id: 864fbb122f15b43d
+- name: 🇷🇺 Россия VLESS-46.8.209.137-009
   type: vless
   server: 46.8.209.137
   port: 18083
@@ -22,7 +95,56 @@ proxies:
   reality-opts:
     public-key: a1MdDR-BBYGSzhVAlLdOIPXUWbTRz_YAT_31hEcVe2o
     short-id: 5f6af0122209fc10
-- name: 🇫🇷 Франция VLESS-13.36.74.87-002
+- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-010
+  type: hysteria2
+  server: vpn-ca-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: vpn-ca-002.fastervpn.world
+  skip-cert-verify: true
+- name: 🇺🇸 США VLESS-meow-fin.nethcloud.top-011
+  type: vless
+  server: meow-fin.nethcloud.top
+  port: 8443
+  uuid: 4cbefb4d-328c-411d-bf76-780df1082df8
+  udp: true
+  encryption: none
+  tls: true
+  servername: wikihow.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /
+    host: wikihow.com
+  reality-opts:
+    public-key: p9ISfhV0uZpKSgrK_8R6Mm4A01tWdzpKMlFR2TIj81s
+- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-012
+  type: hysteria2
+  server: de-tg.fastlanehosting.ru
+  port: 443
+  password: M2NbFywBXjS9Ova8SgqRrQkp
+  udp: true
+  sni: de-tg.fastlanehosting.ru
+  skip-cert-verify: true
+- name: 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-013
+  type: hysteria2
+  server: 31.57.248.176
+  port: 50160
+  password: b0917015b656b3dd2286b5633af0c5c1
+  udp: true
+  sni: 31.57.248.176
+  skip-cert-verify: true
+- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-014
+  type: hysteria2
+  server: cdncache.pleiades.codes
+  port: 8443
+  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
+  udp: true
+  sni: cdncache.pleiades.codes
+  skip-cert-verify: true
+- name: 🇫🇷 Франция VLESS-13.36.74.87-015
   type: vless
   server: 13.36.74.87
   port: 22222
@@ -32,286 +154,60 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇷🇺 Россия VLESS-95.163.214.43-003
+- name: 🇳🇱 Нидерланды VLESS-144.21.34.170-016
   type: vless
-  server: 95.163.214.43
-  port: 443
-  uuid: 88ce17fc-7c6c-43a7-98a4-33fb59697b17
-  udp: true
-  encryption: none
-  tls: true
-  servername: ok.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /api/v1/e0163615
-    host: vk.com
-  reality-opts:
-    public-key: VdG4ntV15FfNWV4rvSny2mvOTSXfOUVKHNC0dOyXY2s
-    short-id: 864fbb122f15b43d
-- name: 🇳🇱 Нидерланды VLESS-94.228.219.172-004
-  type: vless
-  server: 94.228.219.172
-  port: 443
-  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
-  udp: true
-  encryption: none
-  tls: true
-  servername: sstats.vk-portal.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /assets/v2/pkg
-    host: sstats.vk-portal.net
-  reality-opts:
-    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
-    short-id: f79448a30d
-- name: 🇳🇱 Нидерланды VLESS-94.228.219.178-005
-  type: vless
-  server: 94.228.219.178
-  port: 443
-  uuid: eb0e3aec-f67f-4fa2-8577-b0bff0484e77
-  udp: true
-  encryption: none
-  tls: true
-  servername: sstats.vk-portal.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /assets/v2/pkg
-    host: sstats.vk-portal.net
-  reality-opts:
-    public-key: mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg
-    short-id: f79448a30d
-- name: 🇬🇧 Великобритания SS-149.102.149.207-006
-  type: ss
-  server: 149.102.149.207
-  port: 443
-  cipher: aes-256-gcm
-  password: LXchLsIwtCeUAUgu
-  udp: true
-- name: 🇵🇱 Польша VLESS-94.183.209.42-007
-  type: vless
-  server: 94.183.209.42
-  port: 443
-  uuid: 84c898c4-6990-4121-ae51-27d989f5ce39
+  server: 144.21.34.170
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /
-- name: 🇪🇪 Эстония VLESS-94.183.170.248-008
-  type: vless
-  server: 94.183.170.248
-  port: 443
-  uuid: 9d9e3421-5652-4804-85ba-238355b948ab
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-- name: 🇬🇧 Великобритания VLESS-188.220.67.198-009
-  type: vless
-  server: 188.220.67.198
-  port: 2087
-  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /8f2690e2d016
-- name: 🇩🇪 Германия SS-2.58.81.221-010
-  type: ss
-  server: 2.58.81.221
-  port: 443
-  cipher: aes-256-gcm
-  password: kKEd0rBrd56Furjz
-  udp: true
-- name: 🇬🇧 Великобритания SS-82.38.31.46-011
-  type: ss
-  server: 82.38.31.46
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇬🇧 Великобритания VLESS-82.24.203.174-012
-  type: vless
-  server: 82.24.203.174
-  port: 2083
-  uuid: f2616bce-337a-4d13-8c58-1b5e71986569
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: chat.deepseek.com
-- name: 🇳🇱 Нидерланды SS-193.29.139.144-013
-  type: ss
-  server: 193.29.139.144
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇬🇧 Великобритания SS-149.102.149.207-014
-  type: ss
-  server: 149.102.149.207
-  port: 80
-  cipher: aes-256-gcm
-  password: LXchLsIwtCeUAUgu
-  udp: true
-- name: 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-015
-  type: hysteria2
-  server: cdncache.pleiades.codes
-  port: 8443
-  password: e0b9fb0f-1bbd-478b-9580-c2294778338b
-  udp: true
-  sni: cdncache.pleiades.codes
-  skip-cert-verify: true
-- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-016
-  type: vless
-  server: bg3.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: bg3.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: home.v1.ApiService
-  reality-opts:
-    public-key: XBfCioniAKXgKYBUVnvBXu80AIaIa4SpAB3w8qeF7Gk
-    short-id: 1be1bd931c98c84a
-- name: 🇺🇸 США SS-15.204.247.175-017
-  type: ss
-  server: 15.204.247.175
-  port: 8008
-  cipher: aes-256-gcm
-  password: XKFKl2rULjIp74
-  udp: true
-- name: 🇬🇧 Великобритания VLESS-57.129.132.223-018
-  type: vless
-  server: 57.129.132.223
-  port: 80
-  uuid: 9e20b04d-5a81-4e16-b421-01e502f0aac6
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /vless/
-- name: 🇬🇧 Великобритания VLESS-82.24.203.2-019
-  type: vless
-  server: 82.24.203.2
-  port: 2087
-  uuid: 3165b4d0-40f7-4df0-9f59-4c89ccdac92d
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /3bfc3e3ed603
-- name: 🇬🇧 Великобритания SS-82.38.31.66-020
-  type: ss
-  server: 82.38.31.66
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇬🇧 Великобритания VLESS-188.220.67.245-021
-  type: vless
-  server: 188.220.67.245
-  port: 2087
-  uuid: 90da514d-8888-4a53-912e-ac2981c8c6ee
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /8f2690e2d016
-- name: 🇬🇧 Великобритания SS-82.38.31.61-022
-  type: ss
-  server: 82.38.31.61
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-46.8.209.137-001
-  - 🇫🇷 Франция VLESS-13.36.74.87-002
-  - 🇷🇺 Россия VLESS-95.163.214.43-003
-  - 🇳🇱 Нидерланды VLESS-94.228.219.172-004
-  - 🇳🇱 Нидерланды VLESS-94.228.219.178-005
-  - 🇬🇧 Великобритания SS-149.102.149.207-006
-  - 🇵🇱 Польша VLESS-94.183.209.42-007
-  - 🇪🇪 Эстония VLESS-94.183.170.248-008
-  - 🇬🇧 Великобритания VLESS-188.220.67.198-009
-  - 🇩🇪 Германия SS-2.58.81.221-010
-  - 🇬🇧 Великобритания SS-82.38.31.46-011
-  - 🇬🇧 Великобритания VLESS-82.24.203.174-012
-  - 🇳🇱 Нидерланды SS-193.29.139.144-013
-  - 🇬🇧 Великобритания SS-149.102.149.207-014
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-015
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-016
-  - 🇺🇸 США SS-15.204.247.175-017
-  - 🇬🇧 Великобритания VLESS-57.129.132.223-018
-  - 🇬🇧 Великобритания VLESS-82.24.203.2-019
-  - 🇬🇧 Великобритания SS-82.38.31.66-020
-  - 🇬🇧 Великобритания VLESS-188.220.67.245-021
-  - 🇬🇧 Великобритания SS-82.38.31.61-022
+  - 🇨🇦 Канада SS-51.79.64.198-001
+  - 🇺🇸 США SS-15.204.247.175-002
+  - 🇳🇱 Нидерланды VLESS-193.123.36.228-003
+  - 🇨🇦 Канада SS-51.222.155.113-004
+  - 🇨🇦 Канада SS-51.222.200.165-005
+  - 🇺🇸 США SS-15.204.247.244-006
+  - 🇳🇱 Нидерланды VLESS-152.70.56.139-007
+  - 🇷🇺 Россия VLESS-95.163.214.43-008
+  - 🇷🇺 Россия VLESS-46.8.209.137-009
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-010
+  - 🇺🇸 США VLESS-meow-fin.nethcloud.top-011
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-012
+  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-013
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-014
+  - 🇫🇷 Франция VLESS-13.36.74.87-015
+  - 🇳🇱 Нидерланды VLESS-144.21.34.170-016
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-46.8.209.137-001
-  - 🇫🇷 Франция VLESS-13.36.74.87-002
-  - 🇷🇺 Россия VLESS-95.163.214.43-003
-  - 🇳🇱 Нидерланды VLESS-94.228.219.172-004
-  - 🇳🇱 Нидерланды VLESS-94.228.219.178-005
-  - 🇬🇧 Великобритания SS-149.102.149.207-006
-  - 🇵🇱 Польша VLESS-94.183.209.42-007
-  - 🇪🇪 Эстония VLESS-94.183.170.248-008
-  - 🇬🇧 Великобритания VLESS-188.220.67.198-009
-  - 🇩🇪 Германия SS-2.58.81.221-010
-  - 🇬🇧 Великобритания SS-82.38.31.46-011
-  - 🇬🇧 Великобритания VLESS-82.24.203.174-012
-  - 🇳🇱 Нидерланды SS-193.29.139.144-013
-  - 🇬🇧 Великобритания SS-149.102.149.207-014
-  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-015
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-016
-  - 🇺🇸 США SS-15.204.247.175-017
-  - 🇬🇧 Великобритания VLESS-57.129.132.223-018
-  - 🇬🇧 Великобритания VLESS-82.24.203.2-019
-  - 🇬🇧 Великобритания SS-82.38.31.66-020
-  - 🇬🇧 Великобритания VLESS-188.220.67.245-021
-  - 🇬🇧 Великобритания SS-82.38.31.61-022
+  - 🇨🇦 Канада SS-51.79.64.198-001
+  - 🇺🇸 США SS-15.204.247.175-002
+  - 🇳🇱 Нидерланды VLESS-193.123.36.228-003
+  - 🇨🇦 Канада SS-51.222.155.113-004
+  - 🇨🇦 Канада SS-51.222.200.165-005
+  - 🇺🇸 США SS-15.204.247.244-006
+  - 🇳🇱 Нидерланды VLESS-152.70.56.139-007
+  - 🇷🇺 Россия VLESS-95.163.214.43-008
+  - 🇷🇺 Россия VLESS-46.8.209.137-009
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-010
+  - 🇺🇸 США VLESS-meow-fin.nethcloud.top-011
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-012
+  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-013
+  - 🇷🇺 Россия HYSTERIA2-cdncache.pleiades.codes-014
+  - 🇫🇷 Франция VLESS-13.36.74.87-015
+  - 🇳🇱 Нидерланды VLESS-144.21.34.170-016
 rule-providers:
   ru-rules:
     type: http
