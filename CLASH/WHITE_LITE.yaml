@@ -4,14 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-001
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
-  udp: true
-  sni: hy.quattro-tech.ru
-- name: 🇬🇧 Великобритания VLESS-66.90.105.210-002
+- name: 🇬🇧 Великобритания VLESS-66.90.105.210-001
   type: vless
   server: 66.90.105.210
   port: 2083
@@ -24,6 +17,13 @@ proxies:
   network: grpc
   grpc-opts:
     grpc-service-name: vless
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  udp: true
+  sni: hy.quattro-tech.ru
 - name: 🇺🇸 США VLESS-107.173.237.146-003
   type: vless
   server: 107.173.237.146
@@ -85,14 +85,30 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-008
+- name: 🇷🇺 Россия VLESS-82.146.56.149-008
+  type: vless
+  server: 82.146.56.149
+  port: 443
+  uuid: b1b3e430-ff52-44b8-b95d-27fa580fbc4f
+  udp: true
+  encryption: none
+  tls: true
+  servername: id.vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless-grpc-reality
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-009
   type: hysteria2
   server: de-tg.fastlanehosting.ru
   port: 443
   password: M2NbFywBXjS9Ova8SgqRrQkp
   udp: true
   sni: de-tg.fastlanehosting.ru
-- name: 🇺🇸 США VLESS-104.21.70.21-009
+- name: 🇺🇸 США VLESS-104.21.70.21-010
   type: vless
   server: 104.21.70.21
   port: 8080
@@ -107,70 +123,7 @@ proxies:
     path: /pyip=ProxyIP.SG.CMLiussss.net
     headers:
       Host: silent-king-06b6.297-842.workers.dev
-- name: 🇨🇦 Канада SS-51.79.85.185-010
-  type: ss
-  server: 51.79.85.185
-  port: 8118
-  cipher: aes-256-gcm
-  password: cdBIDV42DCwnfIN
-  udp: true
-- name: 🇨🇦 Канада SS-51.222.200.165-011
-  type: ss
-  server: 51.222.200.165
-  port: 5000
-  cipher: aes-256-gcm
-  password: Y6R9pAtvxxzmGC
-  udp: true
-- name: 🇺🇸 США VLESS-cdn.snobvpn.online-012
-  type: vless
-  server: cdn.snobvpn.online
-  port: 80
-  uuid: cabd9303-ae32-4d25-86b9-26b312d0f044
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /snob-ws
-- name: 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-013
-  type: vless
-  server: nl.armankhan.shop
-  port: 8443
-  uuid: 4798121a-068d-4bf7-b290-287a2aa81f10
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.cloudflare.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  reality-opts:
-    public-key: RP-llUEvsc-8FhsjGxA0-LOKCbu4z_sylu17aDwDH14
-    short-id: 066d77d9
-- name: 🇯🇵 Япония SS-84.247.155.196-014
-  type: ss
-  server: 84.247.155.196
-  port: 80
-  cipher: aes-256-gcm
-  password: 3eOFeNssde7PYYMv
-  udp: true
-- name: 🇵🇱 Польша VLESS-94.183.209.33-015
-  type: vless
-  server: 94.183.209.33
-  port: 8443
-  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
-  udp: true
-  encryption: none
-  tls: true
-  servername: timeline.www.cloudflare.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
-    short-id: bafa6f22a3
-- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-016
+- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-011
   type: vless
   server: book.jarbook.net
   port: 443
@@ -187,50 +140,147 @@ proxies:
   reality-opts:
     public-key: SiyX5MHMfE_232cYFpidAhU4eBxaoNphSSnNbVc1xnc
     short-id: 085f6d90
+- name: 🇨🇦 Канада SS-51.79.85.185-012
+  type: ss
+  server: 51.79.85.185
+  port: 8118
+  cipher: aes-256-gcm
+  password: cdBIDV42DCwnfIN
+  udp: true
+- name: 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-013
+  type: vless
+  server: nl.armankhan.shop
+  port: 8443
+  uuid: 4798121a-068d-4bf7-b290-287a2aa81f10
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.cloudflare.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  reality-opts:
+    public-key: RP-llUEvsc-8FhsjGxA0-LOKCbu4z_sylu17aDwDH14
+    short-id: 066d77d9
+- name: 🇺🇸 США VLESS-us-1.gsafevpnapi.com-014
+  type: vless
+  server: us-1.gsafevpnapi.com
+  port: 20270
+  uuid: bd0b6458-917b-4b84-9c21-66b8699f4795
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.yahoo.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 9I4kbgR2flpbRraCLQ-C0umbyQO26riRY3-GY-Tp9DE
+    short-id: e67d9a00676f15ac
+- name: 🇺🇸 США VLESS-cdn.snobvpn.online-015
+  type: vless
+  server: cdn.snobvpn.online
+  port: 80
+  uuid: cabd9303-ae32-4d25-86b9-26b312d0f044
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /snob-ws
+- name: 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-016
+  type: vless
+  server: jp-1.gsafevpnapi.com
+  port: 20270
+  uuid: 5416ef6f-b8e5-48e9-87e4-3d5649b2e3e0
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.yahoo.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: l2Wjf_xR2rZYHYmST-zxaYDDj5QhiL9riXa1ozBSjEE
+    short-id: 28500ae15838f905
+- name: 🇯🇵 Япония SS-84.247.155.196-017
+  type: ss
+  server: 84.247.155.196
+  port: 80
+  cipher: aes-256-gcm
+  password: 3eOFeNssde7PYYMv
+  udp: true
+- name: 🇵🇱 Польша VLESS-94.183.209.33-018
+  type: vless
+  server: 94.183.209.33
+  port: 8443
+  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
+  udp: true
+  encryption: none
+  tls: true
+  servername: timeline.www.cloudflare.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
+    short-id: bafa6f22a3
+- name: 🇨🇦 Канада SS-51.222.200.165-019
+  type: ss
+  server: 51.222.200.165
+  port: 5000
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-001
-  - 🇬🇧 Великобритания VLESS-66.90.105.210-002
+  - 🇬🇧 Великобритания VLESS-66.90.105.210-001
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
   - 🇺🇸 США VLESS-107.173.237.146-003
   - 🇬🇧 Великобритания VLESS-66.90.104.42-004
   - 🇷🇺 Россия VLESS-201.24.50.67-005
   - 🇩🇰 Дания SS-38.180.214.110-006
   - 🇩🇪 Германия VLESS-192.248.182.183-007
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-008
-  - 🇺🇸 США VLESS-104.21.70.21-009
-  - 🇨🇦 Канада SS-51.79.85.185-010
-  - 🇨🇦 Канада SS-51.222.200.165-011
-  - 🇺🇸 США VLESS-cdn.snobvpn.online-012
+  - 🇷🇺 Россия VLESS-82.146.56.149-008
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-009
+  - 🇺🇸 США VLESS-104.21.70.21-010
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-011
+  - 🇨🇦 Канада SS-51.79.85.185-012
   - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-013
-  - 🇯🇵 Япония SS-84.247.155.196-014
-  - 🇵🇱 Польша VLESS-94.183.209.33-015
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-016
+  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-014
+  - 🇺🇸 США VLESS-cdn.snobvpn.online-015
+  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-016
+  - 🇯🇵 Япония SS-84.247.155.196-017
+  - 🇵🇱 Польша VLESS-94.183.209.33-018
+  - 🇨🇦 Канада SS-51.222.200.165-019
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-001
-  - 🇬🇧 Великобритания VLESS-66.90.105.210-002
+  - 🇬🇧 Великобритания VLESS-66.90.105.210-001
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
   - 🇺🇸 США VLESS-107.173.237.146-003
   - 🇬🇧 Великобритания VLESS-66.90.104.42-004
   - 🇷🇺 Россия VLESS-201.24.50.67-005
   - 🇩🇰 Дания SS-38.180.214.110-006
   - 🇩🇪 Германия VLESS-192.248.182.183-007
-  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-008
-  - 🇺🇸 США VLESS-104.21.70.21-009
-  - 🇨🇦 Канада SS-51.79.85.185-010
-  - 🇨🇦 Канада SS-51.222.200.165-011
-  - 🇺🇸 США VLESS-cdn.snobvpn.online-012
+  - 🇷🇺 Россия VLESS-82.146.56.149-008
+  - 🇩🇪 Германия HYSTERIA2-de-tg.fastlanehosting.ru-009
+  - 🇺🇸 США VLESS-104.21.70.21-010
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-011
+  - 🇨🇦 Канада SS-51.79.85.185-012
   - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-013
-  - 🇯🇵 Япония SS-84.247.155.196-014
-  - 🇵🇱 Польша VLESS-94.183.209.33-015
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-016
+  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-014
+  - 🇺🇸 США VLESS-cdn.snobvpn.online-015
+  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-016
+  - 🇯🇵 Япония SS-84.247.155.196-017
+  - 🇵🇱 Польша VLESS-94.183.209.33-018
+  - 🇨🇦 Канада SS-51.222.200.165-019
 rule-providers:
   ru-rules:
     type: http

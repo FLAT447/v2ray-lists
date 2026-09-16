@@ -4,21 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-001
-  type: vless
-  server: jp-1.gsafevpnapi.com
-  port: 20270
-  uuid: fee2c73a-d527-4b3f-9d48-0631168d83e8
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.yahoo.com
-  client-fingerprint: qq
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: l2Wjf_xR2rZYHYmST-zxaYDDj5QhiL9riXa1ozBSjEE
-    short-id: 28500ae15838f905
-- name: 🇺🇸 США VLESS-us-1.gsafevpnapi.com-002
+- name: 🇺🇸 США VLESS-us-1.gsafevpnapi.com-001
   type: vless
   server: us-1.gsafevpnapi.com
   port: 20270
@@ -32,6 +18,20 @@ proxies:
   reality-opts:
     public-key: 9I4kbgR2flpbRraCLQ-C0umbyQO26riRY3-GY-Tp9DE
     short-id: e67d9a00676f15ac
+- name: 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-002
+  type: vless
+  server: jp-1.gsafevpnapi.com
+  port: 20270
+  uuid: fee2c73a-d527-4b3f-9d48-0631168d83e8
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.yahoo.com
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: l2Wjf_xR2rZYHYmST-zxaYDDj5QhiL9riXa1ozBSjEE
+    short-id: 28500ae15838f905
 - name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-003
   type: hysteria2
   server: msk.frkn.org
@@ -53,24 +53,28 @@ proxies:
   password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
   udp: true
   sni: hy.quattro-tech.ru
-- name: 🇷🇺 Россия VLESS-31.184.219.147-006
+- name: 🇸🇬 Сингапур SS-139.180.220.175-006
+  type: ss
+  server: 139.180.220.175
+  port: 8388
+  cipher: aes-256-gcm
+  password: qpSevKaUXYQKvSjp
+  udp: true
+- name: 🇵🇱 Польша VLESS-94.183.209.33-007
   type: vless
-  server: 31.184.219.147
-  port: 9894
-  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
+  server: 94.183.209.33
+  port: 8443
+  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
   udp: true
   encryption: none
   tls: true
-  servername: dl.google.com
-  client-fingerprint: qq
+  servername: timeline.www.cloudflare.com
+  client-fingerprint: firefox
   flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-tunnel
   reality-opts:
-    public-key: sm3E3hjmT6_Gmg_O9rBz4nfXYrHpnl6-LvcCp6T6_xc
-    short-id: aabb
-- name: 🇺🇸 США VLESS-107.173.237.146-007
+    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
+    short-id: bafa6f22a3
+- name: 🇺🇸 США VLESS-107.173.237.146-008
   type: vless
   server: 107.173.237.146
   port: 8443
@@ -84,7 +88,7 @@ proxies:
   reality-opts:
     public-key: D3ojIs3AUKP_tV0E4TEjh90HBVJp24Nq3qMfdxD30kc
     short-id: df8611c07d
-- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-008
+- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-009
   type: vless
   server: book.jarbook.net
   port: 443
@@ -101,31 +105,54 @@ proxies:
   reality-opts:
     public-key: SiyX5MHMfE_232cYFpidAhU4eBxaoNphSSnNbVc1xnc
     short-id: 085f6d90
-- name: 🇵🇱 Польша VLESS-94.183.209.33-009
+- name: 🇳🇱 Нидерланды VLESS-195.189.97.12-010
   type: vless
-  server: 94.183.209.33
-  port: 8443
-  uuid: f4ba862a-4d64-431a-9213-dd7aaafd476a
+  server: 195.189.97.12
+  port: 443
+  uuid: 01a21e01-6098-4c3b-a6fd-1a04d64d0c7f
   udp: true
   encryption: none
   tls: true
-  servername: timeline.www.cloudflare.com
+  servername: reg.jarbook.net
   client-fingerprint: firefox
   flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: BookCatalog
   reality-opts:
-    public-key: S_13TsXuoNyvkx6uf7JHJeuPX3G-nmSRMzn_hgcF3mk
-    short-id: bafa6f22a3
-- name: 🇩🇪 Германия VLESS-192.248.182.183-010
+    public-key: SiyX5MHMfE_232cYFpidAhU4eBxaoNphSSnNbVc1xnc
+    short-id: 085f6d90
+- name: 🇳🇱 Нидерланды VLESS-92.5.225.103-011
   type: vless
-  server: 192.248.182.183
-  port: 39244
-  uuid: 5fc7563b-552d-417f-9409-08ef92284599
+  server: 92.5.225.103
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-011
+- name: 🇬🇧 Великобритания VLESS-66.90.105.210-012
+  type: vless
+  server: 66.90.105.210
+  port: 2083
+  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless
+- name: 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-013
+  type: hysteria2
+  server: 13.212.32.171
+  port: 443
+  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
+  udp: true
+  sni: vpn-sg-001.fastervpn.world
+- name: 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-014
   type: vless
   server: nl.armankhan.shop
   port: 8443
@@ -140,30 +167,129 @@ proxies:
   reality-opts:
     public-key: RP-llUEvsc-8FhsjGxA0-LOKCbu4z_sylu17aDwDH14
     short-id: 066d77d9
-- name: 🇸🇬 Сингапур SS-139.180.220.175-012
-  type: ss
-  server: 139.180.220.175
-  port: 8388
-  cipher: aes-256-gcm
-  password: qpSevKaUXYQKvSjp
-  udp: true
-- name: 🇷🇺 Россия VLESS-82.146.56.149-013
+- name: 🇫🇷 Франция VLESS-52.47.142.19-015
   type: vless
-  server: 82.146.56.149
+  server: 52.47.142.19
+  port: 22224
+  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇩🇪 Германия VLESS-95.179.169.44-016
+  type: vless
+  server: 95.179.169.44
+  port: 53224
+  uuid: 5f00ca4e-3f26-473e-ad1c-414112abb0a3
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-017
+  type: hysteria2
+  server: vpn-us-006.fastervpn.world
   port: 443
-  uuid: b1b3e430-ff52-44b8-b95d-27fa580fbc4f
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: vpn-us-006.fastervpn.world
+- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-018
+  type: hysteria2
+  server: vpn-ca-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: vpn-ca-002.fastervpn.world
+- name: 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-019
+  type: hysteria2
+  server: vpn-kr-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ9wR5tF6vB3z
+  udp: true
+  sni: vpn-kr-002.fastervpn.world
+- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-020
+  type: hysteria2
+  server: vpn-ca-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: speedtest.tinkoff.ru
+- name: 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-021
+  type: hysteria2
+  server: vpn-uk-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: vpn-uk-002.fastervpn.world
+- name: 🇷🇺 Россия VLESS-31.184.219.147-022
+  type: vless
+  server: 31.184.219.147
+  port: 9894
+  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
   udp: true
   encryption: none
   tls: true
-  servername: id.vk.com
+  servername: dl.google.com
   client-fingerprint: firefox
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
-    grpc-service-name: vless-grpc-reality
+    grpc-service-name: grpc-tunnel
   reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇬🇧 Великобритания VLESS-66.90.104.42-014
+    public-key: sm3E3hjmT6_Gmg_O9rBz4nfXYrHpnl6-LvcCp6T6_xc
+    short-id: aa
+- name: 🇯🇵 Япония VLESS-18.182.44.185-023
+  type: vless
+  server: 18.182.44.185
+  port: 20270
+  uuid: e016d072-ed97-40d4-a83f-04c00f8df2a5
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.yahoo.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: l2Wjf_xR2rZYHYmST-zxaYDDj5QhiL9riXa1ozBSjEE
+    short-id: 28500ae15838f905
+- name: 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-024
+  type: hysteria2
+  server: vpn-uk-001.fastervpn.world
+  port: 443
+  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
+  udp: true
+  sni: vpn-uk-001.fastervpn.world
+- name: 🇺🇸 США HYSTERIA2-107.175.219.48-025
+  type: hysteria2
+  server: 107.175.219.48
+  port: 443
+  password: 18bd49994f2eea74ff62798bd75fb7d1
+  udp: true
+  sni: 107.175.219.48
+- name: 🇳🇱 Нидерланды VLESS-45.195.200.4-026
+  type: vless
+  server: 45.195.200.4
+  port: 8443
+  uuid: 4798121a-068d-4bf7-b290-287a2aa81f10
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.cloudflare.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  reality-opts:
+    public-key: RP-llUEvsc-8FhsjGxA0-LOKCbu4z_sylu17aDwDH14
+    short-id: 066d77d9
+- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-027
+  type: hysteria2
+  server: vpn-ca-002.fastervpn.world
+  port: 443
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  udp: true
+  sni: css.rbxcdn.com
+- name: 🇬🇧 Великобритания VLESS-66.90.104.42-028
   type: vless
   server: 66.90.104.42
   port: 2083
@@ -176,144 +302,45 @@ proxies:
   network: grpc
   grpc-opts:
     grpc-service-name: vless
-- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-015
-  type: hysteria2
-  server: vpn-ca-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
-  udp: true
-  sni: css.rbxcdn.com
-- name: 🇺🇸 США HYSTERIA2-107.175.219.48-016
-  type: hysteria2
-  server: 107.175.219.48
-  port: 443
-  password: 18bd49994f2eea74ff62798bd75fb7d1
-  udp: true
-  sni: 107.175.219.48
-- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-017
-  type: hysteria2
-  server: vpn-ca-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
-  udp: true
-  sni: vpn-ca-002.fastervpn.world
-- name: 🇳🇱 Нидерланды VLESS-92.5.225.103-018
-  type: vless
-  server: 92.5.225.103
-  port: 62145
-  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-019
-  type: hysteria2
-  server: 13.212.83.43
-  port: 443
-  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
-  udp: true
-  sni: vpn-sg-001.fastervpn.world
-- name: 🇬🇧 Великобритания VLESS-66.90.105.210-020
-  type: vless
-  server: 66.90.105.210
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇩🇪 Германия VLESS-95.179.169.44-021
-  type: vless
-  server: 95.179.169.44
-  port: 53224
-  uuid: 5f00ca4e-3f26-473e-ad1c-414112abb0a3
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-022
+- name: 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-029
   type: hysteria2
   server: dg2.mangshe.xyz
   port: 2056
   password: 41f0d6d3-4a45-4635-8225-2abd2284189b
   udp: true
   sni: dg2.mangshe.xyz
-- name: 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-023
+- name: 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-030
   type: hysteria2
-  server: vpn-us-006.fastervpn.world
+  server: 13.212.83.43
   port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
   udp: true
-  sni: vpn-us-006.fastervpn.world
-- name: 🇬🇧 Великобритания VLESS-66.90.104.42-024
-  type: vless
-  server: 66.90.104.42
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: /telegram_tm(@azarbayjab1
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-025
-  type: hysteria2
-  server: vpn-uk-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
-  udp: true
-  sni: vpn-uk-002.fastervpn.world
-- name: 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-026
+  sni: vpn-sg-001.fastervpn.world
+- name: 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-031
   type: hysteria2
   server: vpn-us-003.fastervpn.world
   port: 443
   password: H7mP2xY9kJ4nQ8wR5tF6vB3z
   udp: true
   sni: vpn-us-003.fastervpn.world
-- name: 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-027
-  type: hysteria2
-  server: vpn-kr-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ9wR5tF6vB3z
+- name: 🇩🇪 Германия VLESS-192.248.182.183-032
+  type: vless
+  server: 192.248.182.183
+  port: 39244
+  uuid: 5fc7563b-552d-417f-9409-08ef92284599
   udp: true
-  sni: vpn-kr-002.fastervpn.world
-- name: 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-028
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇸🇬 Сингапур HYSTERIA2-47.129.189.148-033
   type: hysteria2
-  server: 31.57.248.176
-  port: 50160
-  password: b0917015b656b3dd2286b5633af0c5c1
-  udp: true
-  sni: www.bing.com
-- name: 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-029
-  type: hysteria2
-  server: vpn-ca-002.fastervpn.world
-  port: 443
-  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
-  udp: true
-  sni: speedtest.tinkoff.ru
-- name: 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-030
-  type: hysteria2
-  server: vpn-uk-001.fastervpn.world
-  port: 443
-  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
-  udp: true
-  sni: vpn-uk-001.fastervpn.world
-- name: 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-031
-  type: hysteria2
-  server: 13.212.32.171
+  server: 47.129.189.148
   port: 443
   password: qQe1z5kU8kN6SlKnDt9Ru3Qp
   udp: true
   sni: vpn-sg-001.fastervpn.world
-- name: 🇯🇵 Япония VLESS-152.69.195.67-032
+- name: 🇯🇵 Япония VLESS-152.69.195.67-034
   type: vless
   server: 152.69.195.67
   port: 47878
@@ -323,91 +350,95 @@ proxies:
   tls: false
   servername: 152.69.195.67
   client-fingerprint: firefox
-- name: 🇸🇬 Сингапур HYSTERIA2-47.129.189.148-033
+- name: 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-035
   type: hysteria2
-  server: 47.129.189.148
-  port: 443
-  password: qQe1z5kU8kN6SlKnDt9Ru3Qp
+  server: 31.57.248.176
+  port: 50160
+  password: b0917015b656b3dd2286b5633af0c5c1
   udp: true
-  sni: vpn-sg-001.fastervpn.world
+  sni: www.bing.com
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-001
-  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-002
+  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-001
+  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-002
   - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-003
   - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-004
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-005
-  - 🇷🇺 Россия VLESS-31.184.219.147-006
-  - 🇺🇸 США VLESS-107.173.237.146-007
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-008
-  - 🇵🇱 Польша VLESS-94.183.209.33-009
-  - 🇩🇪 Германия VLESS-192.248.182.183-010
-  - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-011
-  - 🇸🇬 Сингапур SS-139.180.220.175-012
-  - 🇷🇺 Россия VLESS-82.146.56.149-013
-  - 🇬🇧 Великобритания VLESS-66.90.104.42-014
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-015
-  - 🇺🇸 США HYSTERIA2-107.175.219.48-016
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-017
-  - 🇳🇱 Нидерланды VLESS-92.5.225.103-018
-  - 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-019
-  - 🇬🇧 Великобритания VLESS-66.90.105.210-020
-  - 🇩🇪 Германия VLESS-95.179.169.44-021
-  - 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-022
-  - 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-023
-  - 🇬🇧 Великобритания VLESS-66.90.104.42-024
-  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-025
-  - 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-026
-  - 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-027
-  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-028
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-029
-  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-030
-  - 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-031
-  - 🇯🇵 Япония VLESS-152.69.195.67-032
+  - 🇸🇬 Сингапур SS-139.180.220.175-006
+  - 🇵🇱 Польша VLESS-94.183.209.33-007
+  - 🇺🇸 США VLESS-107.173.237.146-008
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-009
+  - 🇳🇱 Нидерланды VLESS-195.189.97.12-010
+  - 🇳🇱 Нидерланды VLESS-92.5.225.103-011
+  - 🇬🇧 Великобритания VLESS-66.90.105.210-012
+  - 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-013
+  - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-014
+  - 🇫🇷 Франция VLESS-52.47.142.19-015
+  - 🇩🇪 Германия VLESS-95.179.169.44-016
+  - 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-017
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-018
+  - 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-019
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-020
+  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-021
+  - 🇷🇺 Россия VLESS-31.184.219.147-022
+  - 🇯🇵 Япония VLESS-18.182.44.185-023
+  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-024
+  - 🇺🇸 США HYSTERIA2-107.175.219.48-025
+  - 🇳🇱 Нидерланды VLESS-45.195.200.4-026
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-027
+  - 🇬🇧 Великобритания VLESS-66.90.104.42-028
+  - 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-029
+  - 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-030
+  - 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-031
+  - 🇩🇪 Германия VLESS-192.248.182.183-032
   - 🇸🇬 Сингапур HYSTERIA2-47.129.189.148-033
+  - 🇯🇵 Япония VLESS-152.69.195.67-034
+  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-035
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-001
-  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-002
+  - 🇺🇸 США VLESS-us-1.gsafevpnapi.com-001
+  - 🇯🇵 Япония VLESS-jp-1.gsafevpnapi.com-002
   - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-003
   - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-004
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-005
-  - 🇷🇺 Россия VLESS-31.184.219.147-006
-  - 🇺🇸 США VLESS-107.173.237.146-007
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-008
-  - 🇵🇱 Польша VLESS-94.183.209.33-009
-  - 🇩🇪 Германия VLESS-192.248.182.183-010
-  - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-011
-  - 🇸🇬 Сингапур SS-139.180.220.175-012
-  - 🇷🇺 Россия VLESS-82.146.56.149-013
-  - 🇬🇧 Великобритания VLESS-66.90.104.42-014
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-015
-  - 🇺🇸 США HYSTERIA2-107.175.219.48-016
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-017
-  - 🇳🇱 Нидерланды VLESS-92.5.225.103-018
-  - 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-019
-  - 🇬🇧 Великобритания VLESS-66.90.105.210-020
-  - 🇩🇪 Германия VLESS-95.179.169.44-021
-  - 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-022
-  - 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-023
-  - 🇬🇧 Великобритания VLESS-66.90.104.42-024
-  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-025
-  - 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-026
-  - 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-027
-  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-028
-  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-029
-  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-030
-  - 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-031
-  - 🇯🇵 Япония VLESS-152.69.195.67-032
+  - 🇸🇬 Сингапур SS-139.180.220.175-006
+  - 🇵🇱 Польша VLESS-94.183.209.33-007
+  - 🇺🇸 США VLESS-107.173.237.146-008
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-009
+  - 🇳🇱 Нидерланды VLESS-195.189.97.12-010
+  - 🇳🇱 Нидерланды VLESS-92.5.225.103-011
+  - 🇬🇧 Великобритания VLESS-66.90.105.210-012
+  - 🇸🇬 Сингапур HYSTERIA2-13.212.32.171-013
+  - 🇳🇱 Нидерланды VLESS-nl.armankhan.shop-014
+  - 🇫🇷 Франция VLESS-52.47.142.19-015
+  - 🇩🇪 Германия VLESS-95.179.169.44-016
+  - 🇺🇸 США HYSTERIA2-vpn-us-006.fastervpn.world-017
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-018
+  - 🇰🇷 Южная Корея HYSTERIA2-vpn-kr-002.fastervpn.world-019
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-020
+  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-002.fastervpn.world-021
+  - 🇷🇺 Россия VLESS-31.184.219.147-022
+  - 🇯🇵 Япония VLESS-18.182.44.185-023
+  - 🇬🇧 Великобритания HYSTERIA2-vpn-uk-001.fastervpn.world-024
+  - 🇺🇸 США HYSTERIA2-107.175.219.48-025
+  - 🇳🇱 Нидерланды VLESS-45.195.200.4-026
+  - 🇨🇦 Канада HYSTERIA2-vpn-ca-002.fastervpn.world-027
+  - 🇬🇧 Великобритания VLESS-66.90.104.42-028
+  - 🇩🇪 Германия HYSTERIA2-dg2.mangshe.xyz-029
+  - 🇸🇬 Сингапур HYSTERIA2-13.212.83.43-030
+  - 🇺🇸 США HYSTERIA2-vpn-us-003.fastervpn.world-031
+  - 🇩🇪 Германия VLESS-192.248.182.183-032
   - 🇸🇬 Сингапур HYSTERIA2-47.129.189.148-033
+  - 🇯🇵 Япония VLESS-152.69.195.67-034
+  - 🇭🇰 Гонконг HYSTERIA2-31.57.248.176-035
 rule-providers:
   ru-rules:
     type: http
