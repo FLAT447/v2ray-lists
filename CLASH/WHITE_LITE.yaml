@@ -34,21 +34,14 @@ proxies:
     grpc-service-name: grpc-tunnel
   reality-opts:
     public-key: bnRIb3Er1i-K6NGGByCO9UbGfOvu43ZoiK7ulPd1SzU
-- name: 🇨🇦 Канада SS-51.222.141.125-003
-  type: ss
-  server: 51.222.141.125
-  port: 445
-  cipher: aes-256-gcm
-  password: zDNVedRFPQexG9v
-  udp: true
-- name: 🇳🇱 Нидерланды SS-158.173.221.214-004
+- name: 🇳🇱 Нидерланды SS-158.173.221.214-003
   type: ss
   server: 158.173.221.214
   port: 11001
   cipher: chacha20-ietf-poly1305
   password: c58d16e593d44f42
   udp: true
-- name: 🇷🇺 Россия VLESS-176.108.246.73-005
+- name: 🇷🇺 Россия VLESS-176.108.246.73-004
   type: vless
   server: 176.108.246.73
   port: 9873
@@ -65,28 +58,14 @@ proxies:
   reality-opts:
     public-key: bnRIb3Er1i-K6NGGByCO9UbGfOvu43ZoiK7ulPd1SzU
     short-id: aabbccdd
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
-  udp: true
-  sni: hy.quattro-tech.ru
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-007
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
-  udp: true
-  sni: itsallproxy.quattro-tech.ru
-- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
+- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-005
   type: hysteria2
   server: msk.frkn.org
   port: 443
   password: f317b5d6-d399-4d3d-a051-89d674ae953c
   udp: true
   sni: msk.frkn.org
-- name: 🇷🇺 Россия VLESS-191.44.38.143-009
+- name: 🇷🇺 Россия VLESS-191.44.38.143-006
   type: vless
   server: 191.44.38.143
   port: 8443
@@ -100,23 +79,114 @@ proxies:
   reality-opts:
     public-key: -bdfPh42n5vMnPsrknIDPOzEOMsI1TlY9AjDPSggaR0
     short-id: 1c10c8c03e2f0484
-- name: 🇷🇺 Россия VLESS-92.255.79.246-010
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-007
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  udp: true
+  sni: hy.quattro-tech.ru
+- name: 🇮🇩 Индонезия SS-103.160.63.199-008
+  type: ss
+  server: 103.160.63.199
+  port: 31348
+  cipher: chacha20-ietf-poly1305
+  password: 8C5valhOd8vfwaTXUSZ6Zyb0Ip34lRR5z7P8az
+  udp: true
+- name: 🇳🇱 Нидерланды VLESS-193.123.60.87-009
   type: vless
-  server: 92.255.79.246
-  port: 443
-  uuid: 8057eabc-921d-0002-9acb-80ccc6b48379
+  server: 193.123.60.87
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
   udp: true
   encryption: none
-  tls: true
-  servername: supbober.mafioznik.xyz
+  tls: false
+  servername: ''
   client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: Lizat
-  reality-opts:
-    public-key: 8P2rVrZZ8v1q7WpYiRWnZ_nk2UI_4PqpN_DdZP91700
-- name: 🇷🇺 Россия VLESS-77.110.104.125-011
+- name: 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-010
+  type: vless
+  server: shrill-cell-cca7.158-6fa.workers.dev
+  port: 8880
+  uuid: 3e7bb66e-d7c6-4711-aa05-e4ab0ec58c6d
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.SG.CMLiussss.net
+- name: 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-011
+  type: vless
+  server: lingering-grass-6728.131-a78.workers.dev
+  port: 8880
+  uuid: 9e648bb6-25f7-4b16-9949-55ac0952d66b
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-012
+  type: vless
+  server: dawn-waterfall-6052.360-001.workers.dev
+  port: 8880
+  uuid: f3d7ebbc-03a1-40f9-a911-ae8628d3927a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.KR.CMLiussss.net
+- name: 🇨🇱 Чили VLESS-64.176.23.207-013
+  type: vless
+  server: 64.176.23.207
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform118
+    headers:
+      Host: platform118.halalkhor.info
+- name: 🇺🇸 США VLESS-withered-morning-aa51.64-c79.workers.dev-014
+  type: vless
+  server: withered-morning-aa51.64-c79.workers.dev
+  port: 8880
+  uuid: 9f4b666c-ecf1-49e9-8ab8-9ae2c4f4c613
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇵🇱 Польша SS-146.59.116.19-015
+  type: ss
+  server: 146.59.116.19
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-016
+  type: vless
+  server: aged-pine-d8c4.379.workers.dev
+  port: 8880
+  uuid: b9ea760d-3200-4d6d-8000-30514ebbce5a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇷🇺 Россия VLESS-77.110.104.125-017
   type: vless
   server: 77.110.104.125
   port: 8443
@@ -133,30 +203,72 @@ proxies:
   reality-opts:
     public-key: OMlQAFrCMZ3DX0xlnbEZiByLBFzpUE8XJHJsrBzLdlY
     short-id: 2da4299da566b7
-- name: 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-012
+- name: 🇺🇸 США VLESS-billowing-snowflake-f056.63-f14.workers.dev-018
   type: vless
-  server: lingering-grass-6728.131-a78.workers.dev
+  server: billowing-snowflake-f056.63-f14.workers.dev
   port: 8880
-  uuid: 9e648bb6-25f7-4b16-9949-55ac0952d66b
+  uuid: 59a0424b-d36b-4685-bac5-89d50d8969a8
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
   network: ws
-- name: 🇫🇷 Франция VLESS-15.188.230.69-013
+  ws-opts:
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇫🇷 Франция VLESS-15.188.230.69-019
   type: vless
   server: 15.188.230.69
-  port: 22222
+  port: 22223
   uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇳🇱 Нидерланды VLESS-141.144.201.224-014
+- name: 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-020
   type: vless
-  server: 141.144.201.224
+  server: long-math-be5a.233-98b.workers.dev
+  port: 8880
+  uuid: 7b8ff2bf-29c0-4a4f-8925-9f9ef6e486f5
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: qq
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.US.CMLiussss.net
+- name: 🇫🇷 Франция VLESS-185.33.24.85-021
+  type: vless
+  server: 185.33.24.85
+  port: 443
+  uuid: 933eb45b-0e97-4ed1-bfb9-e34bd0b4342c
+  udp: true
+  encryption: none
+  tls: true
+  servername: a.wb.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: M7fn-U9PikoH_WXu6HbDE5bi9ej5cFN8bgWy8qF14WU
+    short-id: 76f547961a8ca082
+- name: 🇺🇸 США VLESS-crimson-smoke-7818.397.workers.dev-022
+  type: vless
+  server: crimson-smoke-7818.397.workers.dev
+  port: 8880
+  uuid: d6bdda67-168d-4501-a2c1-ef01070cb327
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.KR.CMLiussss.net
+- name: 🇳🇱 Нидерланды VLESS-141.148.225.58-023
+  type: vless
+  server: 141.148.225.58
   port: 62145
   uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
   udp: true
@@ -164,7 +276,7 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-015
+- name: 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-024
   type: vless
   server: fragrant-credit-c4cf.148-e68.workers.dev
   port: 8880
@@ -179,11 +291,24 @@ proxies:
     path: /
     headers:
       Host: fragrant-credit-c4cf.148-e68.workers.dev
-- name: 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-016
+- name: 🇺🇸 США VLESS-square-tree-3dbf.285.workers.dev-025
   type: vless
-  server: misty-recipe-be74.271.workers.dev
+  server: square-tree-3dbf.285.workers.dev
   port: 8880
-  uuid: d25ba473-5b05-48bb-b048-e82844e2ae39
+  uuid: 0b01d4d8-656d-4d55-8ad5-ed2a362788b5
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.SG.CMLiussss.net
+- name: 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-026
+  type: vless
+  server: mute-dawn-f27b.375.workers.dev
+  port: 8880
+  uuid: ea29d6f1-3567-4d45-b8c2-e42f162caef4
   udp: true
   encryption: none
   tls: false
@@ -192,11 +317,11 @@ proxies:
   network: ws
   ws-opts:
     path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-017
+- name: 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
   type: vless
-  server: aged-pine-d8c4.379.workers.dev
+  server: crimson-bread-c38e.295.workers.dev
   port: 8880
-  uuid: b9ea760d-3200-4d6d-8000-30514ebbce5a
+  uuid: ba746959-18e7-471c-b00f-fa5cdd930abf
   udp: true
   encryption: none
   tls: false
@@ -205,11 +330,11 @@ proxies:
   network: ws
   ws-opts:
     path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-018
+- name: 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-028
   type: vless
-  server: long-math-be5a.233-98b.workers.dev
+  server: solitary-mountain-996f.223-38e.workers.dev
   port: 8880
-  uuid: 7b8ff2bf-29c0-4a4f-8925-9f9ef6e486f5
+  uuid: 58c1b245-2ea0-40b9-b512-bd2bbe3cbe3f
   udp: true
   encryption: none
   tls: false
@@ -217,8 +342,42 @@ proxies:
   client-fingerprint: qq
   network: ws
   ws-opts:
-    path: /pyip=ProxyIP.US.CMLiussss.net
-- name: 🇹🇼 Тайвань VLESS-45.64.74.100-019
+    path: /pyip=ProxyIP.KR.CMLiussss.net
+- name: 🇺🇸 США VLESS-old-truth-de8a.110-187.workers.dev-029
+  type: vless
+  server: old-truth-de8a.110-187.workers.dev
+  port: 8880
+  uuid: 15ce0fde-88e2-42b0-91e6-e4a1b4568f6e
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇳🇱 Нидерланды VLESS-141.144.201.224-030
+  type: vless
+  server: 141.144.201.224
+  port: 62145
+  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇺🇸 США VLESS-fi.snobvpn.online-031
+  type: vless
+  server: fi.snobvpn.online
+  port: 80
+  uuid: 246b101b-4e4a-451f-8e9c-5e8d3b64b4ef
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /snob-ws
+- name: 🇹🇼 Тайвань VLESS-45.64.74.100-032
   type: vless
   server: 45.64.74.100
   port: 15570
@@ -232,41 +391,42 @@ proxies:
   reality-opts:
     public-key: 59-0Y1oblZGcZajVn0IAMba0RNh8yNv-jhvKni1eZDY
     short-id: 945974883e
-- name: 🇨🇦 Канада SS-51.222.155.32-020
-  type: ss
-  server: 51.222.155.32
-  port: 5003
-  cipher: aes-256-gcm
-  password: g5MeD6Ft3CWlJId
-  udp: true
-- name: 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-021
+- name: 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-033
   type: vless
-  server: mute-dawn-f27b.375.workers.dev
+  server: polished-firefly-3e2d.20-645.workers.dev
   port: 8880
-  uuid: ea29d6f1-3567-4d45-b8c2-e42f162caef4
+  uuid: 3c04e891-dc32-40a3-bcd0-d5e8283a6a03
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
   network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇫🇷 Франция VLESS-15.188.95.192-022
+- name: 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-034
+  type: ss
+  server: yyz-ca-01.blncvpn4u.cc
+  port: 9443
+  cipher: aes-256-gcm
+  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
+  udp: true
+- name: 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-035
   type: vless
-  server: 15.188.95.192
-  port: 22222
-  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
+  server: delicate-base-12ed.287-133.workers.dev
+  port: 8880
+  uuid: adda46c3-eab1-40bc-b88d-6b92c1e8c558
   udp: true
   encryption: none
   tls: false
   servername: ''
-  client-fingerprint: firefox
-- name: 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-023
+  client-fingerprint: qq
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇺🇸 США VLESS-rapid-lab-95ef.173-74c.workers.dev-036
   type: vless
-  server: mute-river-6aee.421-bd7.workers.dev
+  server: rapid-lab-95ef.173-74c.workers.dev
   port: 8880
-  uuid: 49a9aa25-443b-4fab-9a85-066dd5396c57
+  uuid: 30a88c40-581e-4952-aa4c-8af95686ede0
   udp: true
   encryption: none
   tls: false
@@ -275,11 +435,11 @@ proxies:
   network: ws
   ws-opts:
     path: /pyip=ProxyIP.KR.CMLiussss.net
-- name: 🇨🇱 Чили VLESS-64.176.23.207-024
+- name: 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-037
   type: vless
-  server: 64.176.23.207
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  server: misty-recipe-be74.271.workers.dev
+  port: 8880
+  uuid: d25ba473-5b05-48bb-b048-e82844e2ae39
   udp: true
   encryption: none
   tls: false
@@ -287,17 +447,62 @@ proxies:
   client-fingerprint: firefox
   network: ws
   ws-opts:
-    path: /platform118
-    headers:
-      Host: platform118.halalkhor.info
-- name: 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-025
-  type: ss
-  server: yyz-ca-01.blncvpn4u.cc
-  port: 9443
-  cipher: aes-256-gcm
-  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-038
+  type: vless
+  server: jolly-shape-3ce6.392.workers.dev
+  port: 8880
+  uuid: 14e0ab2e-fb3e-4fd1-a6d9-62eeae62976b
   udp: true
-- name: 🇷🇺 Россия VLESS-193.233.223.87-026
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇨🇾 Кипр VLESS-171.22.114.98-039
+  type: vless
+  server: 171.22.114.98
+  port: 443
+  uuid: d929e993-8053-488a-8a22-0ae09f706a2e
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.goo.gl
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 3Qh9roHIRJtLEM-gV_hudQrY6wPK_Dc3ePVtWLGqYho
+    short-id: ef7db38f625526f5
+- name: 🇨🇦 Канада SS-51.222.155.32-040
+  type: ss
+  server: 51.222.155.32
+  port: 5003
+  cipher: aes-256-gcm
+  password: g5MeD6Ft3CWlJId
+  udp: true
+- name: 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-041
+  type: vless
+  server: raspy-sun-3de0.338.workers.dev
+  port: 8880
+  uuid: 1113b881-179c-411c-b29b-53dae8faaf0a
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.US.CMLiussss.net
+- name: 🇺🇸 США SS-15.204.246.107-042
+  type: ss
+  server: 15.204.246.107
+  port: 8888
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇷🇺 Россия VLESS-193.233.223.87-043
   type: vless
   server: 193.233.223.87
   port: 7443
@@ -313,196 +518,60 @@ proxies:
     grpc-service-name: grpc
   reality-opts:
     public-key: 36VgwCvCzW3ST22DrfRU7y8mVfm0PM7JpkXQnN9yLiE
-- name: 🇺🇸 США SS-15.204.246.107-027
-  type: ss
-  server: 15.204.246.107
-  port: 8888
-  cipher: aes-256-gcm
-  password: Y6R9pAtvxxzmGC
-  udp: true
-- name: 🇳🇱 Нидерланды VLESS-193.123.60.87-028
+- name: 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-044
   type: vless
-  server: 193.123.60.87
-  port: 62145
-  uuid: 8fb65472-5957-4f64-ba2d-b5812b2f155a
+  server: mute-river-6aee.421-bd7.workers.dev
+  port: 8880
+  uuid: 49a9aa25-443b-4fab-9a85-066dd5396c57
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇫🇷 Франция VLESS-15.188.230.69-029
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.KR.CMLiussss.net
+- name: 🇺🇸 США VLESS-snowy-lab-6cab.237-2da.workers.dev-045
   type: vless
-  server: 15.188.230.69
-  port: 22223
+  server: snowy-lab-6cab.237-2da.workers.dev
+  port: 8880
+  uuid: 8bcfe782-60c4-4c09-b46c-330f1aa3741c
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: qq
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.US.CMLiussss.net
+- name: 🇫🇷 Франция SS-141.227.134.63-046
+  type: ss
+  server: 141.227.134.63
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇫🇷 Франция VLESS-15.188.95.192-047
+  type: vless
+  server: 15.188.95.192
+  port: 22222
   uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-030
+- name: 🇫🇷 Франция VLESS-15.188.230.69-048
   type: vless
-  server: dawn-waterfall-6052.360-001.workers.dev
-  port: 8880
-  uuid: f3d7ebbc-03a1-40f9-a911-ae8628d3927a
+  server: 15.188.230.69
+  port: 22222
+  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.KR.CMLiussss.net
-- name: 🇨🇾 Кипр VLESS-171.22.114.98-031
-  type: vless
-  server: 171.22.114.98
-  port: 443
-  uuid: d929e993-8053-488a-8a22-0ae09f706a2e
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.goo.gl
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: 3Qh9roHIRJtLEM-gV_hudQrY6wPK_Dc3ePVtWLGqYho
-    short-id: ef7db38f625526f5
-- name: 🇯🇵 Япония SS-84.247.155.196-032
-  type: ss
-  server: 84.247.155.196
-  port: 443
-  cipher: aes-256-gcm
-  password: 3eOFeNssde7PYYMv
-  udp: true
-- name: 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-033
-  type: vless
-  server: delicate-base-12ed.287-133.workers.dev
-  port: 8880
-  uuid: adda46c3-eab1-40bc-b88d-6b92c1e8c558
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: qq
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇨🇱 Чили VLESS-platform118.golnamakcert.top-034
-  type: vless
-  server: platform118.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform118
-    headers:
-      Host: platform118.halalkhor.info
-- name: 🇫🇷 Франция VLESS-185.33.24.85-035
-  type: vless
-  server: 185.33.24.85
-  port: 443
-  uuid: 933eb45b-0e97-4ed1-bfb9-e34bd0b4342c
-  udp: true
-  encryption: none
-  tls: true
-  servername: a.wb.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: M7fn-U9PikoH_WXu6HbDE5bi9ej5cFN8bgWy8qF14WU
-    short-id: 76f547961a8ca082
-- name: 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-036
-  type: vless
-  server: solitary-mountain-996f.223-38e.workers.dev
-  port: 8880
-  uuid: 58c1b245-2ea0-40b9-b512-bd2bbe3cbe3f
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: qq
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.KR.CMLiussss.net
-- name: 🇮🇩 Индонезия SS-103.160.63.199-037
-  type: ss
-  server: 103.160.63.199
-  port: 31348
-  cipher: chacha20-ietf-poly1305
-  password: 8C5valhOd8vfwaTXUSZ6Zyb0Ip34lRR5z7P8az
-  udp: true
-- name: 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-038
-  type: vless
-  server: raspy-sun-3de0.338.workers.dev
-  port: 8880
-  uuid: 1113b881-179c-411c-b29b-53dae8faaf0a
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.US.CMLiussss.net
-- name: 🇵🇱 Польша SS-146.59.116.19-039
-  type: ss
-  server: 146.59.116.19
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇺🇸 США VLESS-fi.snobvpn.online-040
-  type: vless
-  server: fi.snobvpn.online
-  port: 80
-  uuid: 246b101b-4e4a-451f-8e9c-5e8d3b64b4ef
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /snob-ws
-- name: 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-041
-  type: vless
-  server: jolly-shape-3ce6.392.workers.dev
-  port: 8880
-  uuid: 14e0ab2e-fb3e-4fd1-a6d9-62eeae62976b
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-042
-  type: vless
-  server: shrill-cell-cca7.158-6fa.workers.dev
-  port: 8880
-  uuid: 3e7bb66e-d7c6-4711-aa05-e4ab0ec58c6d
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.SG.CMLiussss.net
-- name: 🇨🇱 Чили SS-64.176.2.21-043
-  type: ss
-  server: 64.176.2.21
-  port: 8388
-  cipher: aes-256-gcm
-  password: xBStBEVqvGwHPocc
-  udp: true
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-044
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-049
   type: hysteria2
   server: 91.240.86.70
   port: 22443
@@ -517,48 +586,53 @@ proxy-groups:
   - DIRECT
   - 🇵🇱 Польша VLESS-94.183.209.33-001
   - 🇷🇺 Россия VLESS-176.123.162.100-002
-  - 🇨🇦 Канада SS-51.222.141.125-003
-  - 🇳🇱 Нидерланды SS-158.173.221.214-004
-  - 🇷🇺 Россия VLESS-176.108.246.73-005
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇳🇱 Нидерланды SS-158.173.221.214-003
+  - 🇷🇺 Россия VLESS-176.108.246.73-004
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-005
+  - 🇷🇺 Россия VLESS-191.44.38.143-006
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-007
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
-  - 🇷🇺 Россия VLESS-191.44.38.143-009
-  - 🇷🇺 Россия VLESS-92.255.79.246-010
-  - 🇷🇺 Россия VLESS-77.110.104.125-011
-  - 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-012
-  - 🇫🇷 Франция VLESS-15.188.230.69-013
-  - 🇳🇱 Нидерланды VLESS-141.144.201.224-014
-  - 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-015
-  - 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-016
-  - 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-017
-  - 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-018
-  - 🇹🇼 Тайвань VLESS-45.64.74.100-019
-  - 🇨🇦 Канада SS-51.222.155.32-020
-  - 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-021
-  - 🇫🇷 Франция VLESS-15.188.95.192-022
-  - 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-023
-  - 🇨🇱 Чили VLESS-64.176.23.207-024
-  - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-025
-  - 🇷🇺 Россия VLESS-193.233.223.87-026
-  - 🇺🇸 США SS-15.204.246.107-027
-  - 🇳🇱 Нидерланды VLESS-193.123.60.87-028
-  - 🇫🇷 Франция VLESS-15.188.230.69-029
-  - 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-030
-  - 🇨🇾 Кипр VLESS-171.22.114.98-031
-  - 🇯🇵 Япония SS-84.247.155.196-032
-  - 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-033
-  - 🇨🇱 Чили VLESS-platform118.golnamakcert.top-034
-  - 🇫🇷 Франция VLESS-185.33.24.85-035
-  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-036
-  - 🇮🇩 Индонезия SS-103.160.63.199-037
-  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-038
-  - 🇵🇱 Польша SS-146.59.116.19-039
-  - 🇺🇸 США VLESS-fi.snobvpn.online-040
-  - 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-041
-  - 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-042
-  - 🇨🇱 Чили SS-64.176.2.21-043
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-044
+  - 🇮🇩 Индонезия SS-103.160.63.199-008
+  - 🇳🇱 Нидерланды VLESS-193.123.60.87-009
+  - 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-010
+  - 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-011
+  - 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-012
+  - 🇨🇱 Чили VLESS-64.176.23.207-013
+  - 🇺🇸 США VLESS-withered-morning-aa51.64-c79.workers.dev-014
+  - 🇵🇱 Польша SS-146.59.116.19-015
+  - 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-016
+  - 🇷🇺 Россия VLESS-77.110.104.125-017
+  - 🇺🇸 США VLESS-billowing-snowflake-f056.63-f14.workers.dev-018
+  - 🇫🇷 Франция VLESS-15.188.230.69-019
+  - 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-020
+  - 🇫🇷 Франция VLESS-185.33.24.85-021
+  - 🇺🇸 США VLESS-crimson-smoke-7818.397.workers.dev-022
+  - 🇳🇱 Нидерланды VLESS-141.148.225.58-023
+  - 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-024
+  - 🇺🇸 США VLESS-square-tree-3dbf.285.workers.dev-025
+  - 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-026
+  - 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
+  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-028
+  - 🇺🇸 США VLESS-old-truth-de8a.110-187.workers.dev-029
+  - 🇳🇱 Нидерланды VLESS-141.144.201.224-030
+  - 🇺🇸 США VLESS-fi.snobvpn.online-031
+  - 🇹🇼 Тайвань VLESS-45.64.74.100-032
+  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-033
+  - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-034
+  - 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-035
+  - 🇺🇸 США VLESS-rapid-lab-95ef.173-74c.workers.dev-036
+  - 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-037
+  - 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-038
+  - 🇨🇾 Кипр VLESS-171.22.114.98-039
+  - 🇨🇦 Канада SS-51.222.155.32-040
+  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-041
+  - 🇺🇸 США SS-15.204.246.107-042
+  - 🇷🇺 Россия VLESS-193.233.223.87-043
+  - 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-044
+  - 🇺🇸 США VLESS-snowy-lab-6cab.237-2da.workers.dev-045
+  - 🇫🇷 Франция SS-141.227.134.63-046
+  - 🇫🇷 Франция VLESS-15.188.95.192-047
+  - 🇫🇷 Франция VLESS-15.188.230.69-048
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-049
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -567,48 +641,53 @@ proxy-groups:
   proxies:
   - 🇵🇱 Польша VLESS-94.183.209.33-001
   - 🇷🇺 Россия VLESS-176.123.162.100-002
-  - 🇨🇦 Канада SS-51.222.141.125-003
-  - 🇳🇱 Нидерланды SS-158.173.221.214-004
-  - 🇷🇺 Россия VLESS-176.108.246.73-005
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇳🇱 Нидерланды SS-158.173.221.214-003
+  - 🇷🇺 Россия VLESS-176.108.246.73-004
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-005
+  - 🇷🇺 Россия VLESS-191.44.38.143-006
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-007
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
-  - 🇷🇺 Россия VLESS-191.44.38.143-009
-  - 🇷🇺 Россия VLESS-92.255.79.246-010
-  - 🇷🇺 Россия VLESS-77.110.104.125-011
-  - 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-012
-  - 🇫🇷 Франция VLESS-15.188.230.69-013
-  - 🇳🇱 Нидерланды VLESS-141.144.201.224-014
-  - 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-015
-  - 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-016
-  - 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-017
-  - 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-018
-  - 🇹🇼 Тайвань VLESS-45.64.74.100-019
-  - 🇨🇦 Канада SS-51.222.155.32-020
-  - 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-021
-  - 🇫🇷 Франция VLESS-15.188.95.192-022
-  - 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-023
-  - 🇨🇱 Чили VLESS-64.176.23.207-024
-  - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-025
-  - 🇷🇺 Россия VLESS-193.233.223.87-026
-  - 🇺🇸 США SS-15.204.246.107-027
-  - 🇳🇱 Нидерланды VLESS-193.123.60.87-028
-  - 🇫🇷 Франция VLESS-15.188.230.69-029
-  - 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-030
-  - 🇨🇾 Кипр VLESS-171.22.114.98-031
-  - 🇯🇵 Япония SS-84.247.155.196-032
-  - 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-033
-  - 🇨🇱 Чили VLESS-platform118.golnamakcert.top-034
-  - 🇫🇷 Франция VLESS-185.33.24.85-035
-  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-036
-  - 🇮🇩 Индонезия SS-103.160.63.199-037
-  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-038
-  - 🇵🇱 Польша SS-146.59.116.19-039
-  - 🇺🇸 США VLESS-fi.snobvpn.online-040
-  - 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-041
-  - 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-042
-  - 🇨🇱 Чили SS-64.176.2.21-043
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-044
+  - 🇮🇩 Индонезия SS-103.160.63.199-008
+  - 🇳🇱 Нидерланды VLESS-193.123.60.87-009
+  - 🇺🇸 США VLESS-shrill-cell-cca7.158-6fa.workers.dev-010
+  - 🇺🇸 США VLESS-lingering-grass-6728.131-a78.workers.dev-011
+  - 🇺🇸 США VLESS-dawn-waterfall-6052.360-001.workers.dev-012
+  - 🇨🇱 Чили VLESS-64.176.23.207-013
+  - 🇺🇸 США VLESS-withered-morning-aa51.64-c79.workers.dev-014
+  - 🇵🇱 Польша SS-146.59.116.19-015
+  - 🇺🇸 США VLESS-aged-pine-d8c4.379.workers.dev-016
+  - 🇷🇺 Россия VLESS-77.110.104.125-017
+  - 🇺🇸 США VLESS-billowing-snowflake-f056.63-f14.workers.dev-018
+  - 🇫🇷 Франция VLESS-15.188.230.69-019
+  - 🇺🇸 США VLESS-long-math-be5a.233-98b.workers.dev-020
+  - 🇫🇷 Франция VLESS-185.33.24.85-021
+  - 🇺🇸 США VLESS-crimson-smoke-7818.397.workers.dev-022
+  - 🇳🇱 Нидерланды VLESS-141.148.225.58-023
+  - 🇺🇸 США VLESS-fragrant-credit-c4cf.148-e68.workers.dev-024
+  - 🇺🇸 США VLESS-square-tree-3dbf.285.workers.dev-025
+  - 🇺🇸 США VLESS-mute-dawn-f27b.375.workers.dev-026
+  - 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
+  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-028
+  - 🇺🇸 США VLESS-old-truth-de8a.110-187.workers.dev-029
+  - 🇳🇱 Нидерланды VLESS-141.144.201.224-030
+  - 🇺🇸 США VLESS-fi.snobvpn.online-031
+  - 🇹🇼 Тайвань VLESS-45.64.74.100-032
+  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-033
+  - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-034
+  - 🇺🇸 США VLESS-delicate-base-12ed.287-133.workers.dev-035
+  - 🇺🇸 США VLESS-rapid-lab-95ef.173-74c.workers.dev-036
+  - 🇺🇸 США VLESS-misty-recipe-be74.271.workers.dev-037
+  - 🇺🇸 США VLESS-jolly-shape-3ce6.392.workers.dev-038
+  - 🇨🇾 Кипр VLESS-171.22.114.98-039
+  - 🇨🇦 Канада SS-51.222.155.32-040
+  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-041
+  - 🇺🇸 США SS-15.204.246.107-042
+  - 🇷🇺 Россия VLESS-193.233.223.87-043
+  - 🇺🇸 США VLESS-mute-river-6aee.421-bd7.workers.dev-044
+  - 🇺🇸 США VLESS-snowy-lab-6cab.237-2da.workers.dev-045
+  - 🇫🇷 Франция SS-141.227.134.63-046
+  - 🇫🇷 Франция VLESS-15.188.95.192-047
+  - 🇫🇷 Франция VLESS-15.188.230.69-048
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-049
 rule-providers:
   ru-rules:
     type: http
