@@ -11,13 +11,13 @@ proxies:
   cipher: aes-256-gcm
   password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
   udp: true
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+- name: 🇵🇱 Польша SS-146.59.116.19-002
+  type: ss
+  server: 146.59.116.19
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
   udp: true
-  sni: itsallproxy.quattro-tech.ru
 - name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
   type: hysteria2
   server: 91.240.86.70
@@ -25,7 +25,63 @@ proxies:
   password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
   udp: true
   sni: hy.quattro-tech.ru
-- name: 🇷🇺 Россия VLESS-176.123.167.90-004
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  udp: true
+  sni: itsallproxy.quattro-tech.ru
+- name: 🇨🇦 Канада SS-185.156.47.97-005
+  type: ss
+  server: 185.156.47.97
+  port: 9443
+  cipher: aes-256-gcm
+  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
+  udp: true
+- name: 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-006
+  type: vless
+  server: platform118.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform118
+    headers:
+      Host: platform118.halalkhor.info
+- name: 🇳🇱 Нидерланды VLESS-84.32.177.63-007
+  type: vless
+  server: 84.32.177.63
+  port: 443
+  uuid: 7cde4592-4758-415f-8b97-c188faa4d1c9
+  udp: true
+  encryption: none
+  tls: true
+  servername: app.betust.net
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: xNzdfy4hPv-IgM_MSn64FNQdb-UPu78pmM-GBE1HhSo
+    short-id: ef5d4ad5
+- name: 🇹🇼 Тайвань VLESS-118.167.230.191-008
+  type: vless
+  server: 118.167.230.191
+  port: 24215
+  uuid: 19d5a678-8396-4e3b-93da-ece618d0e83a
+  udp: true
+  encryption: none
+  tls: true
+  servername: addons.mozilla.org
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: mdWKUPMVTtTbDqK10BPb89OcqBC2-Lx-4NOYtqc1GWE
+- name: 🇷🇺 Россия VLESS-176.123.167.90-009
   type: vless
   server: 176.123.167.90
   port: 9881
@@ -42,27 +98,30 @@ proxies:
   reality-opts:
     public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
     short-id: aa
-- name: 🇨🇦 Канада SS-185.156.47.97-005
-  type: ss
-  server: 185.156.47.97
-  port: 9443
-  cipher: aes-256-gcm
-  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
-  udp: true
-- name: 🇹🇼 Тайвань VLESS-118.167.230.191-006
+- name: 🇵🇱 Польша VLESS-test.keoplentuio.xyz-010
   type: vless
-  server: 118.167.230.191
-  port: 24215
-  uuid: 19d5a678-8396-4e3b-93da-ece618d0e83a
+  server: test.keoplentuio.xyz
+  port: 2053
+  uuid: 9ef61079-6f7d-4911-9608-943da85d8e6f
   udp: true
   encryption: none
-  tls: true
-  servername: addons.mozilla.org
+  tls: false
+  servername: ''
   client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: mdWKUPMVTtTbDqK10BPb89OcqBC2-Lx-4NOYtqc1GWE
-- name: 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-007
+- name: 🇬🇧 Великобритания VLESS-66.90.105.211-011
+  type: vless
+  server: 66.90.105.211
+  port: 2083
+  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless
+- name: 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-012
   type: vless
   server: platform113.golnamakcert.top
   port: 80
@@ -77,67 +136,6 @@ proxies:
     path: /platform113
     headers:
       Host: platform113.halalkhor.info
-- name: 🇬🇧 Великобритания VLESS-66.90.104.43-008
-  type: vless
-  server: 66.90.104.43
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-009
-  type: vless
-  server: raspy-sun-3de0.338.workers.dev
-  port: 8880
-  uuid: 1113b881-179c-411c-b29b-53dae8faaf0a
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.US.CMLiussss.net
-- name: 🇷🇺 Россия VLESS-5.35.87.69-010
-  type: vless
-  server: 5.35.87.69
-  port: 443
-  uuid: 933eb45b-0e97-4ed1-bfb9-e34bd0b4342c
-  udp: true
-  encryption: none
-  tls: true
-  servername: a.wb.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: M7fn-U9PikoH_WXu6HbDE5bi9ej5cFN8bgWy8qF14WU
-    short-id: 76f547961a8ca082
-- name: 🇳🇱 Нидерланды VLESS-84.32.177.63-011
-  type: vless
-  server: 84.32.177.63
-  port: 443
-  uuid: 7cde4592-4758-415f-8b97-c188faa4d1c9
-  udp: true
-  encryption: none
-  tls: true
-  servername: app.betust.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: xNzdfy4hPv-IgM_MSn64FNQdb-UPu78pmM-GBE1HhSo
-    short-id: ef5d4ad5
-- name: 🇺🇸 США SS-43.173.90.202-012
-  type: ss
-  server: 43.173.90.202
-  port: 8388
-  cipher: chacha20-ietf-poly1305
-  password: sg-proxy-2026
-  udp: true
 - name: 🇷🇺 Россия VLESS-balance2.nvrsk-not-news.ru-013
   type: vless
   server: balance2.nvrsk-not-news.ru
@@ -162,9 +160,33 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇬🇧 Великобритания VLESS-66.90.105.211-015
+- name: 🇯🇵 Япония SS-84.247.155.196-015
+  type: ss
+  server: 84.247.155.196
+  port: 80
+  cipher: aes-256-gcm
+  password: 3eOFeNssde7PYYMv
+  udp: true
+- name: 🇷🇺 Россия VLESS-5.42.114.41-016
   type: vless
-  server: 66.90.105.211
+  server: 5.42.114.41
+  port: 9892
+  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
+  udp: true
+  encryption: none
+  tls: true
+  servername: dl.google.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc-tunnel
+  reality-opts:
+    public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
+    short-id: aa
+- name: 🇬🇧 Великобритания VLESS-66.90.104.43-017
+  type: vless
+  server: 66.90.104.43
   port: 2083
   uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
   udp: true
@@ -175,67 +197,7 @@ proxies:
   network: grpc
   grpc-opts:
     grpc-service-name: vless
-- name: 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-016
-  type: vless
-  server: platform118.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform118
-    headers:
-      Host: platform118.halalkhor.info
-- name: 🇺🇸 США VLESS-misty-wood-62b4.263-93e.workers.dev-017
-  type: vless
-  server: misty-wood-62b4.263-93e.workers.dev
-  port: 8880
-  uuid: 580af126-448f-407b-a4c2-785e702cd8ea
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇯🇵 Япония SS-84.247.155.196-018
-  type: ss
-  server: 84.247.155.196
-  port: 80
-  cipher: aes-256-gcm
-  password: 3eOFeNssde7PYYMv
-  udp: true
-- name: 🇷🇺 Россия VLESS-161.104.38.98-019
-  type: vless
-  server: 161.104.38.98
-  port: 443
-  uuid: 256c5e3e-431d-0032-bed4-bfcf1334f64b
-  udp: true
-  encryption: none
-  tls: true
-  servername: donatov.net
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /assets
-    host: donatov.net
-  reality-opts:
-    public-key: kYwdZueXQt_DEKPrWTw8yoj6G4AWqupg8UrWjAgWbkE
-    short-id: 8ba6e72ee60667f6
-- name: 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-020
-  type: hysteria2
-  server: msjp.mangshe.xyz
-  port: 20561
-  password: 5d0a6445-a30d-4522-bb1f-94f1d3ad63be
-  udp: true
-  sni: msjp.mangshe.xyz
-- name: 🇷🇺 Россия VLESS-212.119.42.27-021
+- name: 🇷🇺 Россия VLESS-212.119.42.27-018
   type: vless
   server: 212.119.42.27
   port: 43582
@@ -249,6 +211,73 @@ proxies:
   reality-opts:
     public-key: xan4iyYYeN4WR6UJ0-lvdqpdpabZ2sfNxBlhp5Xb7So
     short-id: 1428a09dc9e07a
+- name: 🇷🇺 Россия VLESS-161.104.38.98-019
+  type: vless
+  server: 161.104.38.98
+  port: 443
+  uuid: 256c5e3e-431d-0032-bed4-bfcf1334f64b
+  udp: true
+  encryption: none
+  tls: true
+  servername: donatov.net
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /assets
+    host: donatov.net
+  reality-opts:
+    public-key: kYwdZueXQt_DEKPrWTw8yoj6G4AWqupg8UrWjAgWbkE
+    short-id: 8ba6e72ee60667f6
+- name: 🇦🇪 ОАЭ VLESS-157.228.178.224-020
+  type: vless
+  server: 157.228.178.224
+  port: 42062
+  uuid: c01bed3f-48c2-46bf-a1e7-d68bb794f650
+  udp: true
+  encryption: none
+  tls: true
+  servername: vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: nz_-f0x2HonNSLcydWbXLK_IeDTjMuXeMOPu9XmyxB8
+    short-id: b97825
+- name: 🇩🇪 Германия VLESS-92.118.9.166-021
+  type: vless
+  server: 92.118.9.166
+  port: 27439
+  uuid: 660b556d-4621-4c46-afde-16f6f8e78a26
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: Re0aWbYgk775QZ2eiIzh9fwPANq8HfLlrp9vbTC8vXQ
+    short-id: 0472cdc53f
+- name: 🇷🇺 Россия VLESS-5.35.87.69-022
+  type: vless
+  server: 5.35.87.69
+  port: 443
+  uuid: 933eb45b-0e97-4ed1-bfb9-e34bd0b4342c
+  udp: true
+  encryption: none
+  tls: true
+  servername: a.wb.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: M7fn-U9PikoH_WXu6HbDE5bi9ej5cFN8bgWy8qF14WU
+    short-id: 76f547961a8ca082
+- name: 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-023
+  type: hysteria2
+  server: msjp.mangshe.xyz
+  port: 20561
+  password: 5d0a6445-a30d-4522-bb1f-94f1d3ad63be
+  udp: true
+  sni: msjp.mangshe.xyz
 proxy-groups:
 - name: PROXY
   type: select
@@ -256,26 +285,28 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇳🇱 Нидерланды SS-146.190.236.129-001
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
+  - 🇵🇱 Польша SS-146.59.116.19-002
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
-  - 🇷🇺 Россия VLESS-176.123.167.90-004
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
   - 🇨🇦 Канада SS-185.156.47.97-005
-  - 🇹🇼 Тайвань VLESS-118.167.230.191-006
-  - 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-007
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-008
-  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-009
-  - 🇷🇺 Россия VLESS-5.35.87.69-010
-  - 🇳🇱 Нидерланды VLESS-84.32.177.63-011
-  - 🇺🇸 США SS-43.173.90.202-012
+  - 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-006
+  - 🇳🇱 Нидерланды VLESS-84.32.177.63-007
+  - 🇹🇼 Тайвань VLESS-118.167.230.191-008
+  - 🇷🇺 Россия VLESS-176.123.167.90-009
+  - 🇵🇱 Польша VLESS-test.keoplentuio.xyz-010
+  - 🇬🇧 Великобритания VLESS-66.90.105.211-011
+  - 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-012
   - 🇷🇺 Россия VLESS-balance2.nvrsk-not-news.ru-013
   - 🇵🇱 Польша VLESS-test.keoplentuio.xyz-014
-  - 🇬🇧 Великобритания VLESS-66.90.105.211-015
-  - 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-016
-  - 🇺🇸 США VLESS-misty-wood-62b4.263-93e.workers.dev-017
-  - 🇯🇵 Япония SS-84.247.155.196-018
+  - 🇯🇵 Япония SS-84.247.155.196-015
+  - 🇷🇺 Россия VLESS-5.42.114.41-016
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-017
+  - 🇷🇺 Россия VLESS-212.119.42.27-018
   - 🇷🇺 Россия VLESS-161.104.38.98-019
-  - 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-020
-  - 🇷🇺 Россия VLESS-212.119.42.27-021
+  - 🇦🇪 ОАЭ VLESS-157.228.178.224-020
+  - 🇩🇪 Германия VLESS-92.118.9.166-021
+  - 🇷🇺 Россия VLESS-5.35.87.69-022
+  - 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-023
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -283,26 +314,28 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇳🇱 Нидерланды SS-146.190.236.129-001
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-002
+  - 🇵🇱 Польша SS-146.59.116.19-002
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
-  - 🇷🇺 Россия VLESS-176.123.167.90-004
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
   - 🇨🇦 Канада SS-185.156.47.97-005
-  - 🇹🇼 Тайвань VLESS-118.167.230.191-006
-  - 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-007
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-008
-  - 🇺🇸 США VLESS-raspy-sun-3de0.338.workers.dev-009
-  - 🇷🇺 Россия VLESS-5.35.87.69-010
-  - 🇳🇱 Нидерланды VLESS-84.32.177.63-011
-  - 🇺🇸 США SS-43.173.90.202-012
+  - 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-006
+  - 🇳🇱 Нидерланды VLESS-84.32.177.63-007
+  - 🇹🇼 Тайвань VLESS-118.167.230.191-008
+  - 🇷🇺 Россия VLESS-176.123.167.90-009
+  - 🇵🇱 Польша VLESS-test.keoplentuio.xyz-010
+  - 🇬🇧 Великобритания VLESS-66.90.105.211-011
+  - 🇮🇱 Израиль VLESS-platform113.golnamakcert.top-012
   - 🇷🇺 Россия VLESS-balance2.nvrsk-not-news.ru-013
   - 🇵🇱 Польша VLESS-test.keoplentuio.xyz-014
-  - 🇬🇧 Великобритания VLESS-66.90.105.211-015
-  - 🇮🇱 Израиль VLESS-platform118.golnamakcert.top-016
-  - 🇺🇸 США VLESS-misty-wood-62b4.263-93e.workers.dev-017
-  - 🇯🇵 Япония SS-84.247.155.196-018
+  - 🇯🇵 Япония SS-84.247.155.196-015
+  - 🇷🇺 Россия VLESS-5.42.114.41-016
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-017
+  - 🇷🇺 Россия VLESS-212.119.42.27-018
   - 🇷🇺 Россия VLESS-161.104.38.98-019
-  - 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-020
-  - 🇷🇺 Россия VLESS-212.119.42.27-021
+  - 🇦🇪 ОАЭ VLESS-157.228.178.224-020
+  - 🇩🇪 Германия VLESS-92.118.9.166-021
+  - 🇷🇺 Россия VLESS-5.35.87.69-022
+  - 🇯🇵 Япония HYSTERIA2-msjp.mangshe.xyz-023
 rule-providers:
   ru-rules:
     type: http
