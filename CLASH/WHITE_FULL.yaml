@@ -20,7 +20,6 @@ proxies:
     grpc-service-name: grpc-tunnel
   reality-opts:
     public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
-    short-id: aa
 - name: 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-002
   type: ss
   server: yyz-ca-01.blncvpn4u.cc
@@ -28,7 +27,14 @@ proxies:
   cipher: aes-256-gcm
   password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
   udp: true
-- name: 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-003
+- name: 🇳🇱 Нидерланды SS-158.173.221.214-003
+  type: ss
+  server: 158.173.221.214
+  port: 11001
+  cipher: chacha20-ietf-poly1305
+  password: c58d16e593d44f42
+  udp: true
+- name: 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-004
   type: vless
   server: platform101.golnamakcert.top
   port: 80
@@ -43,28 +49,42 @@ proxies:
     path: /platform101
     headers:
       Host: platform101.halalkhor.info
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
-  udp: true
-  sni: itsallproxy.quattro-tech.ru
 - name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-005
   type: hysteria2
   server: 91.240.86.70
   port: 22443
   password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
   udp: true
+  sni: itsallproxy.quattro-tech.ru
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  udp: true
   sni: hy.quattro-tech.ru
-- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
+- name: 🇷🇺 Россия SS-139.100.236.74-007
+  type: ss
+  server: 139.100.236.74
+  port: 2
+  cipher: chacha20-ietf-poly1305
+  password: WxYpOK1iPSJySbVNMMJDtw
+  udp: true
+- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
   type: hysteria2
   server: msk.frkn.org
   port: 443
   password: f317b5d6-d399-4d3d-a051-89d674ae953c
   udp: true
   sni: msk.frkn.org
-- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
+- name: 🇷🇺 Россия SS-139.100.236.74-009
+  type: ss
+  server: 139.100.236.74
+  port: 3
+  cipher: chacha20-ietf-poly1305
+  password: WxYpOK1iPSJySbVNMMJDtw
+  udp: true
+- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-010
   type: hysteria2
   server: msk.frkn.org
   port: 443
@@ -72,11 +92,40 @@ proxies:
   udp: true
   sni: msk.frkn.org
   up: '0'
-- name: 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-008
+- name: 🇷🇺 Россия SS-135.106.227.252-011
+  type: ss
+  server: 135.106.227.252
+  port: 8388
+  cipher: chacha20-ietf-poly1305
+  password: KHdJKMAYowrILcVjV7t4lPtuh5bVXUAS
+  udp: true
+- name: 🇷🇺 Россия SS-139.100.236.74-012
+  type: ss
+  server: 139.100.236.74
+  port: 1
+  cipher: chacha20-ietf-poly1305
+  password: WxYpOK1iPSJySbVNMMJDtw
+  udp: true
+- name: 🇷🇺 Россия VLESS-xnodtwx.artemida.live-013
   type: vless
-  server: platform118.golnamakcert.top
+  server: xnodtwx.artemida.live
+  port: 443
+  uuid: d9ca156c-8b6d-4ca6-8be1-4eee64c93c36
+  udp: true
+  encryption: none
+  tls: true
+  servername: xnodtwx.artemida.live
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  reality-opts:
+    public-key: JqmkP6Fys7jN2Fu1iDJuWKVNPhlgHfy_pj1DHFVKVhw
+    short-id: a1b2c3d4e5f6a7b8
+- name: 🇩🇪 Германия VLESS-159.69.91.8-014
+  type: vless
+  server: 159.69.91.8
   port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  uuid: 3728d3fa-e004-47b9-b334-9f0723efeef2
   udp: true
   encryption: none
   tls: false
@@ -84,17 +133,8 @@ proxies:
   client-fingerprint: firefox
   network: ws
   ws-opts:
-    path: /platform118
-    headers:
-      Host: platform118.halalkhor.info
-- name: 🇮🇩 Индонезия SS-103.160.63.199-009
-  type: ss
-  server: 103.160.63.199
-  port: 31348
-  cipher: chacha20-ietf-poly1305
-  password: 8C5valhOd8vfwaTXUSZ6Zyb0Ip34lRR5z7P8az
-  udp: true
-- name: 🇫🇷 Франция VLESS-test.keoplentuio.xyz-010
+    path: /
+- name: 🇫🇷 Франция VLESS-test.keoplentuio.xyz-015
   type: vless
   server: test.keoplentuio.xyz
   port: 2053
@@ -104,9 +144,39 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-011
+- name: 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-016
   type: vless
-  server: platform106.golnamakcert.top
+  server: platform108.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: platform108.golnamakcert.top
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform108
+    headers:
+      Host: platform108.halalkhor.info
+- name: 🇿🇦 ЮАР VLESS-platform103.golnamakcert.top-017
+  type: vless
+  server: platform103.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: platform103.halalkhor.info
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform103
+    headers:
+      Host: platform103.halalkhor.info
+- name: 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-018
+  type: vless
+  server: platform108.golnamakcert.top
   port: 80
   uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
   udp: true
@@ -116,60 +186,10 @@ proxies:
   client-fingerprint: firefox
   network: ws
   ws-opts:
-    path: /platform106
+    path: /platform108
     headers:
-      Host: platform106.halalkhor.info
-- name: 🇺🇸 США SS-15.204.246.107-012
-  type: ss
-  server: 15.204.246.107
-  port: 8888
-  cipher: aes-256-gcm
-  password: Y6R9pAtvxxzmGC
-  udp: true
-- name: 🇷🇺 Россия SS-139.100.236.74-013
-  type: ss
-  server: 139.100.236.74
-  port: 3
-  cipher: chacha20-ietf-poly1305
-  password: WxYpOK1iPSJySbVNMMJDtw
-  udp: true
-- name: 🇷🇺 Россия SS-139.100.236.74-014
-  type: ss
-  server: 139.100.236.74
-  port: 2
-  cipher: chacha20-ietf-poly1305
-  password: WxYpOK1iPSJySbVNMMJDtw
-  udp: true
-- name: 🇮🇷 IR VLESS-afra4.nimbaha9.ir-015
-  type: vless
-  server: afra4.nimbaha9.ir
-  port: 2052
-  uuid: e0ff8a9b-dad3-4671-baf4-c8d466d1eb48
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /eyurri
-    headers:
-      Host: afra4.nimbaha9.ir
-- name: 🇷🇺 Россия SS-139.100.236.74-016
-  type: ss
-  server: 139.100.236.74
-  port: 1
-  cipher: chacha20-ietf-poly1305
-  password: WxYpOK1iPSJySbVNMMJDtw
-  udp: true
-- name: 🇬🇧 Великобритания SS-143.110.161.156-017
-  type: ss
-  server: 143.110.161.156
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-018
+      Host: platform108.halalkhor.info
+- name: 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-019
   type: vless
   server: platform117.golnamakcert.top
   port: 80
@@ -184,16 +204,6 @@ proxies:
     path: /platform117
     headers:
       Host: platform117.halalkhor.info
-- name: 🇬🇧 Великобритания VLESS-18.169.206.105-019
-  type: vless
-  server: 18.169.206.105
-  port: 22224
-  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
 - name: 🇷🇺 Россия VLESS-176.108.243.18-020
   type: vless
   server: 176.108.243.18
@@ -211,52 +221,7 @@ proxies:
   reality-opts:
     public-key: sm3E3hjmT6_Gmg_O9rBz4nfXYrHpnl6-LvcCp6T6_xc
     short-id: aabb
-- name: 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-021
-  type: vless
-  server: platform107.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: platform107.halalkhor.info
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform107
-    headers:
-      Host: platform107.halalkhor.info
-- name: 🇩🇪 Германия SS-206.189.52.4-022
-  type: ss
-  server: 206.189.52.4
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇵🇱 Польша VLESS-82.47.63.156-023
-  type: vless
-  server: 82.47.63.156
-  port: 2053
-  uuid: 9ef61079-6f7d-4911-9608-943da85d8e6f
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇬🇧 Великобритания VLESS-66.90.104.43-024
-  type: vless
-  server: 66.90.104.43
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-025
+- name: 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-021
   type: vless
   server: platform109.golnamakcert.top
   port: 80
@@ -271,138 +236,7 @@ proxies:
     path: /platform109
     headers:
       Host: platform109.halalkhor.info
-- name: 🇬🇧 Великобритания VLESS-66.90.105.211-026
-  type: vless
-  server: 66.90.105.211
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇫🇷 Франция SS-141.227.134.63-027
-  type: ss
-  server: 141.227.134.63
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇯🇵 Япония SS-84.247.155.196-028
-  type: ss
-  server: 84.247.155.196
-  port: 80
-  cipher: aes-256-gcm
-  password: 3eOFeNssde7PYYMv
-  udp: true
-- name: 🇵🇱 Польша VLESS-185.62.1.8-029
-  type: vless
-  server: 185.62.1.8
-  port: 8118
-  uuid: eea1c59d-70fd-4829-8ed7-21ddfe55a0da
-  udp: true
-  encryption: none
-  tls: true
-  servername: play.googleapis.com
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: LjAkLizwkZf35ObrUMFZ22UHXTEJzpgcTvHk9AuzcUM
-- name: 🇨🇦 Канада SS-51.222.141.125-030
-  type: ss
-  server: 51.222.141.125
-  port: 445
-  cipher: aes-256-gcm
-  password: zDNVedRFPQexG9v
-  udp: true
-- name: 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-031
-  type: vless
-  server: platform102.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform102
-    headers:
-      Host: platform102.halalkhor.info
-- name: 🇨🇦 Канада SS-185.156.47.97-032
-  type: ss
-  server: 185.156.47.97
-  port: 9443
-  cipher: aes-256-gcm
-  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
-  udp: true
-- name: 🇳🇱 Нидерланды SS-158.173.221.214-033
-  type: ss
-  server: 158.173.221.214
-  port: 11001
-  cipher: chacha20-ietf-poly1305
-  password: c58d16e593d44f42
-  udp: true
-- name: 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-034
-  type: ss
-  server: ce1fc2d8.krkt.hkssip.com
-  port: 49642
-  cipher: aes-256-gcm
-  password: ac9c0a7b
-  udp: true
-- name: 🇩🇪 Германия VLESS-159.69.89.23-035
-  type: vless
-  server: 159.69.89.23
-  port: 80
-  uuid: ca78a1a9-68d2-4373-8ea3-5d85fb61700d
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /
-- name: 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-036
-  type: vless
-  server: platform108.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform108
-    headers:
-      Host: platform108.halalkhor.info
-- name: 🇷🇺 Россия SS-135.106.227.252-037
-  type: ss
-  server: 135.106.227.252
-  port: 8388
-  cipher: chacha20-ietf-poly1305
-  password: KHdJKMAYowrILcVjV7t4lPtuh5bVXUAS
-  udp: true
-- name: 🇺🇸 США VLESS-23.83.224.178-038
-  type: vless
-  server: 23.83.224.178
-  port: 54322
-  uuid: 2b424263-d888-494a-eb6a-79538055d1ad
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /
-- name: 🇩🇪 Германия VLESS-128.140.7.132-039
+- name: 🇩🇪 Германия VLESS-128.140.7.132-022
   type: vless
   server: 128.140.7.132
   port: 80
@@ -415,59 +249,7 @@ proxies:
   network: ws
   ws-opts:
     path: /
-- name: 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-040
-  type: vless
-  server: platform113.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform113
-    headers:
-      Host: platform113.halalkhor.info
-- name: 🇬🇧 Великобритания VLESS-18.169.206.105-041
-  type: vless
-  server: 18.169.206.105
-  port: 22222
-  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇩🇪 Германия VLESS-159.69.91.8-042
-  type: vless
-  server: 159.69.91.8
-  port: 80
-  uuid: 3728d3fa-e004-47b9-b334-9f0723efeef2
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /
-- name: 🇵🇱 Польша VLESS-lineartronic-ii.subaru-volga.com-043
-  type: vless
-  server: lineartronic-ii.subaru-volga.com
-  port: 443
-  uuid: 6db6b948-655f-4f68-a9e7-865050e05b31
-  udp: true
-  encryption: none
-  tls: true
-  servername: lineartronic-ii.subaru-volga.com
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: Fy5oUXHjwXPsnyRzZAHohjOd4dYkDj9mlIhr-Xh6tTc
-    short-id: 6fddaa
-- name: 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-044
+- name: 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-023
   type: vless
   server: platform107.golnamakcert.top
   port: 80
@@ -482,7 +264,22 @@ proxies:
     path: /platform107
     headers:
       Host: platform107.halalkhor.info
-- name: 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-045
+- name: 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-024
+  type: vless
+  server: platform118.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform118
+    headers:
+      Host: platform118.halalkhor.info
+- name: 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-025
   type: vless
   server: platform113.golnamakcert.top
   port: 80
@@ -497,21 +294,184 @@ proxies:
     path: /platform113
     headers:
       Host: platform113.halalkhor.info
-- name: 🇷🇺 Россия VLESS-188.225.83.133-046
+- name: 🇬🇧 Великобритания VLESS-66.90.105.211-026
   type: vless
-  server: 188.225.83.133
-  port: 443
-  uuid: d9ca156c-8b6d-4ca6-8be1-4eee64c93c36
+  server: 66.90.105.211
+  port: 2083
+  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
   udp: true
   encryption: none
-  tls: true
-  servername: xnodtwx.artemida.live
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
   network: grpc
-  reality-opts:
-    public-key: JqmkP6Fys7jN2Fu1iDJuWKVNPhlgHfy_pj1DHFVKVhw
-    short-id: a1b2c3d4e5f6a7b8
+  grpc-opts:
+    grpc-service-name: vless
+- name: 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-027
+  type: vless
+  server: platform106.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform106
+    headers:
+      Host: platform106.halalkhor.info
+- name: 🇯🇵 Япония SS-84.247.155.196-028
+  type: ss
+  server: 84.247.155.196
+  port: 80
+  cipher: aes-256-gcm
+  password: 3eOFeNssde7PYYMv
+  udp: true
+- name: 🇵🇱 Польша VLESS-82.47.63.156-029
+  type: vless
+  server: 82.47.63.156
+  port: 2053
+  uuid: 9ef61079-6f7d-4911-9608-943da85d8e6f
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-030
+  type: vless
+  server: platform117.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform117
+    headers:
+      Host: platform117.halalkhor.info
+- name: 🇩🇪 Германия VLESS-159.69.89.23-031
+  type: vless
+  server: 159.69.89.23
+  port: 80
+  uuid: ca78a1a9-68d2-4373-8ea3-5d85fb61700d
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /
+- name: 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-032
+  type: vless
+  server: platform102.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform102
+    headers:
+      Host: platform102.halalkhor.info
+- name: 🇬🇧 Великобритания SS-143.110.161.156-033
+  type: ss
+  server: 143.110.161.156
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇮🇩 Индонезия SS-103.160.63.199-034
+  type: ss
+  server: 103.160.63.199
+  port: 31348
+  cipher: chacha20-ietf-poly1305
+  password: 8C5valhOd8vfwaTXUSZ6Zyb0Ip34lRR5z7P8az
+  udp: true
+- name: 🇬🇧 Великобритания VLESS-18.169.206.105-035
+  type: vless
+  server: 18.169.206.105
+  port: 22222
+  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇨🇦 Канада SS-185.156.47.97-036
+  type: ss
+  server: 185.156.47.97
+  port: 9443
+  cipher: aes-256-gcm
+  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
+  udp: true
+- name: 🇬🇧 Великобритания VLESS-18.169.206.105-037
+  type: vless
+  server: 18.169.206.105
+  port: 22224
+  uuid: e4514801-0d5a-42ba-869f-39bd605aef9e
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-038
+  type: ss
+  server: ce1fc2d8.krkt.hkssip.com
+  port: 49642
+  cipher: aes-256-gcm
+  password: ac9c0a7b
+  udp: true
+- name: 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-039
+  type: vless
+  server: platform113.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: platform113.halalkhor.info
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform113
+    headers:
+      Host: platform113.halalkhor.info
+- name: 🇫🇷 Франция SS-141.227.134.63-040
+  type: ss
+  server: 141.227.134.63
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇬🇧 Великобритания VLESS-66.90.104.43-041
+  type: vless
+  server: 66.90.104.43
+  port: 2083
+  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless
+- name: 🇷🇺 Россия HYSTERIA2-vpn.ai-boost.tech-042
+  type: hysteria2
+  server: vpn.ai-boost.tech
+  port: 2086
+  password: d900526f-30d7-4f4b-9dbe-e98f17b6fbcc
+  udp: true
+  sni: vpn.ai-boost.tech
 proxy-groups:
 - name: PROXY
   type: select
@@ -520,50 +480,46 @@ proxy-groups:
   - DIRECT
   - 🇷🇺 Россия VLESS-176.123.167.90-001
   - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-002
-  - 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-003
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
+  - 🇳🇱 Нидерланды SS-158.173.221.214-003
+  - 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-004
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-005
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-008
-  - 🇮🇩 Индонезия SS-103.160.63.199-009
-  - 🇫🇷 Франция VLESS-test.keoplentuio.xyz-010
-  - 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-011
-  - 🇺🇸 США SS-15.204.246.107-012
-  - 🇷🇺 Россия SS-139.100.236.74-013
-  - 🇷🇺 Россия SS-139.100.236.74-014
-  - 🇮🇷 IR VLESS-afra4.nimbaha9.ir-015
-  - 🇷🇺 Россия SS-139.100.236.74-016
-  - 🇬🇧 Великобритания SS-143.110.161.156-017
-  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-018
-  - 🇬🇧 Великобритания VLESS-18.169.206.105-019
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇷🇺 Россия SS-139.100.236.74-007
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
+  - 🇷🇺 Россия SS-139.100.236.74-009
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-010
+  - 🇷🇺 Россия SS-135.106.227.252-011
+  - 🇷🇺 Россия SS-139.100.236.74-012
+  - 🇷🇺 Россия VLESS-xnodtwx.artemida.live-013
+  - 🇩🇪 Германия VLESS-159.69.91.8-014
+  - 🇫🇷 Франция VLESS-test.keoplentuio.xyz-015
+  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-016
+  - 🇿🇦 ЮАР VLESS-platform103.golnamakcert.top-017
+  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-018
+  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-019
   - 🇷🇺 Россия VLESS-176.108.243.18-020
-  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-021
-  - 🇩🇪 Германия SS-206.189.52.4-022
-  - 🇵🇱 Польша VLESS-82.47.63.156-023
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-024
-  - 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-025
+  - 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-021
+  - 🇩🇪 Германия VLESS-128.140.7.132-022
+  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-023
+  - 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-024
+  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-025
   - 🇬🇧 Великобритания VLESS-66.90.105.211-026
-  - 🇫🇷 Франция SS-141.227.134.63-027
+  - 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-027
   - 🇯🇵 Япония SS-84.247.155.196-028
-  - 🇵🇱 Польша VLESS-185.62.1.8-029
-  - 🇨🇦 Канада SS-51.222.141.125-030
-  - 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-031
-  - 🇨🇦 Канада SS-185.156.47.97-032
-  - 🇳🇱 Нидерланды SS-158.173.221.214-033
-  - 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-034
-  - 🇩🇪 Германия VLESS-159.69.89.23-035
-  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-036
-  - 🇷🇺 Россия SS-135.106.227.252-037
-  - 🇺🇸 США VLESS-23.83.224.178-038
-  - 🇩🇪 Германия VLESS-128.140.7.132-039
-  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-040
-  - 🇬🇧 Великобритания VLESS-18.169.206.105-041
-  - 🇩🇪 Германия VLESS-159.69.91.8-042
-  - 🇵🇱 Польша VLESS-lineartronic-ii.subaru-volga.com-043
-  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-044
-  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-045
-  - 🇷🇺 Россия VLESS-188.225.83.133-046
+  - 🇵🇱 Польша VLESS-82.47.63.156-029
+  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-030
+  - 🇩🇪 Германия VLESS-159.69.89.23-031
+  - 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-032
+  - 🇬🇧 Великобритания SS-143.110.161.156-033
+  - 🇮🇩 Индонезия SS-103.160.63.199-034
+  - 🇬🇧 Великобритания VLESS-18.169.206.105-035
+  - 🇨🇦 Канада SS-185.156.47.97-036
+  - 🇬🇧 Великобритания VLESS-18.169.206.105-037
+  - 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-038
+  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-039
+  - 🇫🇷 Франция SS-141.227.134.63-040
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-041
+  - 🇷🇺 Россия HYSTERIA2-vpn.ai-boost.tech-042
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -572,50 +528,46 @@ proxy-groups:
   proxies:
   - 🇷🇺 Россия VLESS-176.123.167.90-001
   - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-002
-  - 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-003
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
+  - 🇳🇱 Нидерланды SS-158.173.221.214-003
+  - 🇿🇦 ЮАР VLESS-platform101.golnamakcert.top-004
   - 🇷🇺 Россия HYSTERIA2-91.240.86.70-005
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-008
-  - 🇮🇩 Индонезия SS-103.160.63.199-009
-  - 🇫🇷 Франция VLESS-test.keoplentuio.xyz-010
-  - 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-011
-  - 🇺🇸 США SS-15.204.246.107-012
-  - 🇷🇺 Россия SS-139.100.236.74-013
-  - 🇷🇺 Россия SS-139.100.236.74-014
-  - 🇮🇷 IR VLESS-afra4.nimbaha9.ir-015
-  - 🇷🇺 Россия SS-139.100.236.74-016
-  - 🇬🇧 Великобритания SS-143.110.161.156-017
-  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-018
-  - 🇬🇧 Великобритания VLESS-18.169.206.105-019
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇷🇺 Россия SS-139.100.236.74-007
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-008
+  - 🇷🇺 Россия SS-139.100.236.74-009
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-010
+  - 🇷🇺 Россия SS-135.106.227.252-011
+  - 🇷🇺 Россия SS-139.100.236.74-012
+  - 🇷🇺 Россия VLESS-xnodtwx.artemida.live-013
+  - 🇩🇪 Германия VLESS-159.69.91.8-014
+  - 🇫🇷 Франция VLESS-test.keoplentuio.xyz-015
+  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-016
+  - 🇿🇦 ЮАР VLESS-platform103.golnamakcert.top-017
+  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-018
+  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-019
   - 🇷🇺 Россия VLESS-176.108.243.18-020
-  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-021
-  - 🇩🇪 Германия SS-206.189.52.4-022
-  - 🇵🇱 Польша VLESS-82.47.63.156-023
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-024
-  - 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-025
+  - 🇿🇦 ЮАР VLESS-platform109.golnamakcert.top-021
+  - 🇩🇪 Германия VLESS-128.140.7.132-022
+  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-023
+  - 🇿🇦 ЮАР VLESS-platform118.golnamakcert.top-024
+  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-025
   - 🇬🇧 Великобритания VLESS-66.90.105.211-026
-  - 🇫🇷 Франция SS-141.227.134.63-027
+  - 🇿🇦 ЮАР VLESS-platform106.golnamakcert.top-027
   - 🇯🇵 Япония SS-84.247.155.196-028
-  - 🇵🇱 Польша VLESS-185.62.1.8-029
-  - 🇨🇦 Канада SS-51.222.141.125-030
-  - 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-031
-  - 🇨🇦 Канада SS-185.156.47.97-032
-  - 🇳🇱 Нидерланды SS-158.173.221.214-033
-  - 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-034
-  - 🇩🇪 Германия VLESS-159.69.89.23-035
-  - 🇿🇦 ЮАР VLESS-platform108.golnamakcert.top-036
-  - 🇷🇺 Россия SS-135.106.227.252-037
-  - 🇺🇸 США VLESS-23.83.224.178-038
-  - 🇩🇪 Германия VLESS-128.140.7.132-039
-  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-040
-  - 🇬🇧 Великобритания VLESS-18.169.206.105-041
-  - 🇩🇪 Германия VLESS-159.69.91.8-042
-  - 🇵🇱 Польша VLESS-lineartronic-ii.subaru-volga.com-043
-  - 🇿🇦 ЮАР VLESS-platform107.golnamakcert.top-044
-  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-045
-  - 🇷🇺 Россия VLESS-188.225.83.133-046
+  - 🇵🇱 Польша VLESS-82.47.63.156-029
+  - 🇿🇦 ЮАР VLESS-platform117.golnamakcert.top-030
+  - 🇩🇪 Германия VLESS-159.69.89.23-031
+  - 🇿🇦 ЮАР VLESS-platform102.golnamakcert.top-032
+  - 🇬🇧 Великобритания SS-143.110.161.156-033
+  - 🇮🇩 Индонезия SS-103.160.63.199-034
+  - 🇬🇧 Великобритания VLESS-18.169.206.105-035
+  - 🇨🇦 Канада SS-185.156.47.97-036
+  - 🇬🇧 Великобритания VLESS-18.169.206.105-037
+  - 🇰🇷 Южная Корея SS-ce1fc2d8.krkt.hkssip.com-038
+  - 🇿🇦 ЮАР VLESS-platform113.golnamakcert.top-039
+  - 🇫🇷 Франция SS-141.227.134.63-040
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-041
+  - 🇷🇺 Россия HYSTERIA2-vpn.ai-boost.tech-042
 rule-providers:
   ru-rules:
     type: http
