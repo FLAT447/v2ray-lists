@@ -26,46 +26,25 @@ proxies:
     path: /platform101
     headers:
       Host: platform101.halalkhor.info
-- name: 🇷🇺 Россия VLESS-176.108.244.38-003
-  type: vless
-  server: 176.108.244.38
-  port: 9881
-  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
   udp: true
-  encryption: none
-  tls: true
-  servername: dl.google.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-tunnel
-  reality-opts:
-    public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
-    short-id: aabb
-- name: 🇷🇺 Россия VLESS-161.104.38.98-004
-  type: vless
-  server: 161.104.38.98
-  port: 443
-  uuid: 553d8193-d897-0032-bb46-f075b670f22a
+  sni: itsallproxy.quattro-tech.ru
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
+  type: hysteria2
+  server: 91.240.86.70
+  port: 22443
+  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
   udp: true
-  encryption: none
-  tls: true
-  servername: donatov.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /assets
-    host: donatov.net
-  reality-opts:
-    public-key: kYwdZueXQt_DEKPrWTw8yoj6G4AWqupg8UrWjAgWbkE
-    short-id: 8ba6e72ee60667f6
+  sni: hy.quattro-tech.ru
 - name: 🇷🇺 Россия VLESS-161.104.38.98-005
   type: vless
   server: 161.104.38.98
   port: 443
-  uuid: 553d8193-d897-0032-bb46-f075b670f22a
+  uuid: 553d8193-d897-0024-bb46-f075b670f22a
   udp: true
   encryption: none
   tls: true
@@ -79,13 +58,13 @@ proxies:
   reality-opts:
     public-key: kYwdZueXQt_DEKPrWTw8yoj6G4AWqupg8UrWjAgWbkE
     short-id: 8ba6e72ee60667f6
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
   type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  server: msk.frkn.org
+  port: 443
+  password: f317b5d6-d399-4d3d-a051-89d674ae953c
   udp: true
-  sni: itsallproxy.quattro-tech.ru
+  sni: msk.frkn.org
 - name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
   type: hysteria2
   server: msk.frkn.org
@@ -93,14 +72,33 @@ proxies:
   password: f317b5d6-d399-4d3d-a051-89d674ae953c
   udp: true
   sni: msk.frkn.org
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-008
-  type: hysteria2
-  server: 91.240.86.70
-  port: 22443
-  password: 3f63c86c-ac4a-4900-85cf-4fedf93c2ca5
+  up: '0'
+- name: 🇷🇺 Россия SS-80.242.57.97-008
+  type: ss
+  server: 80.242.57.97
+  port: 3
+  cipher: chacha20-ietf-poly1305
+  password: 9qGcNiZj4uCi7DGSjxlg5Q
   udp: true
-  sni: hy.quattro-tech.ru
-- name: 🇷🇺 Россия VLESS-84.38.187.169-009
+- name: 🇷🇺 Россия VLESS-161.104.38.98-009
+  type: vless
+  server: 161.104.38.98
+  port: 443
+  uuid: 553d8193-d897-0032-bb46-f075b670f22a
+  udp: true
+  encryption: none
+  tls: true
+  servername: donatov.net
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /assets
+    host: donatov.net
+  reality-opts:
+    public-key: kYwdZueXQt_DEKPrWTw8yoj6G4AWqupg8UrWjAgWbkE
+    short-id: 8ba6e72ee60667f6
+- name: 🇷🇺 Россия VLESS-84.38.187.169-010
   type: vless
   server: 84.38.187.169
   port: 443
@@ -118,31 +116,26 @@ proxies:
   reality-opts:
     public-key: rJMYW6mHgjs61mHxfm8Gmm_Re23sV_xe5b0IrTpLsiQ
     short-id: 94c9dbbf07366d96
-- name: 🇨🇦 Канада SS-51.222.141.125-010
+- name: 🇷🇺 Россия SS-80.242.57.97-011
   type: ss
-  server: 51.222.141.125
-  port: 445
-  cipher: aes-256-gcm
-  password: zDNVedRFPQexG9v
+  server: 80.242.57.97
+  port: 1
+  cipher: chacha20-ietf-poly1305
+  password: 9qGcNiZj4uCi7DGSjxlg5Q
   udp: true
-- name: 🇺🇸 США VLESS-moblemangol.ir-011
+- name: 🇬🇧 Великобритания VLESS-66.90.104.43-012
   type: vless
-  server: moblemangol.ir
-  port: 2082
-  uuid: 6a219111-9ee4-4a7a-b9df-af0a33918cb2
+  server: 66.90.104.43
+  port: 2083
+  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-  network: httpupgrade
-- name: 🇲🇽 Мексика SS-64.177.90.30-012
-  type: ss
-  server: 64.177.90.30
-  port: 8388
-  cipher: aes-256-gcm
-  password: BWyPPTusFKhGgzKh
-  udp: true
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless
 - name: 🇬🇧 Великобритания VLESS-66.90.105.211-013
   type: vless
   server: 66.90.105.211
@@ -156,43 +149,14 @@ proxies:
   network: grpc
   grpc-opts:
     grpc-service-name: vless
-- name: 🇳🇱 Нидерланды SS-146.190.236.129-014
-  type: ss
-  server: 146.190.236.129
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-015
-  type: vless
-  server: polished-firefly-3e2d.20-645.workers.dev
-  port: 8880
-  uuid: 3c04e891-dc32-40a3-bcd0-d5e8283a6a03
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-- name: 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-016
-  type: vless
-  server: curly-surf-4401.75-08c.workers.dev
-  port: 8880
-  uuid: 56c673ba-865a-48ec-8dc0-fd7133a7ecfd
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-- name: 🇺🇸 США SS-15.204.247.124-017
+- name: 🇺🇸 США SS-15.204.247.124-014
   type: ss
   server: 15.204.247.124
   port: 2375
   cipher: aes-256-gcm
   password: faBAoD54k87UJG7
   udp: true
-- name: 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-018
+- name: 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-015
   type: vless
   server: muddy-queen-cdda.181-cf9.workers.dev
   port: 8880
@@ -203,7 +167,74 @@ proxies:
   servername: muddy-queen-cdda.181-cf9.workers.dev
   client-fingerprint: firefox
   network: ws
-- name: 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-019
+- name: 🇷🇺 Россия VLESS-213.171.25.29-016
+  type: vless
+  server: 213.171.25.29
+  port: 9889
+  uuid: 5d16ac22-6eea-426f-b778-6f4c2961faef
+  udp: true
+  encryption: none
+  tls: true
+  servername: dl.google.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc-tunnel
+  reality-opts:
+    public-key: ycPIUcY6ci2yi7YA_OHc20e4gzxEdJTqpmeShxSuHRU
+    short-id: aa
+- name: 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-017
+  type: vless
+  server: curly-surf-4401.75-08c.workers.dev
+  port: 8880
+  uuid: 56c673ba-865a-48ec-8dc0-fd7133a7ecfd
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-018
+  type: vless
+  server: polished-firefly-3e2d.20-645.workers.dev
+  port: 8880
+  uuid: 3c04e891-dc32-40a3-bcd0-d5e8283a6a03
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+- name: 🇮🇩 Индонезия SS-103.160.63.199-019
+  type: ss
+  server: 103.160.63.199
+  port: 31348
+  cipher: chacha20-ietf-poly1305
+  password: 8C5valhOd8vfwaTXUSZ6Zyb0Ip34lRR5z7P8az
+  udp: true
+- name: 🇳🇱 Нидерланды SS-146.190.236.129-020
+  type: ss
+  server: 146.190.236.129
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇺🇸 США SS-15.204.246.107-021
+  type: ss
+  server: 15.204.246.107
+  port: 8888
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇨🇦 Канада SS-51.222.141.125-022
+  type: ss
+  server: 51.222.141.125
+  port: 445
+  cipher: aes-256-gcm
+  password: zDNVedRFPQexG9v
+  udp: true
+- name: 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-023
   type: vless
   server: jolly-violet-a006.10-ae8.workers.dev
   port: 8880
@@ -214,40 +245,7 @@ proxies:
   servername: ''
   client-fingerprint: firefox
   network: ws
-- name: 🇬🇧 Великобритания VLESS-66.90.104.43-020
-  type: vless
-  server: 66.90.104.43
-  port: 2083
-  uuid: cd3bb7d9-7df3-4644-ac05-c260990ac277
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless
-- name: 🇬🇧 Великобритания SS-143.110.161.156-021
-  type: ss
-  server: 143.110.161.156
-  port: 17000
-  cipher: aes-256-gcm
-  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
-  udp: true
-- name: 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-022
-  type: vless
-  server: yellow-breeze-989b.348-9b8.workers.dev
-  port: 8880
-  uuid: f9a53aa5-774e-4556-b2b7-d8b57b423b97
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.KR.CMLiussss.net
-- name: 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-023
+- name: 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-024
   type: vless
   server: solitary-mountain-996f.223-38e.workers.dev
   port: 8880
@@ -260,46 +258,103 @@ proxies:
   network: ws
   ws-opts:
     path: /pyip=ProxyIP.KR.CMLiussss.net
-- name: 🇯🇵 Япония SS-84.247.155.196-024
+- name: 🇨🇦 Канада SS-51.222.155.32-025
+  type: ss
+  server: 51.222.155.32
+  port: 5003
+  cipher: aes-256-gcm
+  password: g5MeD6Ft3CWlJId
+  udp: true
+- name: 🇲🇽 Мексика SS-64.177.90.30-026
+  type: ss
+  server: 64.177.90.30
+  port: 8388
+  cipher: aes-256-gcm
+  password: BWyPPTusFKhGgzKh
+  udp: true
+- name: 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
+  type: vless
+  server: crimson-bread-c38e.295.workers.dev
+  port: 8880
+  uuid: ba746959-18e7-471c-b00f-fa5cdd930abf
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.JP.CMLiussss.net
+- name: 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-028
+  type: vless
+  server: yellow-breeze-989b.348-9b8.workers.dev
+  port: 8880
+  uuid: f9a53aa5-774e-4556-b2b7-d8b57b423b97
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /pyip=ProxyIP.KR.CMLiussss.net
+- name: 🇬🇧 Великобритания SS-143.110.161.156-029
+  type: ss
+  server: 143.110.161.156
+  port: 17000
+  cipher: aes-256-gcm
+  password: pX0uhU3ZjUcLWYs0Vez55BO3JoQrRlL
+  udp: true
+- name: 🇯🇵 Япония SS-84.247.155.196-030
   type: ss
   server: 84.247.155.196
   port: 80
   cipher: aes-256-gcm
   password: 3eOFeNssde7PYYMv
   udp: true
-- name: 🇷🇺 Россия VLESS-84.38.187.169-025
+- name: 🇺🇸 США VLESS-moblemangol.ir-031
   type: vless
-  server: 84.38.187.169
-  port: 443
-  uuid: 553d8193-d897-0037-bb46-f075b670f22a
+  server: moblemangol.ir
+  port: 2082
+  uuid: 6a219111-9ee4-4a7a-b9df-af0a33918cb2
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: httpupgrade
+- name: 🇨🇦 Канада SS-185.156.47.97-032
+  type: ss
+  server: 185.156.47.97
+  port: 9443
+  cipher: aes-256-gcm
+  password: eveaaTOb8ji8yntw2Z9yWUG0d6Ir8Ld8m3ymH8THdC5egiTH1mXCiBc0Skr7FibH
+  udp: true
+- name: 🇷🇺 Россия VLESS-shprcdn.homes-033
+  type: vless
+  server: shprcdn.homes
+  port: 7443
+  uuid: 65cd649c-f2f5-49c4-8f57-94d9b706e846
   udp: true
   encryption: none
   tls: true
-  servername: mc.yandex.tr
-  client-fingerprint: qq
+  servername: shprcdn.homes
+  client-fingerprint: edge
   flow: xtls-rprx-vision
   network: xhttp
   xhttp-opts:
-    path: /script
-    host: 84.38.187.169
+    path: /content/dash/segments/
+    host: shprcdn.homes
   reality-opts:
-    public-key: rJMYW6mHgjs61mHxfm8Gmm_Re23sV_xe5b0IrTpLsiQ
-    short-id: 94c9dbbf07366d96
-- name: 🇷🇺 Россия HYSTERIA2-84.252.100.204-026
+    public-key: ypzgxQ7VhTlTqjT0pAzWBIyotcG7SYqMpErwMBDci0g
+- name: 🇯🇵 Япония HYSTERIA2-rb.mangshe.xyz-034
   type: hysteria2
-  server: 84.252.100.204
-  port: 8227
-  password: ODM2MzExOTcyMCwxNzkwNTMyNzE0ksak7YOGMD
+  server: rb.mangshe.xyz
+  port: 2060
+  password: 5d0a6445-a30d-4522-bb1f-94f1d3ad63be
   udp: true
-  sni: sw.lumenvpn.tech
-- name: 🇷🇺 Россия SS-80.242.57.97-027
-  type: ss
-  server: 80.242.57.97
-  port: 3
-  cipher: chacha20-ietf-poly1305
-  password: 9qGcNiZj4uCi7DGSjxlg5Q
-  udp: true
-- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-028
+  sni: rb.mangshe.xyz
+- name: 🇷🇺 Россия HYSTERIA2-91.240.86.70-035
   type: hysteria2
   server: 91.240.86.70
   port: 22443
@@ -314,32 +369,39 @@ proxy-groups:
   - DIRECT
   - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-001
   - 🇲🇾 Малайзия VLESS-platform101.golnamakcert.top-002
-  - 🇷🇺 Россия VLESS-176.108.244.38-003
-  - 🇷🇺 Россия VLESS-161.104.38.98-004
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
   - 🇷🇺 Россия VLESS-161.104.38.98-005
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
   - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-008
-  - 🇷🇺 Россия VLESS-84.38.187.169-009
-  - 🇨🇦 Канада SS-51.222.141.125-010
-  - 🇺🇸 США VLESS-moblemangol.ir-011
-  - 🇲🇽 Мексика SS-64.177.90.30-012
+  - 🇷🇺 Россия SS-80.242.57.97-008
+  - 🇷🇺 Россия VLESS-161.104.38.98-009
+  - 🇷🇺 Россия VLESS-84.38.187.169-010
+  - 🇷🇺 Россия SS-80.242.57.97-011
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-012
   - 🇬🇧 Великобритания VLESS-66.90.105.211-013
-  - 🇳🇱 Нидерланды SS-146.190.236.129-014
-  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-015
-  - 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-016
-  - 🇺🇸 США SS-15.204.247.124-017
-  - 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-018
-  - 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-019
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-020
-  - 🇬🇧 Великобритания SS-143.110.161.156-021
-  - 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-022
-  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-023
-  - 🇯🇵 Япония SS-84.247.155.196-024
-  - 🇷🇺 Россия VLESS-84.38.187.169-025
-  - 🇷🇺 Россия HYSTERIA2-84.252.100.204-026
-  - 🇷🇺 Россия SS-80.242.57.97-027
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-028
+  - 🇺🇸 США SS-15.204.247.124-014
+  - 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-015
+  - 🇷🇺 Россия VLESS-213.171.25.29-016
+  - 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-017
+  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-018
+  - 🇮🇩 Индонезия SS-103.160.63.199-019
+  - 🇳🇱 Нидерланды SS-146.190.236.129-020
+  - 🇺🇸 США SS-15.204.246.107-021
+  - 🇨🇦 Канада SS-51.222.141.125-022
+  - 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-023
+  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-024
+  - 🇨🇦 Канада SS-51.222.155.32-025
+  - 🇲🇽 Мексика SS-64.177.90.30-026
+  - 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
+  - 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-028
+  - 🇬🇧 Великобритания SS-143.110.161.156-029
+  - 🇯🇵 Япония SS-84.247.155.196-030
+  - 🇺🇸 США VLESS-moblemangol.ir-031
+  - 🇨🇦 Канада SS-185.156.47.97-032
+  - 🇷🇺 Россия VLESS-shprcdn.homes-033
+  - 🇯🇵 Япония HYSTERIA2-rb.mangshe.xyz-034
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-035
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -348,32 +410,39 @@ proxy-groups:
   proxies:
   - 🇨🇦 Канада SS-yyz-ca-01.blncvpn4u.cc-001
   - 🇲🇾 Малайзия VLESS-platform101.golnamakcert.top-002
-  - 🇷🇺 Россия VLESS-176.108.244.38-003
-  - 🇷🇺 Россия VLESS-161.104.38.98-004
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-003
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-004
   - 🇷🇺 Россия VLESS-161.104.38.98-005
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-006
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
   - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-008
-  - 🇷🇺 Россия VLESS-84.38.187.169-009
-  - 🇨🇦 Канада SS-51.222.141.125-010
-  - 🇺🇸 США VLESS-moblemangol.ir-011
-  - 🇲🇽 Мексика SS-64.177.90.30-012
+  - 🇷🇺 Россия SS-80.242.57.97-008
+  - 🇷🇺 Россия VLESS-161.104.38.98-009
+  - 🇷🇺 Россия VLESS-84.38.187.169-010
+  - 🇷🇺 Россия SS-80.242.57.97-011
+  - 🇬🇧 Великобритания VLESS-66.90.104.43-012
   - 🇬🇧 Великобритания VLESS-66.90.105.211-013
-  - 🇳🇱 Нидерланды SS-146.190.236.129-014
-  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-015
-  - 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-016
-  - 🇺🇸 США SS-15.204.247.124-017
-  - 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-018
-  - 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-019
-  - 🇬🇧 Великобритания VLESS-66.90.104.43-020
-  - 🇬🇧 Великобритания SS-143.110.161.156-021
-  - 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-022
-  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-023
-  - 🇯🇵 Япония SS-84.247.155.196-024
-  - 🇷🇺 Россия VLESS-84.38.187.169-025
-  - 🇷🇺 Россия HYSTERIA2-84.252.100.204-026
-  - 🇷🇺 Россия SS-80.242.57.97-027
-  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-028
+  - 🇺🇸 США SS-15.204.247.124-014
+  - 🇺🇸 США VLESS-muddy-queen-cdda.181-cf9.workers.dev-015
+  - 🇷🇺 Россия VLESS-213.171.25.29-016
+  - 🇺🇸 США VLESS-curly-surf-4401.75-08c.workers.dev-017
+  - 🇺🇸 США VLESS-polished-firefly-3e2d.20-645.workers.dev-018
+  - 🇮🇩 Индонезия SS-103.160.63.199-019
+  - 🇳🇱 Нидерланды SS-146.190.236.129-020
+  - 🇺🇸 США SS-15.204.246.107-021
+  - 🇨🇦 Канада SS-51.222.141.125-022
+  - 🇺🇸 США VLESS-jolly-violet-a006.10-ae8.workers.dev-023
+  - 🇺🇸 США VLESS-solitary-mountain-996f.223-38e.workers.dev-024
+  - 🇨🇦 Канада SS-51.222.155.32-025
+  - 🇲🇽 Мексика SS-64.177.90.30-026
+  - 🇺🇸 США VLESS-crimson-bread-c38e.295.workers.dev-027
+  - 🇺🇸 США VLESS-yellow-breeze-989b.348-9b8.workers.dev-028
+  - 🇬🇧 Великобритания SS-143.110.161.156-029
+  - 🇯🇵 Япония SS-84.247.155.196-030
+  - 🇺🇸 США VLESS-moblemangol.ir-031
+  - 🇨🇦 Канада SS-185.156.47.97-032
+  - 🇷🇺 Россия VLESS-shprcdn.homes-033
+  - 🇯🇵 Япония HYSTERIA2-rb.mangshe.xyz-034
+  - 🇷🇺 Россия HYSTERIA2-91.240.86.70-035
 rule-providers:
   ru-rules:
     type: http
