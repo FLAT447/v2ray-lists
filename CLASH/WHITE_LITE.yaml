@@ -4,21 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия VLESS-45.12.75.242-001
-  type: vless
-  server: 45.12.75.242
-  port: 26424
-  uuid: 633f424e-2b11-48da-a6b3-a849dd71456f
-  udp: true
-  encryption: none
-  tls: true
-  servername: ya.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: l8AubqcxQO-HRFJy4pZL1vbLOo-eXit69s-XulSELE0
-    short-id: 23103e1e
-- name: 🇷🇺 Россия VLESS-81.94.148.104-002
+- name: 🇷🇺 Россия VLESS-81.94.148.104-001
   type: vless
   server: 81.94.148.104
   port: 2096
@@ -34,7 +20,21 @@ proxies:
     grpc-service-name: vless-grpc-reality
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-003
+- name: 🇮🇹 Италия SS-57.131.48.45-002
+  type: ss
+  server: 57.131.48.45
+  port: 8388
+  cipher: aes-256-gcm
+  password: itzvpn@321
+  udp: true
+- name: 🇨🇦 Канада SS-51.222.141.125-003
+  type: ss
+  server: 51.222.141.125
+  port: 445
+  cipher: aes-256-gcm
+  password: zDNVedRFPQexG9v
+  udp: true
+- name: 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-004
   type: vless
   server: platform109.golnamakcert.top
   port: 80
@@ -49,58 +49,14 @@ proxies:
     path: /platform109
     headers:
       Host: platform109.halalkhor.info
-- name: 🇲🇾 Малайзия VLESS-platform103.golnamakcert.top-004
-  type: vless
-  server: platform103.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: platform103.halalkhor.info
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform103
-    headers:
-      Host: platform103.halalkhor.info
-- name: 🇮🇹 Италия SS-57.131.48.45-005
-  type: ss
-  server: 57.131.48.45
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
-  udp: true
-- name: 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-006
-  type: vless
-  server: platform109.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform109
-    headers:
-      Host: '[''platform109.halalkhor.info'']'
-- name: 🇺🇸 США SS-5.78.51.123-007
+- name: 🇺🇸 США SS-5.78.51.123-005
   type: ss
   server: 5.78.51.123
   port: 1080
   cipher: chacha20-ietf-poly1305
   password: 8tmnvX5zYuWGVIDP2jglZw
   udp: true
-- name: 🇨🇦 Канада SS-51.222.141.125-008
-  type: ss
-  server: 51.222.141.125
-  port: 445
-  cipher: aes-256-gcm
-  password: zDNVedRFPQexG9v
-  udp: true
-- name: 🇷🇺 Россия VLESS-176.108.252.139-009
+- name: 🇷🇺 Россия VLESS-176.108.252.139-006
   type: vless
   server: 176.108.252.139
   port: 9881
@@ -117,81 +73,59 @@ proxies:
   reality-opts:
     public-key: Dfgu8Ey0M8Hz4gXGZAwQ3H9jLt2HByVsjAOTWiuKDB0
     short-id: aabb
-- name: 🇺🇸 США VLESS-bitter-morning-b4e3.283.workers.dev-010
+- name: 🇺🇸 США VLESS-198.251.78.29-007
   type: vless
-  server: bitter-morning-b4e3.283.workers.dev
-  port: 8880
-  uuid: efc13f4d-141c-444c-8fbc-ffbcf2be4252
+  server: 198.251.78.29
+  port: 2053
+  uuid: c423cc1b-f88e-421c-9a16-c480d84da20f
   udp: true
   encryption: none
-  tls: false
-  servername: bitter-morning-b4e3.283.workers.dev
+  tls: true
+  servername: www.cloudflare.com
   client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.JP.CMLiussss.net
-- name: 🇺🇸 США VLESS-fancy-haze-ab00.236-68b.workers.dev-011
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: Uk5b-Wh_uxeCc7R8NS9iWE40xc0h9wWC04rSB9yhgAw
+    short-id: b5d625695ec82c7e
+- name: 🇰🇷 Южная Корея SS-211.174.113.172-008
+  type: ss
+  server: 211.174.113.172
+  port: 49642
+  cipher: aes-256-gcm
+  password: ac9c0a7b
+  udp: true
+- name: 🇧🇬 Болгария VLESS-bg4.univesalsrv.com-009
   type: vless
-  server: fancy-haze-ab00.236-68b.workers.dev
-  port: 8880
-  uuid: adcce8be-9de7-41bd-abcd-52939cec108b
+  server: bg4.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
   udp: true
   encryption: none
-  tls: false
-  servername: fancy-haze-ab00.236-68b.workers.dev
+  tls: true
+  servername: bg4.univesalsrv.com
   client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.SG.CMLiussss.net
-- name: 🇩🇪 Германия SS-213.202.208.199-012
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: cloud.v1.RelayService
+  reality-opts:
+    public-key: k-vH6pkyAv26L1_dXKOFhp0Kesur9-FCUDoj-IIpVhc
+    short-id: 51f45d4fd58cc319
+- name: 🇩🇪 Германия SS-213.202.208.199-010
   type: ss
   server: 213.202.208.199
   port: 7001
   cipher: aes-256-gcm
   password: RexnBgU7EV5ADxG
   udp: true
-- name: 🇩🇪 Германия SS-185.226.172.8-013
-  type: ss
-  server: 185.226.172.8
-  port: 8008
-  cipher: aes-256-gcm
-  password: XKFKl2rULjIp74
-  udp: true
-- name: 🇪🇸 Испания SS-108.181.121.226-014
-  type: ss
-  server: 108.181.121.226
-  port: 8388
-  cipher: chacha20-ietf-poly1305
-  password: WSyL4XTwNsdv
-  udp: true
-- name: 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-015
-  type: vless
-  server: rs3.univesalsrv.com
+- name: 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
+  type: hysteria2
+  server: 45.192.12.93
   port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  password: YutbgyXL1mGaSlBXDoEucWvYbrDCINgUcQ6R6_At5Pjr2xCc
   udp: true
-  encryption: none
-  tls: true
-  servername: ''
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: edge.v2.FeedService
-  reality-opts:
-    public-key: gHDoSWGWMVZKWNKONWHw-Cpl0-bdI6GaKusgJIQ-vWQ
-    short-id: 35d05b666e2c6cdf
-- name: 🇺🇸 США VLESS-104.243.33.154-016
-  type: vless
-  server: 104.243.33.154
-  port: 45299
-  uuid: 261f011c-e97a-4d72-b596-e6329b50b47b
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇷🇺 Россия VLESS-45.133.151.188-017
+  sni: admin.wwwinternetvideo.click
+- name: 🇷🇺 Россия VLESS-45.133.151.188-012
   type: vless
   server: 45.133.151.188
   port: 443
@@ -208,268 +142,42 @@ proxies:
   reality-opts:
     public-key: pAgrBKJCmuSJHIzYkEJTqsOBOVBK_DMtEqFPo-PaTkg
     short-id: b3c9d0c6bdd114a6
-- name: 🇦🇪 ОАЭ VLESS-31.59.210.24-018
-  type: vless
-  server: 31.59.210.24
-  port: 2087
-  uuid: 5413edfb-08d6-4fba-b51c-809c04feb127
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.yandex.ru
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: astracat
-  reality-opts:
-    public-key: W2OLbQ682PLJ9yHQ21Q0nPJk9U8RuL5YnlP-U1fdQzI
-    short-id: a11023050f134216
-- name: 🇲🇾 Малайзия VLESS-23.27.200.125-019
-  type: vless
-  server: 23.27.200.125
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: platform109.halalkhor.info
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform109
-    headers:
-      Host: platform109.halalkhor.info
-- name: 🇺🇸 США VLESS-198.251.78.29-020
-  type: vless
-  server: 198.251.78.29
-  port: 2053
-  uuid: c423cc1b-f88e-421c-9a16-c480d84da20f
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.cloudflare.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: Uk5b-Wh_uxeCc7R8NS9iWE40xc0h9wWC04rSB9yhgAw
-    short-id: b5d625695ec82c7e
-- name: 🇬🇧 Великобритания SS-82.38.31.180-021
-  type: ss
-  server: 82.38.31.180
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: k1dBOmOB4oqi7Ump37a1bQ
-  udp: true
-- name: 🇺🇸 США VLESS-hidden-bonus-24d0.232-647.workers.dev-022
-  type: vless
-  server: hidden-bonus-24d0.232-647.workers.dev
-  port: 8880
-  uuid: e8e34074-166f-48a6-9f86-398ad796c3ca
-  udp: true
-  encryption: none
-  tls: false
-  servername: hidden-bonus-24d0.232-647.workers.dev
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /pyip=ProxyIP.SG.CMLiussss.net
-- name: 🇰🇷 Южная Корея SS-211.174.113.172-023
-  type: ss
-  server: 211.174.113.172
-  port: 49642
-  cipher: aes-256-gcm
-  password: ac9c0a7b
-  udp: true
-- name: 🇺🇸 США SS-15.204.247.124-024
-  type: ss
-  server: 15.204.247.124
-  port: 2375
-  cipher: aes-256-gcm
-  password: faBAoD54k87UJG7
-  udp: true
-- name: 🇺🇸 США SS-15.204.247.206-025
-  type: ss
-  server: 15.204.247.206
-  port: 4444
-  cipher: aes-256-gcm
-  password: pKEW8JPByTVTLtM
-  udp: true
-- name: 🇬🇧 Великобритания VLESS-51.89.194.151-026
-  type: vless
-  server: 51.89.194.151
-  port: 2053
-  uuid: 8e790f25-1d71-4601-9fb0-d503931dcfca
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.apple.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: xPEBx4wUmwAAv4ikUALNBf5wH6TRhyeQ0Q2pcNELsV0
-    short-id: d051f678212f9d54
-- name: 🇵🇱 Польша HYSTERIA2-45.192.12.93-027
-  type: hysteria2
-  server: 45.192.12.93
-  port: 443
-  password: YutbgyXL1mGaSlBXDoEucWvYbrDCINgUcQ6R6_At5Pjr2xCc
-  udp: true
-  sni: admin.wwwinternetvideo.click
-- name: 🇳🇱 Нидерланды VLESS-138.16.141.59-028
-  type: vless
-  server: 138.16.141.59
-  port: 7443
-  uuid: a289a3d3-5833-4b28-8809-ae72898a98d0
-  udp: true
-  encryption: none
-  tls: true
-  servername: ibm.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: RY7zkFQ01lI92jxNAyCa8T33UBW1fgpJgg8ZEqMA10k
-    short-id: a09ff9f8
-- name: 🇨🇦 Канада SS-51.79.85.185-029
-  type: ss
-  server: 51.79.85.185
-  port: 8118
-  cipher: aes-256-gcm
-  password: cdBIDV42DCwnfIN
-  udp: true
-- name: 🇰🇿 Казахстан VLESS-83.222.23.81-030
-  type: vless
-  server: 83.222.23.81
-  port: 38065
-  uuid: 4b9063e0-3288-44e9-9aac-80fbfce323a0
-  udp: true
-  encryption: none
-  tls: true
-  servername: yahoo.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: dSSDPTK6AHfAdRAXD9i4rzqcNIY65RxlF25UyCKdiyo
-    short-id: fa
-- name: 🇺🇸 США SS-140.82.63.79-031
-  type: ss
-  server: 140.82.63.79
-  port: 8388
-  cipher: chacha20-ietf-poly1305
-  password: ZoZtfPOyVvmKARUN
-  udp: true
-- name: 🇷🇺 Россия VLESS-45.133.151.166-032
-  type: vless
-  server: 45.133.151.166
-  port: 25481
-  uuid: 68c3d665-b2b5-4ffb-9f37-9f3d8c47324d
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.bing.com
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 8cb5baa18cd7
-  reality-opts:
-    public-key: mhIAHuZIEr2NpdGGSeOxar7VRSgEfVoNwb_G8Y0073E
-    short-id: 3b84fc70657725af
-- name: 🇺🇸 США VLESS-13.143.180.50-033
-  type: vless
-  server: 13.143.180.50
-  port: 443
-  uuid: 9ea8b000-58ce-4f71-b108-989dd4f248f1
-  udp: true
-  encryption: none
-  tls: true
-  servername: mirror.timeweb.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /ubuntu
-    host: mirror.timeweb.ru
-  reality-opts:
-    public-key: fwQbdsfHEnx2pzokCnyN698SUq5fkQKngnsyPGjmeDg
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-45.12.75.242-001
-  - 🇷🇺 Россия VLESS-81.94.148.104-002
-  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-003
-  - 🇲🇾 Малайзия VLESS-platform103.golnamakcert.top-004
-  - 🇮🇹 Италия SS-57.131.48.45-005
-  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-006
-  - 🇺🇸 США SS-5.78.51.123-007
-  - 🇨🇦 Канада SS-51.222.141.125-008
-  - 🇷🇺 Россия VLESS-176.108.252.139-009
-  - 🇺🇸 США VLESS-bitter-morning-b4e3.283.workers.dev-010
-  - 🇺🇸 США VLESS-fancy-haze-ab00.236-68b.workers.dev-011
-  - 🇩🇪 Германия SS-213.202.208.199-012
-  - 🇩🇪 Германия SS-185.226.172.8-013
-  - 🇪🇸 Испания SS-108.181.121.226-014
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-015
-  - 🇺🇸 США VLESS-104.243.33.154-016
-  - 🇷🇺 Россия VLESS-45.133.151.188-017
-  - 🇦🇪 ОАЭ VLESS-31.59.210.24-018
-  - 🇲🇾 Малайзия VLESS-23.27.200.125-019
-  - 🇺🇸 США VLESS-198.251.78.29-020
-  - 🇬🇧 Великобритания SS-82.38.31.180-021
-  - 🇺🇸 США VLESS-hidden-bonus-24d0.232-647.workers.dev-022
-  - 🇰🇷 Южная Корея SS-211.174.113.172-023
-  - 🇺🇸 США SS-15.204.247.124-024
-  - 🇺🇸 США SS-15.204.247.206-025
-  - 🇬🇧 Великобритания VLESS-51.89.194.151-026
-  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-027
-  - 🇳🇱 Нидерланды VLESS-138.16.141.59-028
-  - 🇨🇦 Канада SS-51.79.85.185-029
-  - 🇰🇿 Казахстан VLESS-83.222.23.81-030
-  - 🇺🇸 США SS-140.82.63.79-031
-  - 🇷🇺 Россия VLESS-45.133.151.166-032
-  - 🇺🇸 США VLESS-13.143.180.50-033
+  - 🇷🇺 Россия VLESS-81.94.148.104-001
+  - 🇮🇹 Италия SS-57.131.48.45-002
+  - 🇨🇦 Канада SS-51.222.141.125-003
+  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-004
+  - 🇺🇸 США SS-5.78.51.123-005
+  - 🇷🇺 Россия VLESS-176.108.252.139-006
+  - 🇺🇸 США VLESS-198.251.78.29-007
+  - 🇰🇷 Южная Корея SS-211.174.113.172-008
+  - 🇧🇬 Болгария VLESS-bg4.univesalsrv.com-009
+  - 🇩🇪 Германия SS-213.202.208.199-010
+  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
+  - 🇷🇺 Россия VLESS-45.133.151.188-012
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-45.12.75.242-001
-  - 🇷🇺 Россия VLESS-81.94.148.104-002
-  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-003
-  - 🇲🇾 Малайзия VLESS-platform103.golnamakcert.top-004
-  - 🇮🇹 Италия SS-57.131.48.45-005
-  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-006
-  - 🇺🇸 США SS-5.78.51.123-007
-  - 🇨🇦 Канада SS-51.222.141.125-008
-  - 🇷🇺 Россия VLESS-176.108.252.139-009
-  - 🇺🇸 США VLESS-bitter-morning-b4e3.283.workers.dev-010
-  - 🇺🇸 США VLESS-fancy-haze-ab00.236-68b.workers.dev-011
-  - 🇩🇪 Германия SS-213.202.208.199-012
-  - 🇩🇪 Германия SS-185.226.172.8-013
-  - 🇪🇸 Испания SS-108.181.121.226-014
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-015
-  - 🇺🇸 США VLESS-104.243.33.154-016
-  - 🇷🇺 Россия VLESS-45.133.151.188-017
-  - 🇦🇪 ОАЭ VLESS-31.59.210.24-018
-  - 🇲🇾 Малайзия VLESS-23.27.200.125-019
-  - 🇺🇸 США VLESS-198.251.78.29-020
-  - 🇬🇧 Великобритания SS-82.38.31.180-021
-  - 🇺🇸 США VLESS-hidden-bonus-24d0.232-647.workers.dev-022
-  - 🇰🇷 Южная Корея SS-211.174.113.172-023
-  - 🇺🇸 США SS-15.204.247.124-024
-  - 🇺🇸 США SS-15.204.247.206-025
-  - 🇬🇧 Великобритания VLESS-51.89.194.151-026
-  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-027
-  - 🇳🇱 Нидерланды VLESS-138.16.141.59-028
-  - 🇨🇦 Канада SS-51.79.85.185-029
-  - 🇰🇿 Казахстан VLESS-83.222.23.81-030
-  - 🇺🇸 США SS-140.82.63.79-031
-  - 🇷🇺 Россия VLESS-45.133.151.166-032
-  - 🇺🇸 США VLESS-13.143.180.50-033
+  - 🇷🇺 Россия VLESS-81.94.148.104-001
+  - 🇮🇹 Италия SS-57.131.48.45-002
+  - 🇨🇦 Канада SS-51.222.141.125-003
+  - 🇲🇾 Малайзия VLESS-platform109.golnamakcert.top-004
+  - 🇺🇸 США SS-5.78.51.123-005
+  - 🇷🇺 Россия VLESS-176.108.252.139-006
+  - 🇺🇸 США VLESS-198.251.78.29-007
+  - 🇰🇷 Южная Корея SS-211.174.113.172-008
+  - 🇧🇬 Болгария VLESS-bg4.univesalsrv.com-009
+  - 🇩🇪 Германия SS-213.202.208.199-010
+  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
+  - 🇷🇺 Россия VLESS-45.133.151.188-012
 rule-providers:
   ru-rules:
     type: http
