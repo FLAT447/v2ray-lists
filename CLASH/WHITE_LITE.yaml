@@ -4,7 +4,22 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия VLESS-87.228.92.103-001
+- name: 🇷🇺 Россия VLESS-79.174.92.222-001
+  type: vless
+  server: 79.174.92.222
+  port: 443
+  uuid: 03ca8c3f-e777-45b5-a1b1-592094ca99ee
+  udp: true
+  encryption: none
+  tls: true
+  servername: m.vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  reality-opts:
+    public-key: _PYBo3dyZRpGC44vADqcmlBCSeAVh1X8l3mulghVsTI
+    short-id: a1b2c3d4
+- name: 🇷🇺 Россия VLESS-87.228.92.103-002
   type: vless
   server: 87.228.92.103
   port: 25178
@@ -18,28 +33,35 @@ proxies:
   reality-opts:
     public-key: UTK3fM9wiII4uIcBYUYJwppN1HezxBPhxPfIxDHZqj4
     short-id: ce43937e79bc30f0
-- name: 🇨🇦 Канада SS-51.222.141.125-002
+- name: 🇨🇦 Канада SS-51.222.141.125-003
   type: ss
   server: 51.222.141.125
   port: 445
   cipher: aes-256-gcm
   password: zDNVedRFPQexG9v
   udp: true
-- name: 🇺🇸 США SS-5.78.51.123-003
+- name: 🇺🇸 США SS-5.78.51.123-004
   type: ss
   server: 5.78.51.123
   port: 1080
   cipher: chacha20-ietf-poly1305
   password: 8tmnvX5zYuWGVIDP2jglZw
   udp: true
-- name: 🇮🇹 Италия SS-57.131.48.45-004
+- name: 🇮🇹 Италия SS-57.131.48.45-005
   type: ss
   server: 57.131.48.45
   port: 8388
   cipher: aes-256-gcm
   password: itzvpn@321
   udp: true
-- name: 🇷🇺 Россия VLESS-45.132.176.172-005
+- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
+  type: hysteria2
+  server: msk.frkn.org
+  port: 443
+  password: f317b5d6-d399-4d3d-a051-89d674ae953c
+  udp: true
+  sni: msk.frkn.org
+- name: 🇷🇺 Россия VLESS-45.132.176.172-007
   type: vless
   server: 45.132.176.172
   port: 9889
@@ -56,42 +78,45 @@ proxies:
   reality-opts:
     public-key: ycPIUcY6ci2yi7YA_OHc20e4gzxEdJTqpmeShxSuHRU
     short-id: aa
-- name: 🇷🇺 Россия HYSTERIA2-94.198.54.132-006
+- name: 🇷🇺 Россия HYSTERIA2-94.198.54.132-008
   type: hysteria2
   server: 94.198.54.132
   port: 443
   password: f317b5d6-d399-4d3d-a051-89d674ae953c
   udp: true
   sni: msk.frkn.org
-- name: 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
+- name: 🇩🇪 Германия HYSTERIA2-188.241.241.181-009
   type: hysteria2
-  server: msk.frkn.org
+  server: 188.241.241.181
   port: 443
-  password: f317b5d6-d399-4d3d-a051-89d674ae953c
+  password: 267b3a79-81f2-42ac-a409-c23b05b6329d
   udp: true
-  sni: msk.frkn.org
-- name: 🇰🇷 Южная Корея VLESS-34.22.111.30-008
+  sni: dehy.bbobr.win
+- name: 🇬🇧 Великобритания VLESS-212.74.39.188-010
   type: vless
-  server: 34.22.111.30
-  port: 443
-  uuid: cb2abff3-5fe6-4b5a-aa19-5739deb285b6
+  server: 212.74.39.188
+  port: 8080
+  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
   udp: true
   encryption: none
-  tls: true
-  servername: www.cloudflare.com
+  tls: false
+  servername: ''
   client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: M0QKczb2MzOH45qDViIAbb9LPrVVyCp880D4HlwIKnA
-    short-id: 8685f8b4d9f4f51e
-- name: 🇵🇱 Польша HYSTERIA2-45.192.12.93-009
+- name: 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
   type: hysteria2
   server: 45.192.12.93
   port: 443
   password: YutbgyXL1mGaSlBXDoEucWvYbrDCINgUcQ6R6_At5Pjr2xCc
   udp: true
   sni: admin.wwwinternetvideo.click
-- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-010
+- name: 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-012
+  type: hysteria2
+  server: dehy.bbobr.win
+  port: 443
+  password: 267b3a79-81f2-42ac-a409-c23b05b6329d
+  udp: true
+  sni: dehy.bbobr.win
+- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-013
   type: vless
   server: bg3.univesalsrv.com
   port: 443
@@ -108,47 +133,79 @@ proxies:
   reality-opts:
     public-key: XBfCioniAKXgKYBUVnvBXu80AIaIa4SpAB3w8qeF7Gk
     short-id: 1be1bd931c98c84a
-- name: 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-011
-  type: hysteria2
-  server: dehy.bbobr.win
+- name: 🇰🇷 Южная Корея VLESS-34.22.111.30-014
+  type: vless
+  server: 34.22.111.30
   port: 443
-  password: 267b3a79-81f2-42ac-a409-c23b05b6329d
+  uuid: cb2abff3-5fe6-4b5a-aa19-5739deb285b6
   udp: true
-  sni: dehy.bbobr.win
+  encryption: none
+  tls: true
+  servername: www.cloudflare.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: M0QKczb2MzOH45qDViIAbb9LPrVVyCp880D4HlwIKnA
+    short-id: 8685f8b4d9f4f51e
+- name: 🇷🇺 Россия VLESS-188.225.45.77-015
+  type: vless
+  server: 188.225.45.77
+  port: 443
+  uuid: 57284239-1ceb-439f-826e-cd25fcc1c1c5
+  udp: true
+  encryption: none
+  tls: true
+  servername: 5post-gate.x5.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+  reality-opts:
+    public-key: 5SjHShy0uFG9MmzFbZ21Ozg623ZXKwLf3pzC_QA8CBE
+    short-id: 5803463a64073dfc
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-87.228.92.103-001
-  - 🇨🇦 Канада SS-51.222.141.125-002
-  - 🇺🇸 США SS-5.78.51.123-003
-  - 🇮🇹 Италия SS-57.131.48.45-004
-  - 🇷🇺 Россия VLESS-45.132.176.172-005
-  - 🇷🇺 Россия HYSTERIA2-94.198.54.132-006
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇰🇷 Южная Корея VLESS-34.22.111.30-008
-  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-009
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-010
-  - 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-011
+  - 🇷🇺 Россия VLESS-79.174.92.222-001
+  - 🇷🇺 Россия VLESS-87.228.92.103-002
+  - 🇨🇦 Канада SS-51.222.141.125-003
+  - 🇺🇸 США SS-5.78.51.123-004
+  - 🇮🇹 Италия SS-57.131.48.45-005
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
+  - 🇷🇺 Россия VLESS-45.132.176.172-007
+  - 🇷🇺 Россия HYSTERIA2-94.198.54.132-008
+  - 🇩🇪 Германия HYSTERIA2-188.241.241.181-009
+  - 🇬🇧 Великобритания VLESS-212.74.39.188-010
+  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
+  - 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-012
+  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-013
+  - 🇰🇷 Южная Корея VLESS-34.22.111.30-014
+  - 🇷🇺 Россия VLESS-188.225.45.77-015
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-87.228.92.103-001
-  - 🇨🇦 Канада SS-51.222.141.125-002
-  - 🇺🇸 США SS-5.78.51.123-003
-  - 🇮🇹 Италия SS-57.131.48.45-004
-  - 🇷🇺 Россия VLESS-45.132.176.172-005
-  - 🇷🇺 Россия HYSTERIA2-94.198.54.132-006
-  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-007
-  - 🇰🇷 Южная Корея VLESS-34.22.111.30-008
-  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-009
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-010
-  - 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-011
+  - 🇷🇺 Россия VLESS-79.174.92.222-001
+  - 🇷🇺 Россия VLESS-87.228.92.103-002
+  - 🇨🇦 Канада SS-51.222.141.125-003
+  - 🇺🇸 США SS-5.78.51.123-004
+  - 🇮🇹 Италия SS-57.131.48.45-005
+  - 🇷🇺 Россия HYSTERIA2-msk.frkn.org-006
+  - 🇷🇺 Россия VLESS-45.132.176.172-007
+  - 🇷🇺 Россия HYSTERIA2-94.198.54.132-008
+  - 🇩🇪 Германия HYSTERIA2-188.241.241.181-009
+  - 🇬🇧 Великобритания VLESS-212.74.39.188-010
+  - 🇵🇱 Польша HYSTERIA2-45.192.12.93-011
+  - 🇩🇪 Германия HYSTERIA2-dehy.bbobr.win-012
+  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-013
+  - 🇰🇷 Южная Корея VLESS-34.22.111.30-014
+  - 🇷🇺 Россия VLESS-188.225.45.77-015
 rule-providers:
   ru-rules:
     type: http
