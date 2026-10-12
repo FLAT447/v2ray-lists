@@ -19,19 +19,22 @@ proxies:
     path: /platform103
     headers:
       Host: platform103.halalkhor.info
-- name: 🇷🇺 Россия VLESS-193.164.149.248-002
+- name: 🇷🇺 Россия VLESS-93.188.184.150-002
   type: vless
-  server: 193.164.149.248
+  server: 93.188.184.150
   port: 443
   uuid: c6e3c24c-ce20-4ad5-8c8c-68cb05890ea8
   udp: true
   encryption: none
   tls: true
-  servername: ru-1-1.unturned-rust-dead.lol
-  client-fingerprint: firefox
+  servername: ru-1-2.unturned-rust-dead.lol
+  client-fingerprint: edge
   flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: ru-api
   reality-opts:
-    public-key: gS0qvWKumWcOVoAgf8SHt6Sm3tqpBw07c5sA_Clb1hg
+    public-key: aYz4_13W8gtAXGBrWeqJXtExahAJ9kUPDapqeyAlYCk
 - name: 🇷🇺 Россия VLESS-82.202.139.225-003
   type: vless
   server: 82.202.139.225
@@ -49,39 +52,7 @@ proxies:
   reality-opts:
     public-key: sm3E3hjmT6_Gmg_O9rBz4nfXYrHpnl6-LvcCp6T6_xc
     short-id: aabbccdd
-- name: 🇷🇺 Россия VLESS-109.172.30.65-004
-  type: vless
-  server: 109.172.30.65
-  port: 2096
-  uuid: 3fcec4e4-a674-44d2-8cae-c253cec43b9c
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: qq
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-93.188.184.150-005
-  type: vless
-  server: 93.188.184.150
-  port: 443
-  uuid: c6e3c24c-ce20-4ad5-8c8c-68cb05890ea8
-  udp: true
-  encryption: none
-  tls: true
-  servername: ru-1-2.unturned-rust-dead.lol
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: ru-api
-  reality-opts:
-    public-key: aYz4_13W8gtAXGBrWeqJXtExahAJ9kUPDapqeyAlYCk
-- name: 🇷🇺 Россия VLESS-82.202.139.79-006
+- name: 🇷🇺 Россия VLESS-82.202.139.79-004
   type: vless
   server: 82.202.139.79
   port: 9882
@@ -98,7 +69,7 @@ proxies:
   reality-opts:
     public-key: bnRIb3Er1i-K6NGGByCO9UbGfOvu43ZoiK7ulPd1SzU
     short-id: aabb
-- name: 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-007
+- name: 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-005
   type: vless
   server: ru-1-1.unturned-rust-dead.lol
   port: 443
@@ -111,23 +82,42 @@ proxies:
   flow: xtls-rprx-vision
   reality-opts:
     public-key: gS0qvWKumWcOVoAgf8SHt6Sm3tqpBw07c5sA_Clb1hg
-- name: 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-008
+- name: 🇷🇺 Россия VLESS-109.172.30.65-006
   type: vless
-  server: 36a466g.fi1.h1clayd.click
-  port: 443
-  uuid: 9a0e84f8-4b58-477f-99da-5fac5a2e58e8
+  server: 109.172.30.65
+  port: 2096
+  uuid: 3fcec4e4-a674-44d2-8cae-c253cec43b9c
   udp: true
   encryption: none
   tls: true
-  servername: 36a466g.fi1.h1clayd.click
-  client-fingerprint: firefox
+  servername: id.vk.com
+  client-fingerprint: qq
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
-    grpc-service-name: 0adb9638509b
+    grpc-service-name: vless-grpc-reality
   reality-opts:
-    public-key: pAgrBKJCmuSJHIzYkEJTqsOBOVBK_DMtEqFPo-PaTkg
-    short-id: b3c9d0c6bdd114a6
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇷🇺 Россия VLESS-193.164.149.248-007
+  type: vless
+  server: 193.164.149.248
+  port: 443
+  uuid: c6e3c24c-ce20-4ad5-8c8c-68cb05890ea8
+  udp: true
+  encryption: none
+  tls: true
+  servername: ru-1-1.unturned-rust-dead.lol
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: gS0qvWKumWcOVoAgf8SHt6Sm3tqpBw07c5sA_Clb1hg
+- name: 🇬🇧 Великобритания SS-82.38.31.181-008
+  type: ss
+  server: 82.38.31.181
+  port: 8080
+  cipher: chacha20-ietf-poly1305
+  password: k1dBOmOB4oqi7Ump37a1bQ
+  udp: true
 - name: 🇩🇪 Германия VLESS-64.188.119.73-009
   type: vless
   server: 64.188.119.73
@@ -142,24 +132,7 @@ proxies:
   reality-opts:
     public-key: zvLIiZsAqG2Uz9FEBPJ1q2P6lUmG4SBv-M7vlDuqEFo
     short-id: 421880b82d
-- name: 🇲🇩 Молдова VLESS-md3.univesalsrv.com-010
-  type: vless
-  server: md3.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: md3.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: stats.v2.PushService
-  reality-opts:
-    public-key: q38CddDj2g-XNDc0uW1m6S6b8iGY_Bne2RwX7C_FYCQ
-    short-id: 9a72d40f1ff882b3
-- name: 🇲🇩 Молдова VLESS-md2.univesalsrv.com-011
+- name: 🇲🇩 Молдова VLESS-md2.univesalsrv.com-010
   type: vless
   server: md2.univesalsrv.com
   port: 443
@@ -176,13 +149,40 @@ proxies:
   reality-opts:
     public-key: JXFsWHYjhAcR-7yz9tuCTMdcfuiyC9a-C9ewA55Z63o
     short-id: d36a38659ce106cb
-- name: 🇬🇧 Великобритания SS-82.38.31.181-012
-  type: ss
-  server: 82.38.31.181
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: k1dBOmOB4oqi7Ump37a1bQ
+- name: 🇲🇩 Молдова VLESS-md3.univesalsrv.com-011
+  type: vless
+  server: md3.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
   udp: true
+  encryption: none
+  tls: true
+  servername: md3.univesalsrv.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: stats.v2.PushService
+  reality-opts:
+    public-key: q38CddDj2g-XNDc0uW1m6S6b8iGY_Bne2RwX7C_FYCQ
+    short-id: 9a72d40f1ff882b3
+- name: 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-012
+  type: vless
+  server: 36a466g.fi1.h1clayd.click
+  port: 443
+  uuid: 9a0e84f8-4b58-477f-99da-5fac5a2e58e8
+  udp: true
+  encryption: none
+  tls: true
+  servername: 36a466g.fi1.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 0adb9638509b
+  reality-opts:
+    public-key: pAgrBKJCmuSJHIzYkEJTqsOBOVBK_DMtEqFPo-PaTkg
+    short-id: b3c9d0c6bdd114a6
 - name: 🇷🇺 Россия VLESS-188.225.83.133-013
   type: vless
   server: 188.225.83.133
@@ -198,9 +198,9 @@ proxies:
   reality-opts:
     public-key: JqmkP6Fys7jN2Fu1iDJuWKVNPhlgHfy_pj1DHFVKVhw
     short-id: a1b2c3d4e5f6a7b8
-- name: 🇷🇺 Россия VLESS-81.94.148.104-014
+- name: 🇷🇺 Россия VLESS-bs.l90909l.vip-014
   type: vless
-  server: 81.94.148.104
+  server: bs.l90909l.vip
   port: 2096
   uuid: 3fcec4e4-a674-44d2-8cae-c253cec43b9c
   udp: true
@@ -214,9 +214,9 @@ proxies:
     grpc-service-name: vless-grpc-reality
   reality-opts:
     public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-bs.l90909l.vip-015
+- name: 🇷🇺 Россия VLESS-81.94.148.104-015
   type: vless
-  server: bs.l90909l.vip
+  server: 81.94.148.104
   port: 2096
   uuid: 3fcec4e4-a674-44d2-8cae-c253cec43b9c
   udp: true
@@ -255,20 +255,20 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇲🇾 Малайзия VLESS-platform103.golnamakcert.top-001
-  - 🇷🇺 Россия VLESS-193.164.149.248-002
+  - 🇷🇺 Россия VLESS-93.188.184.150-002
   - 🇷🇺 Россия VLESS-82.202.139.225-003
-  - 🇷🇺 Россия VLESS-109.172.30.65-004
-  - 🇷🇺 Россия VLESS-93.188.184.150-005
-  - 🇷🇺 Россия VLESS-82.202.139.79-006
-  - 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-007
-  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-008
+  - 🇷🇺 Россия VLESS-82.202.139.79-004
+  - 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-005
+  - 🇷🇺 Россия VLESS-109.172.30.65-006
+  - 🇷🇺 Россия VLESS-193.164.149.248-007
+  - 🇬🇧 Великобритания SS-82.38.31.181-008
   - 🇩🇪 Германия VLESS-64.188.119.73-009
-  - 🇲🇩 Молдова VLESS-md3.univesalsrv.com-010
-  - 🇲🇩 Молдова VLESS-md2.univesalsrv.com-011
-  - 🇬🇧 Великобритания SS-82.38.31.181-012
+  - 🇲🇩 Молдова VLESS-md2.univesalsrv.com-010
+  - 🇲🇩 Молдова VLESS-md3.univesalsrv.com-011
+  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-012
   - 🇷🇺 Россия VLESS-188.225.83.133-013
-  - 🇷🇺 Россия VLESS-81.94.148.104-014
-  - 🇷🇺 Россия VLESS-bs.l90909l.vip-015
+  - 🇷🇺 Россия VLESS-bs.l90909l.vip-014
+  - 🇷🇺 Россия VLESS-81.94.148.104-015
   - 🇸🇨 SC VLESS-45.12.63.165-016
 - name: AUTO
   type: url-test
@@ -277,20 +277,20 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇲🇾 Малайзия VLESS-platform103.golnamakcert.top-001
-  - 🇷🇺 Россия VLESS-193.164.149.248-002
+  - 🇷🇺 Россия VLESS-93.188.184.150-002
   - 🇷🇺 Россия VLESS-82.202.139.225-003
-  - 🇷🇺 Россия VLESS-109.172.30.65-004
-  - 🇷🇺 Россия VLESS-93.188.184.150-005
-  - 🇷🇺 Россия VLESS-82.202.139.79-006
-  - 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-007
-  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-008
+  - 🇷🇺 Россия VLESS-82.202.139.79-004
+  - 🇷🇺 Россия VLESS-ru-1-1.unturned-rust-dead.lol-005
+  - 🇷🇺 Россия VLESS-109.172.30.65-006
+  - 🇷🇺 Россия VLESS-193.164.149.248-007
+  - 🇬🇧 Великобритания SS-82.38.31.181-008
   - 🇩🇪 Германия VLESS-64.188.119.73-009
-  - 🇲🇩 Молдова VLESS-md3.univesalsrv.com-010
-  - 🇲🇩 Молдова VLESS-md2.univesalsrv.com-011
-  - 🇬🇧 Великобритания SS-82.38.31.181-012
+  - 🇲🇩 Молдова VLESS-md2.univesalsrv.com-010
+  - 🇲🇩 Молдова VLESS-md3.univesalsrv.com-011
+  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-012
   - 🇷🇺 Россия VLESS-188.225.83.133-013
-  - 🇷🇺 Россия VLESS-81.94.148.104-014
-  - 🇷🇺 Россия VLESS-bs.l90909l.vip-015
+  - 🇷🇺 Россия VLESS-bs.l90909l.vip-014
+  - 🇷🇺 Россия VLESS-81.94.148.104-015
   - 🇸🇨 SC VLESS-45.12.63.165-016
 rule-providers:
   ru-rules:
