@@ -4,38 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇫🇮 Финляндия VLESS-83.219.97.18-001
-  type: vless
-  server: 83.219.97.18
-  port: 443
-  uuid: fe551942-d6e5-4361-ae5c-1f2e9077cd79
-  udp: true
-  encryption: none
-  tls: true
-  servername: fi5.silalink.sbs
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: 32XFmS-ifqooBFY89KNP3ZrqgSBOd3vel9GlNinL6yw
-    short-id: '03'
-- name: 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-002
-  type: vless
-  server: rs3.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: rs3.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: edge.v2.FeedService
-  reality-opts:
-    public-key: gHDoSWGWMVZKWNKONWHw-Cpl0-bdI6GaKusgJIQ-vWQ
-    short-id: 35d05b666e2c6cdf
-- name: 🇷🇸 Сербия VLESS-150.40.126.19-003
+- name: 🇷🇸 Сербия VLESS-150.40.126.19-001
   type: vless
   server: 150.40.126.19
   port: 443
@@ -52,9 +21,9 @@ proxies:
   reality-opts:
     public-key: tL16MVY08r-7YDXb1_gxuBBWInpSFp97ZLJ_ax3R2iE
     short-id: 1469af2040b7c323
-- name: 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-004
+- name: 🇷🇸 Сербия VLESS-150.40.126.24-002
   type: vless
-  server: rs5.univesalsrv.com
+  server: 150.40.126.24
   port: 443
   uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
   udp: true
@@ -69,6 +38,37 @@ proxies:
   reality-opts:
     public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
     short-id: 4872856d5489c37d
+- name: 🇫🇮 Финляндия VLESS-83.219.97.18-003
+  type: vless
+  server: 83.219.97.18
+  port: 443
+  uuid: fe551942-d6e5-4361-ae5c-1f2e9077cd79
+  udp: true
+  encryption: none
+  tls: true
+  servername: fi5.silalink.sbs
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 32XFmS-ifqooBFY89KNP3ZrqgSBOd3vel9GlNinL6yw
+    short-id: '03'
+- name: 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-004
+  type: vless
+  server: rs3.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  udp: true
+  encryption: none
+  tls: true
+  servername: rs3.univesalsrv.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: edge.v2.FeedService
+  reality-opts:
+    public-key: gHDoSWGWMVZKWNKONWHw-Cpl0-bdI6GaKusgJIQ-vWQ
+    short-id: 35d05b666e2c6cdf
 - name: 🇩🇪 Германия VLESS-milo.rubinaz.xyz-005
   type: vless
   server: milo.rubinaz.xyz
@@ -79,55 +79,7 @@ proxies:
   tls: false
   servername: milo.rubinaz.xyz
   client-fingerprint: firefox
-- name: 🇷🇺 Россия VLESS-ss.90909.club-006
-  type: vless
-  server: ss.90909.club
-  port: 2096
-  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: qq
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-us.90909.club-007
-  type: vless
-  server: us.90909.club
-  port: 2096
-  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: qq
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-213.176.19.64-008
-  type: vless
-  server: 213.176.19.64
-  port: 2096
-  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
-  udp: true
-  encryption: none
-  tls: true
-  servername: id.vk.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: vless-grpc-reality
-  reality-opts:
-    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
-- name: 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-009
+- name: 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-006
   type: vless
   server: 36a466g.fi1.h1clayd.click
   port: 443
@@ -144,6 +96,54 @@ proxies:
   reality-opts:
     public-key: pAgrBKJCmuSJHIzYkEJTqsOBOVBK_DMtEqFPo-PaTkg
     short-id: b3c9d0c6bdd114a6
+- name: 🇷🇺 Россия VLESS-213.176.19.64-007
+  type: vless
+  server: 213.176.19.64
+  port: 2096
+  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
+  udp: true
+  encryption: none
+  tls: true
+  servername: id.vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless-grpc-reality
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇷🇺 Россия VLESS-us.90909.club-008
+  type: vless
+  server: us.90909.club
+  port: 2096
+  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
+  udp: true
+  encryption: none
+  tls: true
+  servername: id.vk.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless-grpc-reality
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
+- name: 🇲🇩 Молдова VLESS-ss.90909.club-009
+  type: vless
+  server: ss.90909.club
+  port: 2096
+  uuid: eeb96fef-4476-4ab0-915e-32e8f014c3b2
+  udp: true
+  encryption: none
+  tls: true
+  servername: id.vk.com
+  client-fingerprint: qq
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: vless-grpc-reality
+  reality-opts:
+    public-key: SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc
 - name: 🇷🇺 Россия VLESS-router.hermit.pw-010
   type: vless
   server: router.hermit.pw
@@ -192,7 +192,14 @@ proxies:
   reality-opts:
     public-key: tL16MVY08r-7YDXb1_gxuBBWInpSFp97ZLJ_ax3R2iE
     short-id: 1469af2040b7c323
-- name: 🇵🇱 Польша VLESS-connect.hondamotor.site-013
+- name: 🇬🇧 Великобритания SS-82.38.31.7-013
+  type: ss
+  server: 82.38.31.7
+  port: 8080
+  cipher: chacha20-ietf-poly1305
+  password: oZIoA69Q8yhcQV8ka3Pa3A
+  udp: true
+- name: 🇵🇱 Польша VLESS-connect.hondamotor.site-014
   type: vless
   server: connect.hondamotor.site
   port: 10002
@@ -202,7 +209,7 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇨🇦 Канада VLESS-51.161.72.153-014
+- name: 🇨🇦 Канада VLESS-51.161.72.153-015
   type: vless
   server: 51.161.72.153
   port: 37765
@@ -219,99 +226,31 @@ proxies:
   reality-opts:
     public-key: g-4UVtgbojoxQaglMCttyLme4xjtTqomqxdZaVsruQ4
     short-id: defda00d613c
-- name: 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-015
+- name: 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-016
   type: vless
-  server: rs1.univesalsrv.com
+  server: bg5.univesalsrv.com
   port: 443
   uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
   udp: true
   encryption: none
   tls: true
-  servername: rs1.univesalsrv.com
-  client-fingerprint: firefox
+  servername: bg5.univesalsrv.com
+  client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
-    grpc-service-name: node.v2.ObjectService
+    grpc-service-name: gw.v2.RelayService
   reality-opts:
-    public-key: upIzyaSbVz2ZK6KfGtXmPl_-sCwn8XLDyFDH5CsL9iY
-    short-id: ed0cd5cc2e26e6e7
-- name: 🇵🇱 Польша VLESS-edge10.cyrionflare.com-016
-  type: vless
-  server: edge10.cyrionflare.com
-  port: 2052
-  uuid: 1a8ecc41-6e62-431b-8eca-87c2fa4dc286
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇬🇧 Великобритания SS-82.38.31.198-017
+    public-key: RDWvDEygSk1eyAQhIK95H9EteFbrS2d9JEjBrco54Bw
+    short-id: 1a3102bb8e51399e
+- name: 🇮🇹 Италия SS-202.50.253.90-017
   type: ss
-  server: 82.38.31.198
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: k1dBOmOB4oqi7Ump37a1bQ
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-018
-  type: vless
-  server: rs5.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: rs5.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gw.v1.ObjectService
-  reality-opts:
-    public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
-    short-id: 4872856d5489c37d
-- name: 🇯🇵 Япония VLESS-152.69.195.67-019
-  type: vless
-  server: 152.69.195.67
-  port: 47878
-  uuid: eb8613e3-8393-4cff-a3ad-6501fd4adc63
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-020
-  type: vless
-  server: bg3.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: bg3.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: home.v1.ApiService
-  reality-opts:
-    public-key: XBfCioniAKXgKYBUVnvBXu80AIaIa4SpAB3w8qeF7Gk
-    short-id: 1be1bd931c98c84a
-- name: 🇬🇧 Великобритания SS-82.38.31.171-021
-  type: ss
-  server: 82.38.31.171
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇬🇧 Великобритания SS-82.38.31.11-022
-  type: ss
-  server: 82.38.31.11
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇲🇩 Молдова VLESS-md1.univesalsrv.com-023
+- name: 🇲🇩 Молдова VLESS-md1.univesalsrv.com-018
   type: vless
   server: md1.univesalsrv.com
   port: 443
@@ -328,222 +267,7 @@ proxies:
   reality-opts:
     public-key: xWejOQUn2koOUorUPSrHMLM-lyHlZ441KzxKc9bLmkY
     short-id: 221ba6174224ca5b
-- name: 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-024
-  type: vless
-  server: rs3.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: rs3.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: edge.v2.FeedService
-  reality-opts:
-    public-key: gHDoSWGWMVZKWNKONWHw-Cpl0-bdI6GaKusgJIQ-vWQ
-    short-id: 35d05b666e2c6cdf
-- name: 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-025
-  type: vless
-  server: bg5.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: bg5.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gw.v2.RelayService
-  reality-opts:
-    public-key: RDWvDEygSk1eyAQhIK95H9EteFbrS2d9JEjBrco54Bw
-    short-id: 1a3102bb8e51399e
-- name: 🇵🇱 Польша VLESS-edge10.cyrionflare.com-026
-  type: vless
-  server: edge10.cyrionflare.com
-  port: 2052
-  uuid: 1a8ecc41-6e62-431b-8eca-87c2fa4dc286
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇵🇱 Польша VLESS-connect.wecantos.site-027
-  type: vless
-  server: connect.wecantos.site
-  port: 10000
-  uuid: a05ecf37-c661-4247-ab09-4432cf0f3cc1
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇮🇹 Италия SS-202.50.253.99-028
-  type: ss
-  server: 202.50.253.99
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.45-029
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.27-030
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.36-031
-  type: ss
-  server: 202.50.253.36
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇬🇧 Великобритания SS-82.38.31.213-032
-  type: ss
-  server: 82.38.31.213
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: k1dBOmOB4oqi7Ump37a1bQ
-  udp: true
-- name: 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-033
-  type: vless
-  server: bg5.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: bg5.univesalsrv.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gw.v2.RelayService
-  reality-opts:
-    public-key: RDWvDEygSk1eyAQhIK95H9EteFbrS2d9JEjBrco54Bw
-    short-id: 1a3102bb8e51399e
-- name: 🇺🇸 США VLESS-196.196.208.14-034
-  type: vless
-  server: 196.196.208.14
-  port: 443
-  uuid: fafc7c16-f890-45ee-a856-02df225172dd
-  udp: true
-  encryption: none
-  tls: true
-  servername: b6a968g.fi7.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 617ed18fb1ea
-  reality-opts:
-    public-key: p5CJCuZrNdf84dMWI-w-t6veMqQzaN6BLM41FxSHBlM
-    short-id: ca89bd67e77b050c
-- name: 🇮🇹 Италия SS-202.50.253.72-035
-  type: ss
-  server: 202.50.253.72
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇵🇱 Польша VLESS-test.wecantos.site-036
-  type: vless
-  server: test.wecantos.site
-  port: 20000
-  uuid: ca59a503-db23-44af-9879-49747d8da98f
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-037
-  type: vless
-  server: rs5.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: ''
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gw.v1.ObjectService
-  reality-opts:
-    public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
-    short-id: 4872856d5489c37d
-- name: 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-038
-  type: vless
-  server: bg5.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: ''
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: gw.v2.RelayService
-  reality-opts:
-    public-key: RDWvDEygSk1eyAQhIK95H9EteFbrS2d9JEjBrco54Bw
-    short-id: 1a3102bb8e51399e
-- name: 🇵🇱 Польша VLESS-connect.wecantos.site-039
-  type: vless
-  server: connect.wecantos.site
-  port: 10000
-  uuid: a05ecf37-c661-4247-ab09-4432cf0f3cc1
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇮🇹 Италия SS-202.50.253.54-040
-  type: ss
-  server: 202.50.253.54
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇬🇧 Великобритания SS-82.38.31.54-041
-  type: ss
-  server: 82.38.31.54
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇵🇱 Польша VLESS-test.wecantos.site-042
-  type: vless
-  server: test.wecantos.site
-  port: 20000
-  uuid: ca59a503-db23-44af-9879-49747d8da98f
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇮🇹 Италия SS-202.50.253.90-043
-  type: ss
-  server: 202.50.253.90
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-044
+- name: 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-019
   type: vless
   server: bg3.univesalsrv.com
   port: 443
@@ -560,7 +284,61 @@ proxies:
   reality-opts:
     public-key: XBfCioniAKXgKYBUVnvBXu80AIaIa4SpAB3w8qeF7Gk
     short-id: 1be1bd931c98c84a
-- name: 🇩🇪 Германия VLESS-milo.rubinaz.xyz-045
+- name: 🇺🇸 США VLESS-196.196.208.14-020
+  type: vless
+  server: 196.196.208.14
+  port: 443
+  uuid: fafc7c16-f890-45ee-a856-02df225172dd
+  udp: true
+  encryption: none
+  tls: true
+  servername: b6a968g.fi7.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 617ed18fb1ea
+  reality-opts:
+    public-key: p5CJCuZrNdf84dMWI-w-t6veMqQzaN6BLM41FxSHBlM
+    short-id: ca89bd67e77b050c
+- name: 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-021
+  type: vless
+  server: rs5.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  udp: true
+  encryption: none
+  tls: true
+  servername: rs5.univesalsrv.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: gw.v1.ObjectService
+  reality-opts:
+    public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
+    short-id: 4872856d5489c37d
+- name: 🇵🇱 Польша VLESS-milo.networkforexir.site-022
+  type: vless
+  server: milo.networkforexir.site
+  port: 8080
+  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇩🇪 Германия VLESS-connect.wecantos.site-023
+  type: vless
+  server: connect.wecantos.site
+  port: 10000
+  uuid: a05ecf37-c661-4247-ab09-4432cf0f3cc1
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇩🇪 Германия VLESS-milo.rubinaz.xyz-024
   type: vless
   server: milo.rubinaz.xyz
   port: 8080
@@ -570,88 +348,31 @@ proxies:
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇵🇱 Польша VLESS-site.teslamotor.site-046
+- name: 🇵🇱 Польша VLESS-connect.hondamotor.site-025
   type: vless
-  server: site.teslamotor.site
-  port: 20001
-  uuid: 8e8210b7-71a4-4799-8b9b-2e69698b1eaf
+  server: connect.hondamotor.site
+  port: 10002
+  uuid: c6362720-0931-4b91-b187-d8ecf3149734
   udp: true
   encryption: none
   tls: false
   servername: ''
   client-fingerprint: firefox
-- name: 🇩🇪 Германия VLESS-milo.networkforexir.site-047
-  type: vless
-  server: milo.networkforexir.site
-  port: 8080
-  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇲🇩 Молдова VLESS-md4.univesalsrv.com-048
-  type: vless
-  server: md4.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: md4.univesalsrv.com
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: hub.v1.ApiService
-  reality-opts:
-    public-key: TZVMqglhHzteJ6t34mtku75LKzXNq0CB6glKYMAH6zg
-    short-id: 8e07337954f9823f
-- name: 🇮🇹 Италия SS-202.50.253.63-049
+- name: 🇮🇹 Италия SS-202.50.253.36-026
   type: ss
-  server: 202.50.253.63
+  server: 202.50.253.36
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇩🇪 Германия VLESS-milo.networkforexir.site-050
-  type: vless
-  server: milo.networkforexir.site
+- name: 🇬🇧 Великобритания SS-82.38.31.213-027
+  type: ss
+  server: 82.38.31.213
   port: 8080
-  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
+  cipher: chacha20-ietf-poly1305
+  password: k1dBOmOB4oqi7Ump37a1bQ
   udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇸🇬 Сингапур VLESS-47.237.74.17-051
-  type: vless
-  server: 47.237.74.17
-  port: 16263
-  uuid: c538c9dd-2e3f-488f-a8ca-ac5b7c0773f3
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-- name: 🇷🇸 Сербия VLESS-rs2.univesalsrv.com-052
-  type: vless
-  server: rs2.univesalsrv.com
-  port: 443
-  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
-  udp: true
-  encryption: none
-  tls: true
-  servername: ''
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: media.v1.ObjectService
-  reality-opts:
-    public-key: tL16MVY08r-7YDXb1_gxuBBWInpSFp97ZLJ_ax3R2iE
-    short-id: 1469af2040b7c323
-- name: 🇲🇩 Молдова VLESS-md4.univesalsrv.com-053
+- name: 🇲🇩 Молдова VLESS-md4.univesalsrv.com-028
   type: vless
   server: md4.univesalsrv.com
   port: 443
@@ -668,24 +389,7 @@ proxies:
   reality-opts:
     public-key: TZVMqglhHzteJ6t34mtku75LKzXNq0CB6glKYMAH6zg
     short-id: 8e07337954f9823f
-- name: 🇳🇱 Нидерланды VLESS-147.45.187.188-054
-  type: vless
-  server: 147.45.187.188
-  port: 8443
-  uuid: fe8e2ffb-8796-408c-af5b-0d4774215e00
-  udp: true
-  encryption: none
-  tls: true
-  servername: vedomosti.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-  reality-opts:
-    public-key: dTdncizxtVTqDZDkQoYdRTkf2Mn6XuKtkzg8vZhrkzA
-    short-id: 6ba85179e30d4fc2
-- name: 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-055
+- name: 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-029
   type: vless
   server: rs1.univesalsrv.com
   port: 443
@@ -702,21 +406,208 @@ proxies:
   reality-opts:
     public-key: upIzyaSbVz2ZK6KfGtXmPl_-sCwn8XLDyFDH5CsL9iY
     short-id: ed0cd5cc2e26e6e7
-- name: 🇬🇧 Великобритания SS-82.38.31.7-056
+- name: 🇮🇹 Италия SS-202.50.253.99-030
   type: ss
-  server: 82.38.31.7
-  port: 8080
-  cipher: chacha20-ietf-poly1305
-  password: oZIoA69Q8yhcQV8ka3Pa3A
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.81-057
-  type: ss
-  server: 202.50.253.81
+  server: 202.50.253.99
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇷🇺 Россия VLESS-89.208.210.53-058
+- name: 🇩🇪 Германия VLESS-site.teslamotor.site-031
+  type: vless
+  server: site.teslamotor.site
+  port: 20001
+  uuid: 8e8210b7-71a4-4799-8b9b-2e69698b1eaf
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇬🇧 Великобритания SS-82.38.31.216-032
+  type: ss
+  server: 82.38.31.216
+  port: 8080
+  cipher: chacha20-ietf-poly1305
+  password: k1dBOmOB4oqi7Ump37a1bQ
+  udp: true
+- name: 🇵🇱 Польша VLESS-test.wecantos.site-033
+  type: vless
+  server: test.wecantos.site
+  port: 20000
+  uuid: ca59a503-db23-44af-9879-49747d8da98f
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇲🇩 Молдова VLESS-md4.univesalsrv.com-034
+  type: vless
+  server: md4.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  udp: true
+  encryption: none
+  tls: true
+  servername: md4.univesalsrv.com
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: hub.v1.ApiService
+  reality-opts:
+    public-key: TZVMqglhHzteJ6t34mtku75LKzXNq0CB6glKYMAH6zg
+    short-id: 8e07337954f9823f
+- name: 🇫🇷 Франция VLESS-edge10.cyrionflare.com-035
+  type: vless
+  server: edge10.cyrionflare.com
+  port: 2052
+  uuid: 1a8ecc41-6e62-431b-8eca-87c2fa4dc286
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇮🇹 Италия SS-202.50.253.63-036
+  type: ss
+  server: 202.50.253.63
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹 Италия SS-202.50.253.45-037
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇯🇵 Япония VLESS-152.69.195.67-038
+  type: vless
+  server: 152.69.195.67
+  port: 47878
+  uuid: eb8613e3-8393-4cff-a3ad-6501fd4adc63
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇮🇹 Италия SS-202.50.253.54-039
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇮🇹 Италия SS-202.50.253.27-040
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇩🇪 Германия VLESS-site.teslamotor.site-041
+  type: vless
+  server: site.teslamotor.site
+  port: 20001
+  uuid: 8e8210b7-71a4-4799-8b9b-2e69698b1eaf
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-042
+  type: vless
+  server: bg5.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  udp: true
+  encryption: none
+  tls: true
+  servername: ''
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: gw.v2.RelayService
+  reality-opts:
+    public-key: RDWvDEygSk1eyAQhIK95H9EteFbrS2d9JEjBrco54Bw
+    short-id: 1a3102bb8e51399e
+- name: 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-043
+  type: vless
+  server: rs5.univesalsrv.com
+  port: 443
+  uuid: 2f35965a-9a9b-45fd-ba32-987296dfb6be
+  udp: true
+  encryption: none
+  tls: true
+  servername: ''
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: gw.v1.ObjectService
+  reality-opts:
+    public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
+    short-id: 4872856d5489c37d
+- name: 🇵🇱 Польша VLESS-milo.networkforexir.site-044
+  type: vless
+  server: milo.networkforexir.site
+  port: 8080
+  uuid: 6bceb548-d9b6-461f-8e37-a5a7fbcdc2c8
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇸🇬 Сингапур VLESS-47.237.74.17-045
+  type: vless
+  server: 47.237.74.17
+  port: 16263
+  uuid: c538c9dd-2e3f-488f-a8ca-ac5b7c0773f3
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+- name: 🇳🇱 Нидерланды VLESS-147.45.187.188-046
+  type: vless
+  server: 147.45.187.188
+  port: 8443
+  uuid: fe8e2ffb-8796-408c-af5b-0d4774215e00
+  udp: true
+  encryption: none
+  tls: true
+  servername: vedomosti.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+  reality-opts:
+    public-key: dTdncizxtVTqDZDkQoYdRTkf2Mn6XuKtkzg8vZhrkzA
+    short-id: 6ba85179e30d4fc2
+- name: 🇮🇹 Италия SS-202.50.253.72-047
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇷🇺 Россия VLESS-de15.h1cloud.net-048
+  type: vless
+  server: de15.h1cloud.net
+  port: 25362
+  uuid: 36fb6650-8a50-42b5-9f66-06538806f32c
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.chip.de
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: hFee7zTreqlv_wccK_8zxN5v23hj9u-DshByvGf-KAA
+    short-id: 23732d14a527990d
+- name: 🇷🇺 Россия VLESS-89.208.210.53-049
   type: vless
   server: 89.208.210.53
   port: 19133
@@ -725,182 +616,152 @@ proxies:
   encryption: none
   tls: true
   servername: music.apple.com
-  client-fingerprint: firefox
+  client-fingerprint: qq
   flow: xtls-rprx-vision
   network: xhttp
   xhttp-opts:
     host: music.apple.com
   reality-opts:
     public-key: ud15DX-emDBS7QsLMabJ7CjgIteK61jxwSp1v0Fewxc
-- name: 🇷🇺 Россия VLESS-de15.h1cloud.net-059
-  type: vless
-  server: de15.h1cloud.net
-  port: 25362
-  uuid: 36fb6650-8a50-42b5-9f66-06538806f32c
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.chip.de
-  client-fingerprint: qq
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: hFee7zTreqlv_wccK_8zxN5v23hj9u-DshByvGf-KAA
-    short-id: 23732d14a527990d
-- name: 🇷🇺 Россия VLESS-de15.h1cloud.net-060
-  type: vless
-  server: de15.h1cloud.net
-  port: 25362
-  uuid: 36fb6650-8a50-42b5-9f66-06538806f32c
-  udp: true
-  encryption: none
-  tls: true
-  servername: www.chip.de
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: hFee7zTreqlv_wccK_8zxN5v23hj9u-DshByvGf-KAA
-    short-id: 23732d14a527990d
-- name: 🇧🇷 Бразилия SS-216.128.168.190-061
+- name: 🇧🇷 Бразилия SS-216.128.168.190-050
   type: ss
   server: 216.128.168.190
   port: 8388
   cipher: aes-256-gcm
   password: owVdNnQcdPgthSyX
   udp: true
+- name: 🇺🇸 США VLESS-2.27.206.215-051
+  type: vless
+  server: 2.27.206.215
+  port: 2096
+  uuid: fafc7c16-f890-45ee-a856-02df225172dd
+  udp: true
+  encryption: none
+  tls: true
+  servername: www.kinopoisk.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /ws/v2
+    host: www.kinopoisk.ru
+  reality-opts:
+    public-key: 3ds1sPK8MuZVr6IOAwjRx0h_2IZMZ2v_RzNGl3iYwno
+    short-id: 62a9725a03e062be
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇫🇮 Финляндия VLESS-83.219.97.18-001
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-002
-  - 🇷🇸 Сербия VLESS-150.40.126.19-003
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-004
+  - 🇷🇸 Сербия VLESS-150.40.126.19-001
+  - 🇷🇸 Сербия VLESS-150.40.126.24-002
+  - 🇫🇮 Финляндия VLESS-83.219.97.18-003
+  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-004
   - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-005
-  - 🇷🇺 Россия VLESS-ss.90909.club-006
-  - 🇷🇺 Россия VLESS-us.90909.club-007
-  - 🇷🇺 Россия VLESS-213.176.19.64-008
-  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-009
+  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-006
+  - 🇷🇺 Россия VLESS-213.176.19.64-007
+  - 🇷🇺 Россия VLESS-us.90909.club-008
+  - 🇲🇩 Молдова VLESS-ss.90909.club-009
   - 🇷🇺 Россия VLESS-router.hermit.pw-010
   - 🇷🇺 Россия VLESS-pl1.h1cloud.net-011
   - 🇷🇸 Сербия VLESS-rs2.univesalsrv.com-012
-  - 🇵🇱 Польша VLESS-connect.hondamotor.site-013
-  - 🇨🇦 Канада VLESS-51.161.72.153-014
-  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-015
-  - 🇵🇱 Польша VLESS-edge10.cyrionflare.com-016
-  - 🇬🇧 Великобритания SS-82.38.31.198-017
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-018
-  - 🇯🇵 Япония VLESS-152.69.195.67-019
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-020
-  - 🇬🇧 Великобритания SS-82.38.31.171-021
-  - 🇬🇧 Великобритания SS-82.38.31.11-022
-  - 🇲🇩 Молдова VLESS-md1.univesalsrv.com-023
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-024
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-025
-  - 🇵🇱 Польша VLESS-edge10.cyrionflare.com-026
-  - 🇵🇱 Польша VLESS-connect.wecantos.site-027
-  - 🇮🇹 Италия SS-202.50.253.99-028
-  - 🇮🇹 Италия SS-202.50.253.45-029
-  - 🇮🇹 Италия SS-202.50.253.27-030
-  - 🇮🇹 Италия SS-202.50.253.36-031
-  - 🇬🇧 Великобритания SS-82.38.31.213-032
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-033
-  - 🇺🇸 США VLESS-196.196.208.14-034
-  - 🇮🇹 Италия SS-202.50.253.72-035
-  - 🇵🇱 Польша VLESS-test.wecantos.site-036
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-037
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-038
-  - 🇵🇱 Польша VLESS-connect.wecantos.site-039
-  - 🇮🇹 Италия SS-202.50.253.54-040
-  - 🇬🇧 Великобритания SS-82.38.31.54-041
-  - 🇵🇱 Польша VLESS-test.wecantos.site-042
-  - 🇮🇹 Италия SS-202.50.253.90-043
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-044
-  - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-045
-  - 🇵🇱 Польша VLESS-site.teslamotor.site-046
-  - 🇩🇪 Германия VLESS-milo.networkforexir.site-047
-  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-048
-  - 🇮🇹 Италия SS-202.50.253.63-049
-  - 🇩🇪 Германия VLESS-milo.networkforexir.site-050
-  - 🇸🇬 Сингапур VLESS-47.237.74.17-051
-  - 🇷🇸 Сербия VLESS-rs2.univesalsrv.com-052
-  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-053
-  - 🇳🇱 Нидерланды VLESS-147.45.187.188-054
-  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-055
-  - 🇬🇧 Великобритания SS-82.38.31.7-056
-  - 🇮🇹 Италия SS-202.50.253.81-057
-  - 🇷🇺 Россия VLESS-89.208.210.53-058
-  - 🇷🇺 Россия VLESS-de15.h1cloud.net-059
-  - 🇷🇺 Россия VLESS-de15.h1cloud.net-060
-  - 🇧🇷 Бразилия SS-216.128.168.190-061
+  - 🇬🇧 Великобритания SS-82.38.31.7-013
+  - 🇵🇱 Польша VLESS-connect.hondamotor.site-014
+  - 🇨🇦 Канада VLESS-51.161.72.153-015
+  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-016
+  - 🇮🇹 Италия SS-202.50.253.90-017
+  - 🇲🇩 Молдова VLESS-md1.univesalsrv.com-018
+  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-019
+  - 🇺🇸 США VLESS-196.196.208.14-020
+  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-021
+  - 🇵🇱 Польша VLESS-milo.networkforexir.site-022
+  - 🇩🇪 Германия VLESS-connect.wecantos.site-023
+  - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-024
+  - 🇵🇱 Польша VLESS-connect.hondamotor.site-025
+  - 🇮🇹 Италия SS-202.50.253.36-026
+  - 🇬🇧 Великобритания SS-82.38.31.213-027
+  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-028
+  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-029
+  - 🇮🇹 Италия SS-202.50.253.99-030
+  - 🇩🇪 Германия VLESS-site.teslamotor.site-031
+  - 🇬🇧 Великобритания SS-82.38.31.216-032
+  - 🇵🇱 Польша VLESS-test.wecantos.site-033
+  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-034
+  - 🇫🇷 Франция VLESS-edge10.cyrionflare.com-035
+  - 🇮🇹 Италия SS-202.50.253.63-036
+  - 🇮🇹 Италия SS-202.50.253.45-037
+  - 🇯🇵 Япония VLESS-152.69.195.67-038
+  - 🇮🇹 Италия SS-202.50.253.54-039
+  - 🇮🇹 Италия SS-202.50.253.27-040
+  - 🇩🇪 Германия VLESS-site.teslamotor.site-041
+  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-042
+  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-043
+  - 🇵🇱 Польша VLESS-milo.networkforexir.site-044
+  - 🇸🇬 Сингапур VLESS-47.237.74.17-045
+  - 🇳🇱 Нидерланды VLESS-147.45.187.188-046
+  - 🇮🇹 Италия SS-202.50.253.72-047
+  - 🇷🇺 Россия VLESS-de15.h1cloud.net-048
+  - 🇷🇺 Россия VLESS-89.208.210.53-049
+  - 🇧🇷 Бразилия SS-216.128.168.190-050
+  - 🇺🇸 США VLESS-2.27.206.215-051
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇫🇮 Финляндия VLESS-83.219.97.18-001
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-002
-  - 🇷🇸 Сербия VLESS-150.40.126.19-003
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-004
+  - 🇷🇸 Сербия VLESS-150.40.126.19-001
+  - 🇷🇸 Сербия VLESS-150.40.126.24-002
+  - 🇫🇮 Финляндия VLESS-83.219.97.18-003
+  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-004
   - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-005
-  - 🇷🇺 Россия VLESS-ss.90909.club-006
-  - 🇷🇺 Россия VLESS-us.90909.club-007
-  - 🇷🇺 Россия VLESS-213.176.19.64-008
-  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-009
+  - 🇷🇺 Россия VLESS-36a466g.fi1.h1clayd.click-006
+  - 🇷🇺 Россия VLESS-213.176.19.64-007
+  - 🇷🇺 Россия VLESS-us.90909.club-008
+  - 🇲🇩 Молдова VLESS-ss.90909.club-009
   - 🇷🇺 Россия VLESS-router.hermit.pw-010
   - 🇷🇺 Россия VLESS-pl1.h1cloud.net-011
   - 🇷🇸 Сербия VLESS-rs2.univesalsrv.com-012
-  - 🇵🇱 Польша VLESS-connect.hondamotor.site-013
-  - 🇨🇦 Канада VLESS-51.161.72.153-014
-  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-015
-  - 🇵🇱 Польша VLESS-edge10.cyrionflare.com-016
-  - 🇬🇧 Великобритания SS-82.38.31.198-017
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-018
-  - 🇯🇵 Япония VLESS-152.69.195.67-019
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-020
-  - 🇬🇧 Великобритания SS-82.38.31.171-021
-  - 🇬🇧 Великобритания SS-82.38.31.11-022
-  - 🇲🇩 Молдова VLESS-md1.univesalsrv.com-023
-  - 🇷🇸 Сербия VLESS-rs3.univesalsrv.com-024
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-025
-  - 🇵🇱 Польша VLESS-edge10.cyrionflare.com-026
-  - 🇵🇱 Польша VLESS-connect.wecantos.site-027
-  - 🇮🇹 Италия SS-202.50.253.99-028
-  - 🇮🇹 Италия SS-202.50.253.45-029
-  - 🇮🇹 Италия SS-202.50.253.27-030
-  - 🇮🇹 Италия SS-202.50.253.36-031
-  - 🇬🇧 Великобритания SS-82.38.31.213-032
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-033
-  - 🇺🇸 США VLESS-196.196.208.14-034
-  - 🇮🇹 Италия SS-202.50.253.72-035
-  - 🇵🇱 Польша VLESS-test.wecantos.site-036
-  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-037
-  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-038
-  - 🇵🇱 Польша VLESS-connect.wecantos.site-039
-  - 🇮🇹 Италия SS-202.50.253.54-040
-  - 🇬🇧 Великобритания SS-82.38.31.54-041
-  - 🇵🇱 Польша VLESS-test.wecantos.site-042
-  - 🇮🇹 Италия SS-202.50.253.90-043
-  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-044
-  - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-045
-  - 🇵🇱 Польша VLESS-site.teslamotor.site-046
-  - 🇩🇪 Германия VLESS-milo.networkforexir.site-047
-  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-048
-  - 🇮🇹 Италия SS-202.50.253.63-049
-  - 🇩🇪 Германия VLESS-milo.networkforexir.site-050
-  - 🇸🇬 Сингапур VLESS-47.237.74.17-051
-  - 🇷🇸 Сербия VLESS-rs2.univesalsrv.com-052
-  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-053
-  - 🇳🇱 Нидерланды VLESS-147.45.187.188-054
-  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-055
-  - 🇬🇧 Великобритания SS-82.38.31.7-056
-  - 🇮🇹 Италия SS-202.50.253.81-057
-  - 🇷🇺 Россия VLESS-89.208.210.53-058
-  - 🇷🇺 Россия VLESS-de15.h1cloud.net-059
-  - 🇷🇺 Россия VLESS-de15.h1cloud.net-060
-  - 🇧🇷 Бразилия SS-216.128.168.190-061
+  - 🇬🇧 Великобритания SS-82.38.31.7-013
+  - 🇵🇱 Польша VLESS-connect.hondamotor.site-014
+  - 🇨🇦 Канада VLESS-51.161.72.153-015
+  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-016
+  - 🇮🇹 Италия SS-202.50.253.90-017
+  - 🇲🇩 Молдова VLESS-md1.univesalsrv.com-018
+  - 🇧🇬 Болгария VLESS-bg3.univesalsrv.com-019
+  - 🇺🇸 США VLESS-196.196.208.14-020
+  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-021
+  - 🇵🇱 Польша VLESS-milo.networkforexir.site-022
+  - 🇩🇪 Германия VLESS-connect.wecantos.site-023
+  - 🇩🇪 Германия VLESS-milo.rubinaz.xyz-024
+  - 🇵🇱 Польша VLESS-connect.hondamotor.site-025
+  - 🇮🇹 Италия SS-202.50.253.36-026
+  - 🇬🇧 Великобритания SS-82.38.31.213-027
+  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-028
+  - 🇷🇸 Сербия VLESS-rs1.univesalsrv.com-029
+  - 🇮🇹 Италия SS-202.50.253.99-030
+  - 🇩🇪 Германия VLESS-site.teslamotor.site-031
+  - 🇬🇧 Великобритания SS-82.38.31.216-032
+  - 🇵🇱 Польша VLESS-test.wecantos.site-033
+  - 🇲🇩 Молдова VLESS-md4.univesalsrv.com-034
+  - 🇫🇷 Франция VLESS-edge10.cyrionflare.com-035
+  - 🇮🇹 Италия SS-202.50.253.63-036
+  - 🇮🇹 Италия SS-202.50.253.45-037
+  - 🇯🇵 Япония VLESS-152.69.195.67-038
+  - 🇮🇹 Италия SS-202.50.253.54-039
+  - 🇮🇹 Италия SS-202.50.253.27-040
+  - 🇩🇪 Германия VLESS-site.teslamotor.site-041
+  - 🇧🇬 Болгария VLESS-bg5.univesalsrv.com-042
+  - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-043
+  - 🇵🇱 Польша VLESS-milo.networkforexir.site-044
+  - 🇸🇬 Сингапур VLESS-47.237.74.17-045
+  - 🇳🇱 Нидерланды VLESS-147.45.187.188-046
+  - 🇮🇹 Италия SS-202.50.253.72-047
+  - 🇷🇺 Россия VLESS-de15.h1cloud.net-048
+  - 🇷🇺 Россия VLESS-89.208.210.53-049
+  - 🇧🇷 Бразилия SS-216.128.168.190-050
+  - 🇺🇸 США VLESS-2.27.206.215-051
 rule-providers:
   ru-rules:
     type: http
