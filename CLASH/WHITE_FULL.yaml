@@ -4,7 +4,14 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США VLESS-de166.mech-pro.online-001
+- name: 🇮🇹 Италия SS-202.50.253.45-001
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США VLESS-de166.mech-pro.online-002
   type: vless
   server: de166.mech-pro.online
   port: 443
@@ -18,13 +25,6 @@ proxies:
   reality-opts:
     public-key: jbiddtGRgeBvlkjbuA3aU-WPjKgEX87tOVh1mFfvOUI
     short-id: 16e0f049
-- name: 🇮🇹 Италия SS-202.50.253.45-002
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
 - name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
   type: vless
   server: book.jarbook.net
@@ -34,7 +34,7 @@ proxies:
   encryption: none
   tls: true
   servername: reg.jarbook.net
-  client-fingerprint: firefox
+  client-fingerprint: edge
   flow: xtls-rprx-vision
   network: grpc
   grpc-opts:
@@ -59,23 +59,13 @@ proxies:
   reality-opts:
     public-key: X8mPYnsoTd8QCnvFZKSy7VvpSn_nrt_NWJkCUJhFCyE
     short-id: 4872856d5489c37d
-- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-005
-  type: vless
-  server: book.jarbook.net
+- name: 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-005
+  type: hysteria2
+  server: 5.129.235.85
   port: 443
-  uuid: 95d0e214-eab0-4701-93ed-fea4f1b56062
+  password: gf1:gfhysteria2024
   udp: true
-  encryption: none
-  tls: true
-  servername: reg.jarbook.net
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: BookCatalog
-  reality-opts:
-    public-key: nUUSNvkc5Xy6LRCP4yeFvbI8wFMx7gdgruPMNBq7jzo
-    short-id: dceb4214
+  sni: vk.com
 - name: 🇮🇹 Италия SS-202.50.253.27-006
   type: ss
   server: 202.50.253.27
@@ -83,58 +73,30 @@ proxies:
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-007
-  type: hysteria2
-  server: 5.129.235.85
-  port: 443
-  password: gf1:gfhysteria2024
-  udp: true
-  sni: vk.com
-- name: 🇳🇱 Нидерланды VLESS-79.141.164.124-008
-  type: vless
-  server: 79.141.164.124
-  port: 443
-  uuid: 14f3543e-6136-47a2-9bc0-eea1dac73d07
-  udp: true
-  encryption: none
-  tls: true
-  servername: nla.kosmosapp.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: neurex
-  reality-opts:
-    public-key: pR39Vv5qhk8r6akOicoy6mMs4-ppSWUez8MyAXG7wwQ
-    short-id: 27350908de933e09
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇮🇹 Италия SS-202.50.253.45-002
+  - 🇮🇹 Италия SS-202.50.253.45-001
+  - 🇺🇸 США VLESS-de166.mech-pro.online-002
   - 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
   - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-004
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-005
+  - 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-005
   - 🇮🇹 Италия SS-202.50.253.27-006
-  - 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-007
-  - 🇳🇱 Нидерланды VLESS-79.141.164.124-008
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇮🇹 Италия SS-202.50.253.45-002
+  - 🇮🇹 Италия SS-202.50.253.45-001
+  - 🇺🇸 США VLESS-de166.mech-pro.online-002
   - 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
   - 🇷🇸 Сербия VLESS-rs5.univesalsrv.com-004
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-005
+  - 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-005
   - 🇮🇹 Италия SS-202.50.253.27-006
-  - 🇳🇱 Нидерланды HYSTERIA2-5.129.235.85-007
-  - 🇳🇱 Нидерланды VLESS-79.141.164.124-008
 rule-providers:
   ru-rules:
     type: http
