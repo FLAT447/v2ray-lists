@@ -4,7 +4,35 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
+- name: 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-001
+  type: vless
+  server: at-86-10.cdn-lab.online
+  port: 443
+  uuid: 5fa16fdf-5b3c-4f57-988d-b24c6722c91a
+  udp: true
+  encryption: none
+  tls: true
+  servername: at-86-10.cdn-lab.online
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: grOuLMf8qYwwB0EFvBDmoVKsM4LSaovUKOIk8Whe-14
+    short-id: 7311e59b009bbed5
+- name: 🇩🇪 Германия VLESS-downloadchache1.song69.fun-002
+  type: vless
+  server: downloadchache1.song69.fun
+  port: 28150
+  uuid: 92b79c22-f68b-4713-8b21-52f264cb92f5
+  udp: true
+  encryption: none
+  tls: true
+  servername: metrika.yandex.ru
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: HRmmr0Ii4Tr9jPLwratvLhee3_VWFNK47T8AAo7kzww
+    short-id: dcb858da
+- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
   type: vless
   server: book.jarbook.net
   port: 443
@@ -21,7 +49,7 @@ proxies:
   reality-opts:
     public-key: nUUSNvkc5Xy6LRCP4yeFvbI8wFMx7gdgruPMNBq7jzo
     short-id: dceb4214
-- name: 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
+- name: 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-004
   type: vless
   server: at-86-10.cdn-lab.online
   port: 443
@@ -35,22 +63,45 @@ proxies:
   reality-opts:
     public-key: grOuLMf8qYwwB0EFvBDmoVKsM4LSaovUKOIk8Whe-14
     short-id: 7311e59b009bbed5
+- name: 🇷🇺 Россия VLESS-5.42.105.63-005
+  type: vless
+  server: 5.42.105.63
+  port: 25443
+  uuid: 3d78373f-bdbd-428a-9b83-aea64264bf4e
+  udp: true
+  encryption: none
+  tls: true
+  servername: cdvid.gamescloud.uk
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc-tunnel
+  reality-opts:
+    public-key: ohYKVa5uVRwqzZndETnytrSXE63zaUFVNN1_T4eTHnc
+    short-id: 568dfd0846c2
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
-  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-001
+  - 🇩🇪 Германия VLESS-downloadchache1.song69.fun-002
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-004
+  - 🇷🇺 Россия VLESS-5.42.105.63-005
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
-  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-001
+  - 🇩🇪 Германия VLESS-downloadchache1.song69.fun-002
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-003
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-004
+  - 🇷🇺 Россия VLESS-5.42.105.63-005
 rule-providers:
   ru-rules:
     type: http
