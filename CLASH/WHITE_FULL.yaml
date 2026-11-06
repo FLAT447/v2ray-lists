@@ -4,21 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇺🇸 США VLESS-de166.mech-pro.online-001
-  type: vless
-  server: de166.mech-pro.online
-  port: 443
-  uuid: 976f82d9-0e6b-40ed-9c09-cafd06c4bc98
-  udp: true
-  encryption: none
-  tls: true
-  servername: de166.mech-pro.online
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: jbiddtGRgeBvlkjbuA3aU-WPjKgEX87tOVh1mFfvOUI
-    short-id: 16e0f049
-- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-002
+- name: 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
   type: vless
   server: book.jarbook.net
   port: 443
@@ -35,7 +21,7 @@ proxies:
   reality-opts:
     public-key: nUUSNvkc5Xy6LRCP4yeFvbI8wFMx7gdgruPMNBq7jzo
     short-id: dceb4214
-- name: 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-003
+- name: 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
   type: vless
   server: at-86-10.cdn-lab.online
   port: 443
@@ -49,62 +35,22 @@ proxies:
   reality-opts:
     public-key: grOuLMf8qYwwB0EFvBDmoVKsM4LSaovUKOIk8Whe-14
     short-id: 7311e59b009bbed5
-- name: 🇷🇺 Россия VLESS-5.42.105.63-004
-  type: vless
-  server: 5.42.105.63
-  port: 25443
-  uuid: 3d78373f-bdbd-428a-9b83-aea64264bf4e
-  udp: true
-  encryption: none
-  tls: true
-  servername: cdvid.gamescloud.uk
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-tunnel
-  reality-opts:
-    public-key: ohYKVa5uVRwqzZndETnytrSXE63zaUFVNN1_T4eTHnc
-    short-id: 568dfd0846c2
-- name: 🇷🇺 Россия VLESS-5abad7g.de13.h1clayd.click-005
-  type: vless
-  server: 5abad7g.de13.h1clayd.click
-  port: 443
-  uuid: 3d78373f-bdbd-428a-9b83-aea64264bf4e
-  udp: true
-  encryption: none
-  tls: true
-  servername: 5abad7g.de13.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: c4bfecf5b2e2
-  reality-opts:
-    public-key: 8822vCabp_NsDThze-mGI-DzcOriG4_wJ98lClFYVl8
-    short-id: 104ee381f09a46bc
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-002
-  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-003
-  - 🇷🇺 Россия VLESS-5.42.105.63-004
-  - 🇷🇺 Россия VLESS-5abad7g.de13.h1clayd.click-005
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-002
-  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-003
-  - 🇷🇺 Россия VLESS-5.42.105.63-004
-  - 🇷🇺 Россия VLESS-5abad7g.de13.h1clayd.click-005
+  - 🇳🇱 Нидерланды VLESS-book.jarbook.net-001
+  - 🇬🇧 Великобритания VLESS-at-86-10.cdn-lab.online-002
 rule-providers:
   ru-rules:
     type: http
