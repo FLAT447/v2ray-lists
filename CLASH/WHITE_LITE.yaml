@@ -3,125 +3,21 @@ allow-lan: false
 mode: rule
 log-level: info
 ipv6: false
-proxies:
-- name: 🇺🇸 США VLESS-de166.mech-pro.online-001
-  type: vless
-  server: de166.mech-pro.online
-  port: 443
-  uuid: 976f82d9-0e6b-40ed-9c09-cafd06c4bc98
-  udp: true
-  encryption: none
-  tls: true
-  servername: de166.mech-pro.online
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: jbiddtGRgeBvlkjbuA3aU-WPjKgEX87tOVh1mFfvOUI
-    short-id: 16e0f049
-- name: 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-002
-  type: vless
-  server: 04535dt.us9.h1clayd.click
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 04535dt.us9.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: UoS8qZ74hP_ECcncCz55lzvlcVss3R7VA0WYZE0YQCY
-    short-id: ba2a3dce62b99092
-- name: 🇺🇸 США VLESS-961ec0g.nl13.h1clayd.click-003
-  type: vless
-  server: 961ec0g.nl13.h1clayd.click
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 961ec0g.nl13.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: 7d5abcd7d8a1
-  reality-opts:
-    public-key: xn7KVKS5MOnsFrYrEeRS04JssBCOxh12rxegaDFyGkA
-    short-id: 6d289ff0f47c0aac
-- name: 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-004
-  type: vless
-  server: 04535dt.us9.h1clayd.click
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 04535dt.us9.h1clayd.click
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: UoS8qZ74hP_ECcncCz55lzvlcVss3R7VA0WYZE0YQCY
-    short-id: ba2a3dce62b99092
-- name: 🇩🇪 Германия VLESS-79.137.207.198-005
-  type: vless
-  server: 79.137.207.198
-  port: 8444
-  uuid: e83932a8-5cfe-4747-8e5b-43d6d3e96e82
-  udp: true
-  encryption: none
-  tls: true
-  servername: stacklayer.ru
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc-reality
-  reality-opts:
-    public-key: 0Yda-t_3S31WaEd-8yyDfVWEyIOyxtqPD8k4P5rtxgk
-    short-id: 98f95b300717abf0
-- name: 🇩🇪 Германия VLESS-79.137.207.198-006
-  type: vless
-  server: 79.137.207.198
-  port: 8443
-  uuid: e83932a8-5cfe-4747-8e5b-43d6d3e96e82
-  udp: true
-  encryption: none
-  tls: true
-  servername: stacklayer.ru
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /vless-xhttp
-    host: stacklayer.ru
-  reality-opts:
-    public-key: 0Yda-t_3S31WaEd-8yyDfVWEyIOyxtqPD8k4P5rtxgk
-    short-id: 98f95b300717abf0
+proxies: []
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-002
-  - 🇺🇸 США VLESS-961ec0g.nl13.h1clayd.click-003
-  - 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-004
-  - 🇩🇪 Германия VLESS-79.137.207.198-005
-  - 🇩🇪 Германия VLESS-79.137.207.198-006
+  - DIRECT
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇺🇸 США VLESS-de166.mech-pro.online-001
-  - 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-002
-  - 🇺🇸 США VLESS-961ec0g.nl13.h1clayd.click-003
-  - 🇺🇸 США VLESS-04535dt.us9.h1clayd.click-004
-  - 🇩🇪 Германия VLESS-79.137.207.198-005
-  - 🇩🇪 Германия VLESS-79.137.207.198-006
+  - DIRECT
 rule-providers:
   ru-rules:
     type: http
