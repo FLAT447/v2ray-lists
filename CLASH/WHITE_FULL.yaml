@@ -17,13 +17,6 @@ proxies:
   flow: xtls-rprx-vision
   reality-opts:
     public-key: drY21DHNOr6ezJLA2B10mzTExeJ9-gVBfTBNLwVBtWI
-- name: 🇩🇪 Германия SS-156.67.120.205-002
-  type: ss
-  server: 156.67.120.205
-  port: 51628
-  cipher: chacha20-ietf-poly1305
-  password: 29ZZXVa34x7sC48w9FKQ54UKHiJJGTVgKFppBRgviLrVCAYVVyKZdD3obbpjCyk31V5b2G2d7xzqmaPBFdcheCVB9UQ4ZghF
-  udp: true
 proxy-groups:
 - name: PROXY
   type: select
@@ -31,7 +24,6 @@ proxy-groups:
   - AUTO
   - DIRECT
   - 🇷🇺 Россия VLESS-78.159.250.107-001
-  - 🇩🇪 Германия SS-156.67.120.205-002
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
@@ -39,7 +31,6 @@ proxy-groups:
   tolerance: 50
   proxies:
   - 🇷🇺 Россия VLESS-78.159.250.107-001
-  - 🇩🇪 Германия SS-156.67.120.205-002
 rule-providers:
   ru-rules:
     type: http
