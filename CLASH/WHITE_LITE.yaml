@@ -4,9 +4,23 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇷🇺 Россия VLESS-78.159.250.107-001
+- name: 🇺🇸 США VLESS-201.58.139.66-001
   type: vless
-  server: 78.159.250.107
+  server: 201.58.139.66
+  port: 443
+  uuid: 056405e8-de9f-4d0d-8145-956f13cc34da
+  udp: true
+  encryption: none
+  tls: true
+  servername: 57aac2t.pl7.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: LY0H47MWx87_L_JBzxFAuTzKZB53U7MrZQK8-dNnMxM
+    short-id: 6c5c7900406a1ae7
+- name: 🇷🇺 Россия VLESS-qq.utiltools.site-002
+  type: vless
+  server: qq.utiltools.site
   port: 443
   uuid: 4054fdc2-ee80-4419-8a8e-d937df4719e2
   udp: true
@@ -17,20 +31,93 @@ proxies:
   flow: xtls-rprx-vision
   reality-opts:
     public-key: drY21DHNOr6ezJLA2B10mzTExeJ9-gVBfTBNLwVBtWI
+- name: 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-003
+  type: vless
+  server: 04535dt.us8.h1clayd.click
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 04535dt.us8.h1clayd.click
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: UoS8qZ74hP_ECcncCz55lzvlcVss3R7VA0WYZE0YQCY
+    short-id: ba2a3dce62b99092
+- name: 🇷🇺 Россия VLESS-0592efg.us8.h1clayd.click-004
+  type: vless
+  server: 0592efg.us8.h1clayd.click
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 0592efg.us8.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 99f2107b03f8
+  reality-opts:
+    public-key: cO3wYHISTeorXcM8ffaDCDdqZ-olBQL-GyZqb-W7rTk
+    short-id: bd8f712209a9c283
+- name: 🇷🇺 Россия VLESS-35295cx.us8.h1clayd.click-005
+  type: vless
+  server: 35295cx.us8.h1clayd.click
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 35295cx.us8.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /1812842934d4
+    host: 35295cx.us8.h1clayd.click
+  reality-opts:
+    public-key: LsaTohbE6CqCH9UbYKwIybVXG3E5Wgz_X9czqas2LAI
+    short-id: 9acff4d98e2fbcc6
+- name: 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-006
+  type: vless
+  server: 04535dt.us8.h1clayd.click
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 04535dt.us8.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: UoS8qZ74hP_ECcncCz55lzvlcVss3R7VA0WYZE0YQCY
+    short-id: ba2a3dce62b99092
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - DIRECT
-  - 🇷🇺 Россия VLESS-78.159.250.107-001
+  - 🇺🇸 США VLESS-201.58.139.66-001
+  - 🇷🇺 Россия VLESS-qq.utiltools.site-002
+  - 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-003
+  - 🇷🇺 Россия VLESS-0592efg.us8.h1clayd.click-004
+  - 🇷🇺 Россия VLESS-35295cx.us8.h1clayd.click-005
+  - 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-006
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇷🇺 Россия VLESS-78.159.250.107-001
+  - 🇺🇸 США VLESS-201.58.139.66-001
+  - 🇷🇺 Россия VLESS-qq.utiltools.site-002
+  - 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-003
+  - 🇷🇺 Россия VLESS-0592efg.us8.h1clayd.click-004
+  - 🇷🇺 Россия VLESS-35295cx.us8.h1clayd.click-005
+  - 🇷🇺 Россия VLESS-04535dt.us8.h1clayd.click-006
 rule-providers:
   ru-rules:
     type: http
