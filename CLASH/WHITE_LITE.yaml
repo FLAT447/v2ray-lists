@@ -4,25 +4,7 @@ mode: rule
 log-level: info
 ipv6: false
 proxies:
-- name: 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-001
-  type: vless
-  server: 35295cx.us8.h1clayd.click
-  port: 443
-  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
-  udp: true
-  encryption: none
-  tls: true
-  servername: 35295cx.us8.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /1812842934d4
-    host: 35295cx.us8.h1clayd.click
-  reality-opts:
-    public-key: LsaTohbE6CqCH9UbYKwIybVXG3E5Wgz_X9czqas2LAI
-    short-id: 9acff4d98e2fbcc6
-- name: 🇪🇪 Эстония VLESS-13.143.239.236-002
+- name: 🇪🇪 Эстония VLESS-13.143.239.236-001
   type: vless
   server: 13.143.239.236
   port: 25700
@@ -40,6 +22,24 @@ proxies:
   reality-opts:
     public-key: w698in_6eoH8y_C5jY3cpScMyaRaPpmPQEQhzw8QMUM
     short-id: 54c9c22217db5c86
+- name: 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-002
+  type: vless
+  server: 35295cx.us8.h1clayd.click
+  port: 443
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  encryption: none
+  tls: true
+  servername: 35295cx.us8.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: xhttp
+  xhttp-opts:
+    path: /1812842934d4
+    host: 35295cx.us8.h1clayd.click
+  reality-opts:
+    public-key: LsaTohbE6CqCH9UbYKwIybVXG3E5Wgz_X9czqas2LAI
+    short-id: 9acff4d98e2fbcc6
 - name: 🇷🇺 Россия VLESS-78.159.245.147-003
   type: vless
   server: 78.159.245.147
@@ -56,7 +56,20 @@ proxies:
     grpc-service-name: grpc
   reality-opts:
     public-key: VHWmCkZwC5XE-ctv0p8BinjoIx4SWgJUIsZPrhNf6TA
-- name: 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-004
+- name: 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-004
+  type: vless
+  server: platform103.golnamakcert.top
+  port: 80
+  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
+  udp: true
+  encryption: none
+  tls: false
+  servername: ''
+  client-fingerprint: firefox
+  network: ws
+  ws-opts:
+    path: /platform103
+- name: 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-005
   type: vless
   server: platform109.golnamakcert.top
   port: 80
@@ -71,55 +84,28 @@ proxies:
     path: /platform109
     headers:
       Host: '[''platform109.halalkhor.info'']'
-- name: 🇨🇦 Канада SS-51.222.141.125-005
+- name: 🇨🇦 Канада SS-51.222.141.125-006
   type: ss
   server: 51.222.141.125
   port: 445
   cipher: aes-256-gcm
   password: zDNVedRFPQexG9v
   udp: true
-- name: 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-006
-  type: vless
-  server: platform103.golnamakcert.top
-  port: 80
-  uuid: e13cf851-b4fd-413b-8d49-146e6eb8e5d4
-  udp: true
-  encryption: none
-  tls: false
-  servername: ''
-  client-fingerprint: firefox
-  network: ws
-  ws-opts:
-    path: /platform103
-- name: 🇷🇺 Россия HYSTERIA2-168.113.252.11-007
-  type: hysteria2
-  server: 168.113.252.11
-  port: 443
-  password: 004ea4a8-d701-0001-b0c0-8e61a5c31a23
-  udp: true
-  sni: jkawq-ru-45sb.fade.mom
-- name: 🇷🇺 Россия HYSTERIA2-168.113.254.183-008
+- name: 🇷🇺 Россия HYSTERIA2-168.113.254.183-007
   type: hysteria2
   server: 168.113.254.183
   port: 443
   password: 3098af7f-dd3e-0001-b8e5-05a194206ac0
   udp: true
   sni: xykmh-ru-70sb.my-fade.cloud
-- name: 🇩🇪 Германия VLESS-92.118.206.217-009
-  type: vless
-  server: 92.118.206.217
-  port: 8443
-  uuid: c53ea5e9-ed8b-4990-805d-7f1d6451426c
+- name: 🇷🇺 Россия HYSTERIA2-168.113.252.11-008
+  type: hysteria2
+  server: 168.113.252.11
+  port: 443
+  password: 004ea4a8-d701-0001-b0c0-8e61a5c31a23
   udp: true
-  encryption: none
-  tls: true
-  servername: dur.sky-vault.top
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: fSVfR9NB-6J6smrZlavi0GWd8JfDh0aXuEkKbtuFzUI
-    short-id: 3cbc3d737fb9c4af
-- name: 🇺🇸 США VLESS-31.76.31.75-010
+  sni: jkawq-ru-45sb.fade.mom
+- name: 🇺🇸 США VLESS-31.76.31.75-009
   type: vless
   server: 31.76.31.75
   port: 4443
@@ -137,6 +123,13 @@ proxies:
   reality-opts:
     public-key: NORtYfSTVbYq7r3qD1p8f7GWN8lCapPxqQTzGE7-3WQ
     short-id: 69e9f04fdfe55673
+- name: 🇷🇺 Россия SS-91.206.92.202-010
+  type: ss
+  server: 91.206.92.202
+  port: 18443
+  cipher: aes-256-gcm
+  password: cCMJgJTA3BA489YUYrFq7XHXSiSpWlLa
+  udp: true
 - name: 🇩🇪 Германия VLESS-92.118.206.217-011
   type: vless
   server: 92.118.206.217
@@ -165,93 +158,7 @@ proxies:
   reality-opts:
     public-key: 3wFF83gtIA0sXj-6GGCAa--oQbSr0MVUj0FBc-0QmiE
     short-id: e572b6579ea525d4
-- name: 🇸🇨 SC VLESS-45.130.127.79-013
-  type: vless
-  server: 45.130.127.79
-  port: 443
-  uuid: 8d251959-b345-4665-b2fc-3ac177c35e6f
-  udp: true
-  encryption: none
-  tls: true
-  servername: fi.users.golu-gulu.online
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: ZPjkqL8oFJ27Oa8ETFfSC_S2EHnGl8TyN5ujzYwMknw
-    short-id: 7d19a6e4c2f8305b
-- name: 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-014
-  type: vless
-  server: 71b840t.de7.h1clayd.click
-  port: 443
-  uuid: 26843758-24de-4f76-b5d0-624038e353c4
-  udp: true
-  encryption: none
-  tls: true
-  servername: 71b840t.de7.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: 3wFF83gtIA0sXj-6GGCAa--oQbSr0MVUj0FBc-0QmiE
-    short-id: e572b6579ea525d4
-- name: 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-015
-  type: vless
-  server: 71b840t.de7.h1clayd.click
-  port: 443
-  uuid: 26843758-24de-4f76-b5d0-624038e353c4
-  udp: true
-  encryption: none
-  tls: true
-  servername: 71b840t.de7.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: 3wFF83gtIA0sXj-6GGCAa--oQbSr0MVUj0FBc-0QmiE
-    short-id: e572b6579ea525d4
-- name: 🇩🇪 Германия VLESS-92.118.206.217-016
-  type: vless
-  server: 92.118.206.217
-  port: 8443
-  uuid: c53ea5e9-ed8b-4990-805d-7f1d6451426c
-  udp: true
-  encryption: none
-  tls: true
-  servername: dur.sky-vault.top
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: fSVfR9NB-6J6smrZlavi0GWd8JfDh0aXuEkKbtuFzUI
-    short-id: 3cbc3d737fb9c4af
-- name: 🇺🇸 США VLESS-178.20.28.5-017
-  type: vless
-  server: 178.20.28.5
-  port: 8443
-  uuid: 4fabeed0-790e-9724-8f12-138ed31ac60e
-  udp: true
-  encryption: none
-  tls: true
-  servername: res.cdn.office.net
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: TunService
-  reality-opts:
-    public-key: 4g8R0-Acc1LjppgvUopldH0Wg3JA2tPXvYB96aJnigo
-- name: 🇷🇺 Россия VLESS-85.192.30.88-018
-  type: vless
-  server: 85.192.30.88
-  port: 443
-  uuid: be146d46-ae50-4691-838c-b6c87dbaec8f
-  udp: true
-  encryption: none
-  tls: true
-  servername: 702e56t.pl5.h1clayd.click
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: 8OI8rEgAiWxH-cG03xgzuz7XTFHrbA1MY9HnPHcgSUA
-    short-id: 1d5ac21e988c571f
-- name: 🇨🇿 Чехия VLESS-193.124.94.101-019
+- name: 🇨🇿 Чехия VLESS-193.124.94.101-013
   type: vless
   server: 193.124.94.101
   port: 443
@@ -265,7 +172,35 @@ proxies:
   reality-opts:
     public-key: lxTQST37knG1eCPA0UscdPHzTmSnMgito5r4o0vZils
     short-id: 4e9b7a1c5f3d2e68
-- name: 🇷🇺 Россия VLESS-89.169.2.136-020
+- name: 🇷🇺 Россия VLESS-85.192.30.88-014
+  type: vless
+  server: 85.192.30.88
+  port: 443
+  uuid: be146d46-ae50-4691-838c-b6c87dbaec8f
+  udp: true
+  encryption: none
+  tls: true
+  servername: 702e56t.pl5.h1clayd.click
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 8OI8rEgAiWxH-cG03xgzuz7XTFHrbA1MY9HnPHcgSUA
+    short-id: 1d5ac21e988c571f
+- name: 🇩🇪 Германия VLESS-92.118.206.217-015
+  type: vless
+  server: 92.118.206.217
+  port: 8443
+  uuid: c53ea5e9-ed8b-4990-805d-7f1d6451426c
+  udp: true
+  encryption: none
+  tls: true
+  servername: dur.sky-vault.top
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: fSVfR9NB-6J6smrZlavi0GWd8JfDh0aXuEkKbtuFzUI
+    short-id: 3cbc3d737fb9c4af
+- name: 🇷🇺 Россия VLESS-89.169.2.136-016
   type: vless
   server: 89.169.2.136
   port: 443
@@ -279,266 +214,287 @@ proxies:
   reality-opts:
     public-key: LfUUkcBZXllEsV7LraRZC96hdDBKKawsRoSKum93Xyg
     short-id: 27de245a9190ada7
-- name: 🇷🇺 Россия SS-91.206.92.202-021
-  type: ss
-  server: 91.206.92.202
-  port: 18443
-  cipher: aes-256-gcm
-  password: cCMJgJTA3BA489YUYrFq7XHXSiSpWlLa
+- name: 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-017
+  type: vless
+  server: 71b840t.de7.h1clayd.click
+  port: 443
+  uuid: 26843758-24de-4f76-b5d0-624038e353c4
   udp: true
-- name: 🇨🇦 Канада SS-184.107.106.78-022
-  type: ss
-  server: 184.107.106.78
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
+  encryption: none
+  tls: true
+  servername: 71b840t.de7.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 3wFF83gtIA0sXj-6GGCAa--oQbSr0MVUj0FBc-0QmiE
+    short-id: e572b6579ea525d4
+- name: 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-018
+  type: vless
+  server: 71b840t.de7.h1clayd.click
+  port: 443
+  uuid: 26843758-24de-4f76-b5d0-624038e353c4
   udp: true
-- name: 🇺🇸 США SS-193.151.163.18-023
+  encryption: none
+  tls: true
+  servername: 71b840t.de7.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: 3wFF83gtIA0sXj-6GGCAa--oQbSr0MVUj0FBc-0QmiE
+    short-id: e572b6579ea525d4
+- name: 🇸🇨 SC VLESS-45.130.127.79-019
+  type: vless
+  server: 45.130.127.79
+  port: 443
+  uuid: 8d251959-b345-4665-b2fc-3ac177c35e6f
+  udp: true
+  encryption: none
+  tls: true
+  servername: fi.users.golu-gulu.online
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: ZPjkqL8oFJ27Oa8ETFfSC_S2EHnGl8TyN5ujzYwMknw
+    short-id: 7d19a6e4c2f8305b
+- name: 🇩🇪 Германия VLESS-92.118.206.217-020
+  type: vless
+  server: 92.118.206.217
+  port: 8443
+  uuid: c53ea5e9-ed8b-4990-805d-7f1d6451426c
+  udp: true
+  encryption: none
+  tls: true
+  servername: dur.sky-vault.top
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: fSVfR9NB-6J6smrZlavi0GWd8JfDh0aXuEkKbtuFzUI
+    short-id: 3cbc3d737fb9c4af
+- name: 🇺🇸 США SS-67.220.73.178-021
   type: ss
-  server: 193.151.163.18
+  server: 67.220.73.178
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-169.197.140.247-024
+- name: 🇺🇸 США SS-137.184.89.151-022
   type: ss
-  server: 169.197.140.247
+  server: 137.184.89.151
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-38.91.107.188-025
-  type: ss
-  server: 38.91.107.188
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-193.151.160.9-026
-  type: ss
-  server: 193.151.160.9
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-45.86.51.18-027
-  type: ss
-  server: 45.86.51.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-167.88.62.203-028
-  type: ss
-  server: 167.88.62.203
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-15.204.247.244-029
-  type: ss
-  server: 15.204.247.244
-  port: 4444
-  cipher: aes-256-gcm
-  password: pKEW8JPByTVTLtM
-  udp: true
-- name: 🇺🇸 США SS-15.204.247.206-030
-  type: ss
-  server: 15.204.247.206
-  port: 4444
-  cipher: aes-256-gcm
-  password: pKEW8JPByTVTLtM
-  udp: true
-- name: 🇨🇦 Канада SS-51.79.49.116-031
-  type: ss
-  server: 51.79.49.116
-  port: 8882
-  cipher: aes-256-gcm
-  password: kDWvXYZoTBcGkC4
-  udp: true
-- name: 🇨🇦 Канада SS-192.99.151.230-032
+- name: 🇨🇦 Канада SS-192.99.151.230-023
   type: ss
   server: 192.99.151.230
   port: 8388
   cipher: aes-256-gcm
   password: itzvpn@321
   udp: true
-- name: 🇺🇸 США SS-193.151.160.18-033
+- name: 🇺🇸 США SS-38.121.43.18-024
   type: ss
-  server: 193.151.160.18
+  server: 38.121.43.18
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-15.204.246.108-034
+- name: 🇺🇸 США SS-38.22.17.139-025
   type: ss
-  server: 15.204.246.108
-  port: 8881
-  cipher: aes-256-gcm
-  password: kDWvXYZoTBcGkC4
-  udp: true
-- name: 🇺🇸 США SS-15.204.246.107-035
-  type: ss
-  server: 15.204.246.107
-  port: 8888
-  cipher: aes-256-gcm
-  password: Y6R9pAtvxxzmGC
-  udp: true
-- name: 🇺🇸 США SS-185.230.230.18-036
-  type: ss
-  server: 185.230.230.18
+  server: 38.22.17.139
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-15.204.246.132-037
-  type: ss
-  server: 15.204.246.132
-  port: 7307
-  cipher: aes-256-gcm
-  password: FoOiGlkAA9yPEGP
-  udp: true
-- name: 🇧🇷 Бразилия SS-200.102.179.179-038
-  type: ss
-  server: 200.102.179.179
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
-  udp: true
-- name: 🇺🇸 США SS-135.148.42.13-039
-  type: ss
-  server: 135.148.42.13
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
-  udp: true
-- name: 🇺🇸 США SS-138.197.89.234-040
-  type: ss
-  server: 138.197.89.234
-  port: 28960
-  cipher: chacha20-ietf-poly1305
-  password: DZRy4Q3QH0jUGfKFl2jDCZ
-  udp: true
-- name: 🇺🇸 США SS-149.40.57.134-041
-  type: ss
-  server: 149.40.57.134
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-167.88.62.56-042
-  type: ss
-  server: 167.88.62.56
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇨🇦 Канада SS-51.222.136.236-043
+- name: 🇨🇦 Канада SS-51.222.136.236-026
   type: ss
   server: 51.222.136.236
   port: 8882
   cipher: aes-256-gcm
   password: kDWvXYZoTBcGkC4
   udp: true
-- name: 🇺🇸 США SS-40.160.86.43-044
+- name: 🇺🇸 США SS-40.160.86.43-027
   type: ss
   server: 40.160.86.43
   port: 8388
   cipher: aes-256-gcm
   password: itzvpn@321
   udp: true
-- name: 🇺🇸 США SS-149.40.57.138-045
+- name: 🇺🇸 США SS-167.17.67.171-028
   type: ss
-  server: 149.40.57.138
+  server: 167.17.67.171
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇨🇦 Канада SS-51.222.200.165-046
+- name: 🇺🇸 США SS-38.121.43.231-029
   type: ss
-  server: 51.222.200.165
-  port: 5000
+  server: 38.121.43.231
+  port: 19999
   cipher: aes-256-gcm
-  password: Y6R9pAtvxxzmGC
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-15.204.247.175-047
-  type: ss
-  server: 15.204.247.175
-  port: 8008
-  cipher: aes-256-gcm
-  password: XKFKl2rULjIp74
-  udp: true
-- name: 🇨🇦 Канада SS-51.79.85.185-048
-  type: ss
-  server: 51.79.85.185
-  port: 8118
-  cipher: aes-256-gcm
-  password: cdBIDV42DCwnfIN
-  udp: true
-- name: 🇺🇸 США SS-15.204.247.124-049
-  type: ss
-  server: 15.204.247.124
-  port: 2375
-  cipher: aes-256-gcm
-  password: faBAoD54k87UJG7
-  udp: true
-- name: 🇺🇸 США SS-136.148.77.250-050
+- name: 🇺🇸 США SS-136.148.77.250-030
   type: ss
   server: 136.148.77.250
   port: 8388
   cipher: aes-256-gcm
   password: itzvpn@321
   udp: true
-- name: 🇺🇸 США SS-38.128.66.32-051
+- name: 🇺🇸 США SS-185.230.230.18-031
   type: ss
-  server: 38.128.66.32
+  server: 185.230.230.18
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-15.204.246.111-052
+- name: 🇺🇸 США SS-15.204.246.111-032
   type: ss
   server: 15.204.246.111
   port: 5498
   cipher: aes-256-gcm
   password: lGqs95QkFHo2NV
   udp: true
-- name: 🇺🇸 США SS-149.40.57.135-053
+- name: 🇨🇦 Канада SS-184.107.106.78-033
   type: ss
-  server: 149.40.57.135
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇨🇦 Канада SS-184.107.106.77-054
-  type: ss
-  server: 184.107.106.77
+  server: 184.107.106.78
   port: 8388
   cipher: aes-256-gcm
   password: itzvpn@321
   udp: true
-- name: 🇺🇸 США SS-162.251.62.31-055
+- name: 🇺🇸 США SS-167.88.62.203-034
   type: ss
-  server: 162.251.62.31
+  server: 167.88.62.203
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-38.91.100.39-056
+- name: 🇺🇸 США SS-23.150.152.38-035
   type: ss
-  server: 38.91.100.39
+  server: 23.150.152.38
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-216.106.178.169-057
+- name: 🇺🇸 США SS-15.204.246.108-036
+  type: ss
+  server: 15.204.246.108
+  port: 8881
+  cipher: aes-256-gcm
+  password: kDWvXYZoTBcGkC4
+  udp: true
+- name: 🇺🇸 США SS-15.204.247.124-037
+  type: ss
+  server: 15.204.247.124
+  port: 2375
+  cipher: aes-256-gcm
+  password: faBAoD54k87UJG7
+  udp: true
+- name: 🇺🇸 США SS-193.151.163.18-038
+  type: ss
+  server: 193.151.163.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-95.215.201.18-039
+  type: ss
+  server: 95.215.201.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-38.22.17.129-040
+  type: ss
+  server: 38.22.17.129
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-167.88.62.56-041
+  type: ss
+  server: 167.88.62.56
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-38.22.17.214-042
+  type: ss
+  server: 38.22.17.214
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-185.215.132.18-043
+  type: ss
+  server: 185.215.132.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-135.148.42.13-044
+  type: ss
+  server: 135.148.42.13
+  port: 8388
+  cipher: aes-256-gcm
+  password: itzvpn@321
+  udp: true
+- name: 🇺🇸 США SS-216.106.178.169-045
   type: ss
   server: 216.106.178.169
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇷🇺 Россия VLESS-95.163.209.247-058
+- name: 🇨🇦 Канада SS-51.79.85.185-046
+  type: ss
+  server: 51.79.85.185
+  port: 8118
+  cipher: aes-256-gcm
+  password: cdBIDV42DCwnfIN
+  udp: true
+- name: 🇺🇸 США SS-169.197.142.68-047
+  type: ss
+  server: 169.197.142.68
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-45.86.51.18-048
+  type: ss
+  server: 45.86.51.18
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-38.128.66.32-049
+  type: ss
+  server: 38.128.66.32
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-15.204.247.206-050
+  type: ss
+  server: 15.204.247.206
+  port: 4444
+  cipher: aes-256-gcm
+  password: pKEW8JPByTVTLtM
+  udp: true
+- name: 🇺🇸 США SS-15.204.246.107-051
+  type: ss
+  server: 15.204.246.107
+  port: 8888
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇧🇷 Бразилия SS-200.102.179.179-052
+  type: ss
+  server: 200.102.179.179
+  port: 8388
+  cipher: aes-256-gcm
+  password: itzvpn@321
+  udp: true
+- name: 🇷🇺 Россия VLESS-95.163.209.247-053
   type: vless
   server: 95.163.209.247
   port: 443
@@ -556,61 +512,14 @@ proxies:
   reality-opts:
     public-key: 87MlVLlUdyNhLfxhktmWtzp6UAInFjzwvyVg1A7Zgz8
     short-id: 03f1e073fa9e42ac
-- name: 🇷🇺 Россия VLESS-193.233.89.130-059
-  type: vless
-  server: 193.233.89.130
-  port: 8443
-  uuid: 7bd7c4aa-52c4-482c-bdcc-e7380fa6b5fe
-  udp: true
-  encryption: none
-  tls: true
-  servername: g.play2go.gay
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: grpc
-  reality-opts:
-    public-key: xx8KWdR4HbVmvqPb0wRPAstBHGN2Uk99m7AF794_E3c
-- name: 🇷🇺 Россия HYSTERIA2-185.151.243.186-060
+- name: 🇷🇺 Россия HYSTERIA2-84.38.189.122-054
   type: hysteria2
-  server: 185.151.243.186
+  server: 84.38.189.122
   port: 443
-  password: be986553-5976-0001-9209-3050366e40d1
+  password: b280a29b-a3d9-0001-8a81-198855a17d57
   udp: true
-  sni: piodr-ru-74sel.my-fade.cloud
-- name: 🇷🇺 Россия VLESS-87.228.92.112-061
-  type: vless
-  server: 87.228.92.112
-  port: 25201
-  uuid: e89a2a0e-7803-447e-b050-3ba67962ed95
-  udp: true
-  encryption: none
-  tls: true
-  servername: s-25454.nl18.h1clayd.click
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: grpc
-  grpc-opts:
-    grpc-service-name: becc6caf9bea
-  reality-opts:
-    public-key: YOgsoXtChX3RvA0Gf9SSsP8VLP4GGk7dytVBo9qZCH4
-    short-id: 221ba0d14384ccf1
-- name: 🇷🇺 Россия VLESS-87.228.92.112-062
-  type: vless
-  server: 87.228.92.112
-  port: 25135
-  uuid: e89a2a0e-7803-447e-b050-3ba67962ed95
-  udp: true
-  encryption: none
-  tls: true
-  servername: s-25452.nl18.h1clayd.click
-  client-fingerprint: edge
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: zJI16_ywLd4clshY0IQQPxQ_YBbIq2b0XTO_dnTJOy4
-    short-id: fe51f413b9646e97
-- name: 🇷🇺 Россия VLESS-seedance25.neuroseti.info-063
+  sni: shyrc-ru-75sel.my-fade.cloud
+- name: 🇷🇺 Россия VLESS-seedance25.neuroseti.info-055
   type: vless
   server: seedance25.neuroseti.info
   port: 443
@@ -628,168 +537,145 @@ proxies:
   reality-opts:
     public-key: 87MlVLlUdyNhLfxhktmWtzp6UAInFjzwvyVg1A7Zgz8
     short-id: 03f1e073fa9e42ac
-- name: 🇷🇺 Россия HYSTERIA2-84.38.189.122-064
-  type: hysteria2
-  server: 84.38.189.122
-  port: 443
-  password: b280a29b-a3d9-0001-8a81-198855a17d57
+- name: 🇷🇺 Россия VLESS-87.228.92.112-056
+  type: vless
+  server: 87.228.92.112
+  port: 25201
+  uuid: e89a2a0e-7803-447e-b050-3ba67962ed95
   udp: true
-  sni: shyrc-ru-75sel.my-fade.cloud
-- name: 🇷🇺 Россия HYSTERIA2-188.68.216.27-065
+  encryption: none
+  tls: true
+  servername: s-25454.nl18.h1clayd.click
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: becc6caf9bea
+  reality-opts:
+    public-key: YOgsoXtChX3RvA0Gf9SSsP8VLP4GGk7dytVBo9qZCH4
+    short-id: 221ba0d14384ccf1
+- name: 🇷🇺 Россия VLESS-193.233.89.130-057
+  type: vless
+  server: 193.233.89.130
+  port: 8443
+  uuid: 7bd7c4aa-52c4-482c-bdcc-e7380fa6b5fe
+  udp: true
+  encryption: none
+  tls: true
+  servername: g.play2go.gay
+  client-fingerprint: firefox
+  flow: xtls-rprx-vision
+  network: grpc
+  grpc-opts:
+    grpc-service-name: grpc
+  reality-opts:
+    public-key: xx8KWdR4HbVmvqPb0wRPAstBHGN2Uk99m7AF794_E3c
+- name: 🇷🇺 Россия VLESS-87.228.92.112-058
+  type: vless
+  server: 87.228.92.112
+  port: 25135
+  uuid: e89a2a0e-7803-447e-b050-3ba67962ed95
+  udp: true
+  encryption: none
+  tls: true
+  servername: s-25452.nl18.h1clayd.click
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: zJI16_ywLd4clshY0IQQPxQ_YBbIq2b0XTO_dnTJOy4
+    short-id: fe51f413b9646e97
+- name: 🇷🇺 Россия HYSTERIA2-188.68.216.27-059
   type: hysteria2
   server: 188.68.216.27
   port: 443
   password: 49b5c86a-fbfc-0001-82af-171a932d04e7
   udp: true
   sni: qtuod-ru-56sel.fade.mom
-- name: 🇳🇱 Нидерланды SS-77.221.132.206-066
-  type: ss
-  server: 77.221.132.206
-  port: 24759
-  cipher: chacha20-ietf-poly1305
-  password: hCgbUnMaoAfSgvE8IKdnGu
-  udp: true
-- name: 🇫🇷 Франция SS-167.17.64.27-067
-  type: ss
-  server: 167.17.64.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇫🇷 Франция SS-167.17.64.175-068
-  type: ss
-  server: 167.17.64.175
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-38.121.43.231-069
-  type: ss
-  server: 38.121.43.231
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇬🇧 Великобритания VLESS-englandssihcwpocj.whooisthebest.ir-070
-  type: vless
-  server: englandssihcwpocj.whooisthebest.ir
-  port: 10000
-  uuid: 97be5ac0-dae3-43c1-aae8-3fcb7b130c59
-  udp: true
-  encryption: none
-  tls: true
-  servername: amp-api-edge.apps.apple.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  reality-opts:
-    public-key: Du5pk4KuMNA1sRcSpmuoLuC0HmxDBmFljFNfUzqxKiM
-    short-id: cd0a1986719e44c8
-- name: 🇺🇸 США SS-38.121.43.18-071
-  type: ss
-  server: 38.121.43.18
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇨🇭 Швейцария SS-186.190.215.251-072
-  type: ss
-  server: 186.190.215.251
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-38.22.17.214-073
-  type: ss
-  server: 38.22.17.214
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇺🇸 США SS-38.91.107.57-074
-  type: ss
-  server: 38.91.107.57
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇷🇺 Россия SS-130.49.189.158-075
-  type: ss
-  server: 130.49.189.158
-  port: 43558
-  cipher: chacha20-ietf-poly1305
-  password: JYevOrmujurJsNP1ata0kNfjsxwFLAhgD73mrZPJP1I=
-  udp: true
-- name: 🇩🇪 Германия SS-178.162.254.38-076
-  type: ss
-  server: 178.162.254.38
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
-  udp: true
-- name: 🇬🇧 Великобритания SS-198.244.201.129-077
-  type: ss
-  server: 198.244.201.129
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇳🇴 Норвегия SS-185.213.23.63-078
-  type: ss
-  server: 185.213.23.63
-  port: 990
-  cipher: chacha20-ietf-poly1305
-  password: ARgvGZywA+gacgGV26Bvmu05+wZmRW/j+AdU+Z8Bt44=
-  udp: true
-- name: 🇫🇮 Финляндия VLESS-144.31.90.235-079
-  type: vless
-  server: 144.31.90.235
+- name: 🇷🇺 Россия HYSTERIA2-185.151.243.186-060
+  type: hysteria2
+  server: 185.151.243.186
   port: 443
-  uuid: 6ab79fec-ca02-447b-b7be-5945f6e6ea8f
+  password: be986553-5976-0001-9209-3050366e40d1
+  udp: true
+  sni: piodr-ru-74sel.my-fade.cloud
+- name: 🇭🇰 Гонконг SS-213.176.92.148-061
+  type: ss
+  server: 213.176.92.148
+  port: 40647
+  cipher: aes-256-gcm
+  password: DgMywXKqojHXeuXY8hOJaYGPFcjweCIJeD5cdg/cUUY=
+  udp: true
+- name: 🇹🇼 Тайвань VLESS-free.fugui.lol-062
+  type: vless
+  server: free.fugui.lol
+  port: 51283
+  uuid: ead3595f-4020-4e76-a3ec-c248e1a2f2f7
   udp: true
   encryption: none
   tls: true
-  servername: blog-asia.livemusic.ac
+  servername: swdist.apple.com
   client-fingerprint: firefox
   flow: xtls-rprx-vision
   reality-opts:
-    public-key: DfbGULX0lQ6_3ZrSW3NBHlh6Bz6ORxonjptCcNObC0w
-    short-id: adff113498e0f7fc
-- name: 🇺🇸 США SS-23.150.152.38-080
+    public-key: IjWYbHNrZb3UCQxsTJyekEOA3tHq42L6Jw3O8MmLYVQ
+    short-id: fa514b83
+- name: 🇫🇷 Франция SS-79.137.99.183-063
   type: ss
-  server: 23.150.152.38
+  server: 79.137.99.183
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇮🇹 Италия SS-202.50.253.63-081
+- name: 🇦🇪 ОАЭ SS-151.241.19.36-064
   type: ss
-  server: 202.50.253.63
+  server: 151.241.19.36
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США SS-38.143.66.146-082
-  type: ss
-  server: 38.143.66.146
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇦🇪 ОАЭ SS-151.241.19.29-083
-  type: ss
-  server: 151.241.19.29
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇩🇪 Германия SS-193.108.117.111-084
+- name: 🇩🇪 Германия SS-193.108.117.111-065
   type: ss
   server: 193.108.117.111
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇨🇿 Чехия VLESS-guide.blog-forme.ru-085
+- name: 🇫🇷 Франция SS-167.17.64.27-066
+  type: ss
+  server: 167.17.64.27
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇳🇱 Нидерланды SS-77.221.132.206-067
+  type: ss
+  server: 77.221.132.206
+  port: 24759
+  cipher: chacha20-ietf-poly1305
+  password: hCgbUnMaoAfSgvE8IKdnGu
+  udp: true
+- name: 🇬🇧 Великобритания SS-198.244.201.129-068
+  type: ss
+  server: 198.244.201.129
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇨🇦 Канада SS-51.222.12.127-069
+  type: ss
+  server: 51.222.12.127
+  port: 445
+  cipher: aes-256-gcm
+  password: zDNVedRFPQexG9v
+  udp: true
+- name: 🇩🇪 Германия SS-193.108.118.247-070
+  type: ss
+  server: 193.108.118.247
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇨🇿 Чехия VLESS-guide.blog-forme.ru-071
   type: vless
   server: guide.blog-forme.ru
   port: 2087
@@ -807,130 +693,140 @@ proxies:
   reality-opts:
     public-key: mbi4BZAuiq_L6pfhG2xxWmtosq0Z1Pzf18fvNSWKMxY
     short-id: 3258252d44113e23
-- name: 🇪🇸 Испания SS-66.163.118.103-086
+- name: 🇸🇬 Сингапур SS-15.235.164.133-072
   type: ss
-  server: 66.163.118.103
+  server: 15.235.164.133
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇩🇪 Германия SS-193.108.117.84-087
+- name: 🇮🇹 Италия SS-202.50.253.54-073
   type: ss
-  server: 193.108.117.84
+  server: 202.50.253.54
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇩🇪 Германия SS-23.157.88.43-088
-  type: ss
-  server: 23.157.88.43
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇭🇰 Гонконг SS-213.176.92.148-089
-  type: ss
-  server: 213.176.92.148
-  port: 40647
-  cipher: aes-256-gcm
-  password: DgMywXKqojHXeuXY8hOJaYGPFcjweCIJeD5cdg/cUUY=
-  udp: true
-- name: 🇪🇸 Испания SS-167.17.71.167-090
-  type: ss
-  server: 167.17.71.167
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-57.131.27.21-091
-  type: ss
-  server: 57.131.27.21
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.90-092
-  type: ss
-  server: 202.50.253.90
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇩🇪 Германия SS-193.108.119.2-093
+- name: 🇩🇪 Германия SS-193.108.119.2-074
   type: ss
   server: 193.108.119.2
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇮🇱 Израиль SS-206.245.128.123-094
+- name: 🇺🇸 США SS-162.251.62.31-075
   type: ss
-  server: 206.245.128.123
-  port: 18443
-  cipher: aes-256-gcm
-  password: dmJDtsxs41dBer8X+7idvkvMQHqJuwRb
-  udp: true
-- name: 🇺🇸 США SS-38.91.107.19-095
-  type: ss
-  server: 38.91.107.19
+  server: 162.251.62.31
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇫🇷 Франция SS-107.161.160.28-096
+- name: 🇺🇸 США SS-216.172.144.199-076
   type: ss
-  server: 107.161.160.28
-  port: 8388
-  cipher: aes-256-gcm
-  password: itzvpn@321
+  server: 216.172.144.199
+  port: 40643
+  cipher: chacha20-ietf-poly1305
+  password: Xd4G9xn7AgT88msCYC9MZfavMUqd3dWFNAvswi6KfaD9YcexptMbPn4cSECEMzDgvAMomAWJHyweqJer99ssMVYGH6TK8k4c
   udp: true
-- name: 🇳🇱 Нидерланды VLESS-93.183.127.54-097
+- name: 🇮🇹 Италия SS-202.50.253.72-077
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇩🇪 Германия SS-57.129.76.233-078
+  type: ss
+  server: 57.129.76.233
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇬🇧 Великобритания SS-198.244.202.215-079
+  type: ss
+  server: 198.244.202.215
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇫🇷 Франция SS-38.109.228.110-080
+  type: ss
+  server: 38.109.228.110
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-193.151.160.9-081
+  type: ss
+  server: 193.151.160.9
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇦🇹 Австрия SS-152.53.1.57-082
+  type: ss
+  server: 152.53.1.57
+  port: 8388
+  cipher: chacha20-ietf-poly1305
+  password: AdawffFMHymlasRb0VOP3HFf7sTG5sJx
+  udp: true
+- name: 🇨🇦 Канада SS-51.222.200.165-083
+  type: ss
+  server: 51.222.200.165
+  port: 5000
+  cipher: aes-256-gcm
+  password: Y6R9pAtvxxzmGC
+  udp: true
+- name: 🇺🇸 США SS-138.197.89.234-084
+  type: ss
+  server: 138.197.89.234
+  port: 28960
+  cipher: chacha20-ietf-poly1305
+  password: DZRy4Q3QH0jUGfKFl2jDCZ
+  udp: true
+- name: 🇮🇹 Италия SS-202.50.253.99-085
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇸🇬 Сингапур SS-149.88.106.73-086
+  type: ss
+  server: 149.88.106.73
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇬🇧 Великобритания SS-82.110.60.9-087
+  type: ss
+  server: 82.110.60.9
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-38.121.43.225-088
+  type: ss
+  server: 38.121.43.225
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США VLESS-durov.sky-vault.top-089
   type: vless
-  server: 93.183.127.54
-  port: 24446
-  uuid: 549766c3-fa5f-471e-8031-ffc1f8d5064f
+  server: durov.sky-vault.top
+  port: 8443
+  uuid: c53ea5e9-ed8b-4990-805d-7f1d6451426c
   udp: true
   encryption: none
   tls: true
-  servername: tgnl2.blog-forme.ru
-  client-fingerprint: qq
+  servername: durov.sky-vault.top
+  client-fingerprint: firefox
   flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /v2/notes/86cf7ba6ede1
-    host: tgnl2.blog-forme.ru
   reality-opts:
-    public-key: 31_G-lTr8GVS33I-ySfmMOXJ7SzpS48Ela7xXeT9D1Y
-    short-id: 29f834cf893710f9
-- name: 🇺🇸 США SS-137.184.89.151-098
-  type: ss
-  server: 137.184.89.151
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇫🇷 Франция SS-79.137.99.183-099
-  type: ss
-  server: 79.137.99.183
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.27-100
-  type: ss
-  server: 202.50.253.27
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇮🇹 Италия SS-202.50.253.45-101
-  type: ss
-  server: 202.50.253.45
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-  udp: true
-- name: 🇨🇿 Чехия VLESS-95.85.232.83-102
+    public-key: fSVfR9NB-6J6smrZlavi0GWd8JfDh0aXuEkKbtuFzUI
+    short-id: 3cbc3d737fb9c4af
+- name: 🇨🇿 Чехия VLESS-95.85.232.83-090
   type: vless
   server: 95.85.232.83
   port: 2087
@@ -948,83 +844,142 @@ proxies:
   reality-opts:
     public-key: mbi4BZAuiq_L6pfhG2xxWmtosq0Z1Pzf18fvNSWKMxY
     short-id: 3258252d44113e23
-- name: 🇺🇸 США SS-95.215.201.18-103
+- name: 🇮🇹 Италия SS-202.50.253.90-091
   type: ss
-  server: 95.215.201.18
+  server: 202.50.253.90
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇸🇬 Сингапур SS-149.88.106.73-104
-  type: ss
-  server: 149.88.106.73
-  port: 19999
-  cipher: aes-256-gcm
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: 🇹🇼 Тайвань VLESS-free.fugui.lol-092
+  type: vless
+  server: free.fugui.lol
+  port: 19482
+  uuid: ead3595f-4020-4e76-a3ec-c248e1a2f2f7
   udp: true
-- name: 🇩🇪 Германия SS-57.129.83.85-105
+  encryption: none
+  tls: true
+  servername: swdist.apple.com
+  client-fingerprint: edge
+  flow: xtls-rprx-vision
+  reality-opts:
+    public-key: IjWYbHNrZb3UCQxsTJyekEOA3tHq42L6Jw3O8MmLYVQ
+    short-id: fa514b83
+- name: 🇩🇪 Германия SS-57.129.83.85-093
   type: ss
   server: 57.129.83.85
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇬🇧 Великобритания SS-198.244.202.215-106
+- name: 🇮🇹 Италия SS-202.50.253.63-094
   type: ss
-  server: 198.244.202.215
+  server: 202.50.253.63
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇩🇪 Германия SS-57.129.76.233-107
+- name: 🇦🇪 ОАЭ SS-151.241.19.29-095
   type: ss
-  server: 57.129.76.233
+  server: 151.241.19.29
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇫🇷 Франция SS-23.162.152.22-108
+- name: 🇫🇷 Франция SS-167.17.64.22-096
   type: ss
-  server: 23.162.152.22
+  server: 167.17.64.22
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇦🇹 Австрия SS-152.53.1.57-109
+- name: 🇩🇪 Германия SS-193.108.117.84-097
   type: ss
-  server: 152.53.1.57
-  port: 8388
+  server: 193.108.117.84
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇸🇪 Швеция SS-138.199.55.243-098
+  type: ss
+  server: 138.199.55.243
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-38.22.17.219-099
+  type: ss
+  server: 38.22.17.219
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇳🇴 Норвегия SS-185.213.23.63-100
+  type: ss
+  server: 185.213.23.63
+  port: 990
   cipher: chacha20-ietf-poly1305
-  password: AdawffFMHymlasRb0VOP3HFf7sTG5sJx
+  password: ARgvGZywA+gacgGV26Bvmu05+wZmRW/j+AdU+Z8Bt44=
   udp: true
-- name: 🇩🇪 Германия SS-185.176.204.18-110
+- name: 🇺🇸 США SS-167.88.63.39-101
+  type: ss
+  server: 167.88.63.39
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇩🇪 Германия SS-156.67.120.205-102
+  type: ss
+  server: 156.67.120.205
+  port: 51628
+  cipher: chacha20-ietf-poly1305
+  password: 29ZZXVa34x7sC48w9FKQ54UKHiJJGTVgKFppBRgviLrVCAYVVyKZdD3obbpjCyk31V5b2G2d7xzqmaPBFdcheCVB9UQ4ZghF
+  udp: true
+- name: 🇺🇸 США SS-38.91.107.188-103
+  type: ss
+  server: 38.91.107.188
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-172.111.36.123-104
+  type: ss
+  server: 172.111.36.123
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇺🇸 США SS-149.40.57.135-105
+  type: ss
+  server: 149.40.57.135
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇸🇬 Сингапур SS-51.79.228.131-106
+  type: ss
+  server: 51.79.228.131
+  port: 19999
+  cipher: aes-256-gcm
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+  udp: true
+- name: 🇩🇪 Германия SS-185.176.204.18-107
   type: ss
   server: 185.176.204.18
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
   udp: true
-- name: 🇺🇸 США VLESS-5.78.51.198-111
-  type: vless
-  server: 5.78.51.198
-  port: 2083
-  uuid: 31c910e5-6dfb-4c2e-b98c-3ec093d2468c
-  udp: true
-  encryption: none
-  tls: true
-  servername: github.com
-  client-fingerprint: firefox
-  flow: xtls-rprx-vision
-  network: xhttp
-  xhttp-opts:
-    path: /dacc7d5d1e6b4ff4
-    host: github.com
-  reality-opts:
-    public-key: lizk11r0PqfhxIgx86cgJd1EAkbyxg8qnIKyKCSFkmc
-    short-id: 01a55bdd118a63b9
-- name: 🇫🇷 Франция SS-38.109.228.110-112
+- name: 🇺🇸 США SS-15.204.246.132-108
   type: ss
-  server: 38.109.228.110
+  server: 15.204.246.132
+  port: 7307
+  cipher: aes-256-gcm
+  password: FoOiGlkAA9yPEGP
+  udp: true
+- name: 🇩🇪 Германия SS-23.157.88.43-109
+  type: ss
+  server: 23.157.88.43
   port: 19999
   cipher: aes-256-gcm
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
@@ -1035,236 +990,230 @@ proxy-groups:
   proxies:
   - AUTO
   - DIRECT
-  - 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-001
-  - 🇪🇪 Эстония VLESS-13.143.239.236-002
+  - 🇪🇪 Эстония VLESS-13.143.239.236-001
+  - 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-002
   - 🇷🇺 Россия VLESS-78.159.245.147-003
-  - 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-004
-  - 🇨🇦 Канада SS-51.222.141.125-005
-  - 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-006
-  - 🇷🇺 Россия HYSTERIA2-168.113.252.11-007
-  - 🇷🇺 Россия HYSTERIA2-168.113.254.183-008
-  - 🇩🇪 Германия VLESS-92.118.206.217-009
-  - 🇺🇸 США VLESS-31.76.31.75-010
+  - 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-004
+  - 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-005
+  - 🇨🇦 Канада SS-51.222.141.125-006
+  - 🇷🇺 Россия HYSTERIA2-168.113.254.183-007
+  - 🇷🇺 Россия HYSTERIA2-168.113.252.11-008
+  - 🇺🇸 США VLESS-31.76.31.75-009
+  - 🇷🇺 Россия SS-91.206.92.202-010
   - 🇩🇪 Германия VLESS-92.118.206.217-011
   - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-012
-  - 🇸🇨 SC VLESS-45.130.127.79-013
-  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-014
-  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-015
-  - 🇩🇪 Германия VLESS-92.118.206.217-016
-  - 🇺🇸 США VLESS-178.20.28.5-017
-  - 🇷🇺 Россия VLESS-85.192.30.88-018
-  - 🇨🇿 Чехия VLESS-193.124.94.101-019
-  - 🇷🇺 Россия VLESS-89.169.2.136-020
-  - 🇷🇺 Россия SS-91.206.92.202-021
-  - 🇨🇦 Канада SS-184.107.106.78-022
-  - 🇺🇸 США SS-193.151.163.18-023
-  - 🇺🇸 США SS-169.197.140.247-024
-  - 🇺🇸 США SS-38.91.107.188-025
-  - 🇺🇸 США SS-193.151.160.9-026
-  - 🇺🇸 США SS-45.86.51.18-027
-  - 🇺🇸 США SS-167.88.62.203-028
-  - 🇺🇸 США SS-15.204.247.244-029
-  - 🇺🇸 США SS-15.204.247.206-030
-  - 🇨🇦 Канада SS-51.79.49.116-031
-  - 🇨🇦 Канада SS-192.99.151.230-032
-  - 🇺🇸 США SS-193.151.160.18-033
-  - 🇺🇸 США SS-15.204.246.108-034
-  - 🇺🇸 США SS-15.204.246.107-035
-  - 🇺🇸 США SS-185.230.230.18-036
-  - 🇺🇸 США SS-15.204.246.132-037
-  - 🇧🇷 Бразилия SS-200.102.179.179-038
-  - 🇺🇸 США SS-135.148.42.13-039
-  - 🇺🇸 США SS-138.197.89.234-040
-  - 🇺🇸 США SS-149.40.57.134-041
-  - 🇺🇸 США SS-167.88.62.56-042
-  - 🇨🇦 Канада SS-51.222.136.236-043
-  - 🇺🇸 США SS-40.160.86.43-044
-  - 🇺🇸 США SS-149.40.57.138-045
-  - 🇨🇦 Канада SS-51.222.200.165-046
-  - 🇺🇸 США SS-15.204.247.175-047
-  - 🇨🇦 Канада SS-51.79.85.185-048
-  - 🇺🇸 США SS-15.204.247.124-049
-  - 🇺🇸 США SS-136.148.77.250-050
-  - 🇺🇸 США SS-38.128.66.32-051
-  - 🇺🇸 США SS-15.204.246.111-052
-  - 🇺🇸 США SS-149.40.57.135-053
-  - 🇨🇦 Канада SS-184.107.106.77-054
-  - 🇺🇸 США SS-162.251.62.31-055
-  - 🇺🇸 США SS-38.91.100.39-056
-  - 🇺🇸 США SS-216.106.178.169-057
-  - 🇷🇺 Россия VLESS-95.163.209.247-058
-  - 🇷🇺 Россия VLESS-193.233.89.130-059
+  - 🇨🇿 Чехия VLESS-193.124.94.101-013
+  - 🇷🇺 Россия VLESS-85.192.30.88-014
+  - 🇩🇪 Германия VLESS-92.118.206.217-015
+  - 🇷🇺 Россия VLESS-89.169.2.136-016
+  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-017
+  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-018
+  - 🇸🇨 SC VLESS-45.130.127.79-019
+  - 🇩🇪 Германия VLESS-92.118.206.217-020
+  - 🇺🇸 США SS-67.220.73.178-021
+  - 🇺🇸 США SS-137.184.89.151-022
+  - 🇨🇦 Канада SS-192.99.151.230-023
+  - 🇺🇸 США SS-38.121.43.18-024
+  - 🇺🇸 США SS-38.22.17.139-025
+  - 🇨🇦 Канада SS-51.222.136.236-026
+  - 🇺🇸 США SS-40.160.86.43-027
+  - 🇺🇸 США SS-167.17.67.171-028
+  - 🇺🇸 США SS-38.121.43.231-029
+  - 🇺🇸 США SS-136.148.77.250-030
+  - 🇺🇸 США SS-185.230.230.18-031
+  - 🇺🇸 США SS-15.204.246.111-032
+  - 🇨🇦 Канада SS-184.107.106.78-033
+  - 🇺🇸 США SS-167.88.62.203-034
+  - 🇺🇸 США SS-23.150.152.38-035
+  - 🇺🇸 США SS-15.204.246.108-036
+  - 🇺🇸 США SS-15.204.247.124-037
+  - 🇺🇸 США SS-193.151.163.18-038
+  - 🇺🇸 США SS-95.215.201.18-039
+  - 🇺🇸 США SS-38.22.17.129-040
+  - 🇺🇸 США SS-167.88.62.56-041
+  - 🇺🇸 США SS-38.22.17.214-042
+  - 🇺🇸 США SS-185.215.132.18-043
+  - 🇺🇸 США SS-135.148.42.13-044
+  - 🇺🇸 США SS-216.106.178.169-045
+  - 🇨🇦 Канада SS-51.79.85.185-046
+  - 🇺🇸 США SS-169.197.142.68-047
+  - 🇺🇸 США SS-45.86.51.18-048
+  - 🇺🇸 США SS-38.128.66.32-049
+  - 🇺🇸 США SS-15.204.247.206-050
+  - 🇺🇸 США SS-15.204.246.107-051
+  - 🇧🇷 Бразилия SS-200.102.179.179-052
+  - 🇷🇺 Россия VLESS-95.163.209.247-053
+  - 🇷🇺 Россия HYSTERIA2-84.38.189.122-054
+  - 🇷🇺 Россия VLESS-seedance25.neuroseti.info-055
+  - 🇷🇺 Россия VLESS-87.228.92.112-056
+  - 🇷🇺 Россия VLESS-193.233.89.130-057
+  - 🇷🇺 Россия VLESS-87.228.92.112-058
+  - 🇷🇺 Россия HYSTERIA2-188.68.216.27-059
   - 🇷🇺 Россия HYSTERIA2-185.151.243.186-060
-  - 🇷🇺 Россия VLESS-87.228.92.112-061
-  - 🇷🇺 Россия VLESS-87.228.92.112-062
-  - 🇷🇺 Россия VLESS-seedance25.neuroseti.info-063
-  - 🇷🇺 Россия HYSTERIA2-84.38.189.122-064
-  - 🇷🇺 Россия HYSTERIA2-188.68.216.27-065
-  - 🇳🇱 Нидерланды SS-77.221.132.206-066
-  - 🇫🇷 Франция SS-167.17.64.27-067
-  - 🇫🇷 Франция SS-167.17.64.175-068
-  - 🇺🇸 США SS-38.121.43.231-069
-  - 🇬🇧 Великобритания VLESS-englandssihcwpocj.whooisthebest.ir-070
-  - 🇺🇸 США SS-38.121.43.18-071
-  - 🇨🇭 Швейцария SS-186.190.215.251-072
-  - 🇺🇸 США SS-38.22.17.214-073
-  - 🇺🇸 США SS-38.91.107.57-074
-  - 🇷🇺 Россия SS-130.49.189.158-075
-  - 🇩🇪 Германия SS-178.162.254.38-076
-  - 🇬🇧 Великобритания SS-198.244.201.129-077
-  - 🇳🇴 Норвегия SS-185.213.23.63-078
-  - 🇫🇮 Финляндия VLESS-144.31.90.235-079
-  - 🇺🇸 США SS-23.150.152.38-080
-  - 🇮🇹 Италия SS-202.50.253.63-081
-  - 🇺🇸 США SS-38.143.66.146-082
-  - 🇦🇪 ОАЭ SS-151.241.19.29-083
-  - 🇩🇪 Германия SS-193.108.117.111-084
-  - 🇨🇿 Чехия VLESS-guide.blog-forme.ru-085
-  - 🇪🇸 Испания SS-66.163.118.103-086
-  - 🇩🇪 Германия SS-193.108.117.84-087
-  - 🇩🇪 Германия SS-23.157.88.43-088
-  - 🇭🇰 Гонконг SS-213.176.92.148-089
-  - 🇪🇸 Испания SS-167.17.71.167-090
-  - 🇮🇹 Италия SS-57.131.27.21-091
-  - 🇮🇹 Италия SS-202.50.253.90-092
-  - 🇩🇪 Германия SS-193.108.119.2-093
-  - 🇮🇱 Израиль SS-206.245.128.123-094
-  - 🇺🇸 США SS-38.91.107.19-095
-  - 🇫🇷 Франция SS-107.161.160.28-096
-  - 🇳🇱 Нидерланды VLESS-93.183.127.54-097
-  - 🇺🇸 США SS-137.184.89.151-098
-  - 🇫🇷 Франция SS-79.137.99.183-099
-  - 🇮🇹 Италия SS-202.50.253.27-100
-  - 🇮🇹 Италия SS-202.50.253.45-101
-  - 🇨🇿 Чехия VLESS-95.85.232.83-102
-  - 🇺🇸 США SS-95.215.201.18-103
-  - 🇸🇬 Сингапур SS-149.88.106.73-104
-  - 🇩🇪 Германия SS-57.129.83.85-105
-  - 🇬🇧 Великобритания SS-198.244.202.215-106
-  - 🇩🇪 Германия SS-57.129.76.233-107
-  - 🇫🇷 Франция SS-23.162.152.22-108
-  - 🇦🇹 Австрия SS-152.53.1.57-109
-  - 🇩🇪 Германия SS-185.176.204.18-110
-  - 🇺🇸 США VLESS-5.78.51.198-111
-  - 🇫🇷 Франция SS-38.109.228.110-112
+  - 🇭🇰 Гонконг SS-213.176.92.148-061
+  - 🇹🇼 Тайвань VLESS-free.fugui.lol-062
+  - 🇫🇷 Франция SS-79.137.99.183-063
+  - 🇦🇪 ОАЭ SS-151.241.19.36-064
+  - 🇩🇪 Германия SS-193.108.117.111-065
+  - 🇫🇷 Франция SS-167.17.64.27-066
+  - 🇳🇱 Нидерланды SS-77.221.132.206-067
+  - 🇬🇧 Великобритания SS-198.244.201.129-068
+  - 🇨🇦 Канада SS-51.222.12.127-069
+  - 🇩🇪 Германия SS-193.108.118.247-070
+  - 🇨🇿 Чехия VLESS-guide.blog-forme.ru-071
+  - 🇸🇬 Сингапур SS-15.235.164.133-072
+  - 🇮🇹 Италия SS-202.50.253.54-073
+  - 🇩🇪 Германия SS-193.108.119.2-074
+  - 🇺🇸 США SS-162.251.62.31-075
+  - 🇺🇸 США SS-216.172.144.199-076
+  - 🇮🇹 Италия SS-202.50.253.72-077
+  - 🇩🇪 Германия SS-57.129.76.233-078
+  - 🇬🇧 Великобритания SS-198.244.202.215-079
+  - 🇫🇷 Франция SS-38.109.228.110-080
+  - 🇺🇸 США SS-193.151.160.9-081
+  - 🇦🇹 Австрия SS-152.53.1.57-082
+  - 🇨🇦 Канада SS-51.222.200.165-083
+  - 🇺🇸 США SS-138.197.89.234-084
+  - 🇮🇹 Италия SS-202.50.253.99-085
+  - 🇸🇬 Сингапур SS-149.88.106.73-086
+  - 🇬🇧 Великобритания SS-82.110.60.9-087
+  - 🇺🇸 США SS-38.121.43.225-088
+  - 🇺🇸 США VLESS-durov.sky-vault.top-089
+  - 🇨🇿 Чехия VLESS-95.85.232.83-090
+  - 🇮🇹 Италия SS-202.50.253.90-091
+  - 🇹🇼 Тайвань VLESS-free.fugui.lol-092
+  - 🇩🇪 Германия SS-57.129.83.85-093
+  - 🇮🇹 Италия SS-202.50.253.63-094
+  - 🇦🇪 ОАЭ SS-151.241.19.29-095
+  - 🇫🇷 Франция SS-167.17.64.22-096
+  - 🇩🇪 Германия SS-193.108.117.84-097
+  - 🇸🇪 Швеция SS-138.199.55.243-098
+  - 🇺🇸 США SS-38.22.17.219-099
+  - 🇳🇴 Норвегия SS-185.213.23.63-100
+  - 🇺🇸 США SS-167.88.63.39-101
+  - 🇩🇪 Германия SS-156.67.120.205-102
+  - 🇺🇸 США SS-38.91.107.188-103
+  - 🇺🇸 США SS-172.111.36.123-104
+  - 🇺🇸 США SS-149.40.57.135-105
+  - 🇸🇬 Сингапур SS-51.79.228.131-106
+  - 🇩🇪 Германия SS-185.176.204.18-107
+  - 🇺🇸 США SS-15.204.246.132-108
+  - 🇩🇪 Германия SS-23.157.88.43-109
 - name: AUTO
   type: url-test
   url: https://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-001
-  - 🇪🇪 Эстония VLESS-13.143.239.236-002
+  - 🇪🇪 Эстония VLESS-13.143.239.236-001
+  - 🇭🇰 Гонконг VLESS-35295cx.us8.h1clayd.click-002
   - 🇷🇺 Россия VLESS-78.159.245.147-003
-  - 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-004
-  - 🇨🇦 Канада SS-51.222.141.125-005
-  - 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-006
-  - 🇷🇺 Россия HYSTERIA2-168.113.252.11-007
-  - 🇷🇺 Россия HYSTERIA2-168.113.254.183-008
-  - 🇩🇪 Германия VLESS-92.118.206.217-009
-  - 🇺🇸 США VLESS-31.76.31.75-010
+  - 🇧🇷 Бразилия VLESS-platform103.golnamakcert.top-004
+  - 🇧🇷 Бразилия VLESS-platform109.golnamakcert.top-005
+  - 🇨🇦 Канада SS-51.222.141.125-006
+  - 🇷🇺 Россия HYSTERIA2-168.113.254.183-007
+  - 🇷🇺 Россия HYSTERIA2-168.113.252.11-008
+  - 🇺🇸 США VLESS-31.76.31.75-009
+  - 🇷🇺 Россия SS-91.206.92.202-010
   - 🇩🇪 Германия VLESS-92.118.206.217-011
   - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-012
-  - 🇸🇨 SC VLESS-45.130.127.79-013
-  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-014
-  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-015
-  - 🇩🇪 Германия VLESS-92.118.206.217-016
-  - 🇺🇸 США VLESS-178.20.28.5-017
-  - 🇷🇺 Россия VLESS-85.192.30.88-018
-  - 🇨🇿 Чехия VLESS-193.124.94.101-019
-  - 🇷🇺 Россия VLESS-89.169.2.136-020
-  - 🇷🇺 Россия SS-91.206.92.202-021
-  - 🇨🇦 Канада SS-184.107.106.78-022
-  - 🇺🇸 США SS-193.151.163.18-023
-  - 🇺🇸 США SS-169.197.140.247-024
-  - 🇺🇸 США SS-38.91.107.188-025
-  - 🇺🇸 США SS-193.151.160.9-026
-  - 🇺🇸 США SS-45.86.51.18-027
-  - 🇺🇸 США SS-167.88.62.203-028
-  - 🇺🇸 США SS-15.204.247.244-029
-  - 🇺🇸 США SS-15.204.247.206-030
-  - 🇨🇦 Канада SS-51.79.49.116-031
-  - 🇨🇦 Канада SS-192.99.151.230-032
-  - 🇺🇸 США SS-193.151.160.18-033
-  - 🇺🇸 США SS-15.204.246.108-034
-  - 🇺🇸 США SS-15.204.246.107-035
-  - 🇺🇸 США SS-185.230.230.18-036
-  - 🇺🇸 США SS-15.204.246.132-037
-  - 🇧🇷 Бразилия SS-200.102.179.179-038
-  - 🇺🇸 США SS-135.148.42.13-039
-  - 🇺🇸 США SS-138.197.89.234-040
-  - 🇺🇸 США SS-149.40.57.134-041
-  - 🇺🇸 США SS-167.88.62.56-042
-  - 🇨🇦 Канада SS-51.222.136.236-043
-  - 🇺🇸 США SS-40.160.86.43-044
-  - 🇺🇸 США SS-149.40.57.138-045
-  - 🇨🇦 Канада SS-51.222.200.165-046
-  - 🇺🇸 США SS-15.204.247.175-047
-  - 🇨🇦 Канада SS-51.79.85.185-048
-  - 🇺🇸 США SS-15.204.247.124-049
-  - 🇺🇸 США SS-136.148.77.250-050
-  - 🇺🇸 США SS-38.128.66.32-051
-  - 🇺🇸 США SS-15.204.246.111-052
-  - 🇺🇸 США SS-149.40.57.135-053
-  - 🇨🇦 Канада SS-184.107.106.77-054
-  - 🇺🇸 США SS-162.251.62.31-055
-  - 🇺🇸 США SS-38.91.100.39-056
-  - 🇺🇸 США SS-216.106.178.169-057
-  - 🇷🇺 Россия VLESS-95.163.209.247-058
-  - 🇷🇺 Россия VLESS-193.233.89.130-059
+  - 🇨🇿 Чехия VLESS-193.124.94.101-013
+  - 🇷🇺 Россия VLESS-85.192.30.88-014
+  - 🇩🇪 Германия VLESS-92.118.206.217-015
+  - 🇷🇺 Россия VLESS-89.169.2.136-016
+  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-017
+  - 🇱🇹 Литва VLESS-71b840t.de7.h1clayd.click-018
+  - 🇸🇨 SC VLESS-45.130.127.79-019
+  - 🇩🇪 Германия VLESS-92.118.206.217-020
+  - 🇺🇸 США SS-67.220.73.178-021
+  - 🇺🇸 США SS-137.184.89.151-022
+  - 🇨🇦 Канада SS-192.99.151.230-023
+  - 🇺🇸 США SS-38.121.43.18-024
+  - 🇺🇸 США SS-38.22.17.139-025
+  - 🇨🇦 Канада SS-51.222.136.236-026
+  - 🇺🇸 США SS-40.160.86.43-027
+  - 🇺🇸 США SS-167.17.67.171-028
+  - 🇺🇸 США SS-38.121.43.231-029
+  - 🇺🇸 США SS-136.148.77.250-030
+  - 🇺🇸 США SS-185.230.230.18-031
+  - 🇺🇸 США SS-15.204.246.111-032
+  - 🇨🇦 Канада SS-184.107.106.78-033
+  - 🇺🇸 США SS-167.88.62.203-034
+  - 🇺🇸 США SS-23.150.152.38-035
+  - 🇺🇸 США SS-15.204.246.108-036
+  - 🇺🇸 США SS-15.204.247.124-037
+  - 🇺🇸 США SS-193.151.163.18-038
+  - 🇺🇸 США SS-95.215.201.18-039
+  - 🇺🇸 США SS-38.22.17.129-040
+  - 🇺🇸 США SS-167.88.62.56-041
+  - 🇺🇸 США SS-38.22.17.214-042
+  - 🇺🇸 США SS-185.215.132.18-043
+  - 🇺🇸 США SS-135.148.42.13-044
+  - 🇺🇸 США SS-216.106.178.169-045
+  - 🇨🇦 Канада SS-51.79.85.185-046
+  - 🇺🇸 США SS-169.197.142.68-047
+  - 🇺🇸 США SS-45.86.51.18-048
+  - 🇺🇸 США SS-38.128.66.32-049
+  - 🇺🇸 США SS-15.204.247.206-050
+  - 🇺🇸 США SS-15.204.246.107-051
+  - 🇧🇷 Бразилия SS-200.102.179.179-052
+  - 🇷🇺 Россия VLESS-95.163.209.247-053
+  - 🇷🇺 Россия HYSTERIA2-84.38.189.122-054
+  - 🇷🇺 Россия VLESS-seedance25.neuroseti.info-055
+  - 🇷🇺 Россия VLESS-87.228.92.112-056
+  - 🇷🇺 Россия VLESS-193.233.89.130-057
+  - 🇷🇺 Россия VLESS-87.228.92.112-058
+  - 🇷🇺 Россия HYSTERIA2-188.68.216.27-059
   - 🇷🇺 Россия HYSTERIA2-185.151.243.186-060
-  - 🇷🇺 Россия VLESS-87.228.92.112-061
-  - 🇷🇺 Россия VLESS-87.228.92.112-062
-  - 🇷🇺 Россия VLESS-seedance25.neuroseti.info-063
-  - 🇷🇺 Россия HYSTERIA2-84.38.189.122-064
-  - 🇷🇺 Россия HYSTERIA2-188.68.216.27-065
-  - 🇳🇱 Нидерланды SS-77.221.132.206-066
-  - 🇫🇷 Франция SS-167.17.64.27-067
-  - 🇫🇷 Франция SS-167.17.64.175-068
-  - 🇺🇸 США SS-38.121.43.231-069
-  - 🇬🇧 Великобритания VLESS-englandssihcwpocj.whooisthebest.ir-070
-  - 🇺🇸 США SS-38.121.43.18-071
-  - 🇨🇭 Швейцария SS-186.190.215.251-072
-  - 🇺🇸 США SS-38.22.17.214-073
-  - 🇺🇸 США SS-38.91.107.57-074
-  - 🇷🇺 Россия SS-130.49.189.158-075
-  - 🇩🇪 Германия SS-178.162.254.38-076
-  - 🇬🇧 Великобритания SS-198.244.201.129-077
-  - 🇳🇴 Норвегия SS-185.213.23.63-078
-  - 🇫🇮 Финляндия VLESS-144.31.90.235-079
-  - 🇺🇸 США SS-23.150.152.38-080
-  - 🇮🇹 Италия SS-202.50.253.63-081
-  - 🇺🇸 США SS-38.143.66.146-082
-  - 🇦🇪 ОАЭ SS-151.241.19.29-083
-  - 🇩🇪 Германия SS-193.108.117.111-084
-  - 🇨🇿 Чехия VLESS-guide.blog-forme.ru-085
-  - 🇪🇸 Испания SS-66.163.118.103-086
-  - 🇩🇪 Германия SS-193.108.117.84-087
-  - 🇩🇪 Германия SS-23.157.88.43-088
-  - 🇭🇰 Гонконг SS-213.176.92.148-089
-  - 🇪🇸 Испания SS-167.17.71.167-090
-  - 🇮🇹 Италия SS-57.131.27.21-091
-  - 🇮🇹 Италия SS-202.50.253.90-092
-  - 🇩🇪 Германия SS-193.108.119.2-093
-  - 🇮🇱 Израиль SS-206.245.128.123-094
-  - 🇺🇸 США SS-38.91.107.19-095
-  - 🇫🇷 Франция SS-107.161.160.28-096
-  - 🇳🇱 Нидерланды VLESS-93.183.127.54-097
-  - 🇺🇸 США SS-137.184.89.151-098
-  - 🇫🇷 Франция SS-79.137.99.183-099
-  - 🇮🇹 Италия SS-202.50.253.27-100
-  - 🇮🇹 Италия SS-202.50.253.45-101
-  - 🇨🇿 Чехия VLESS-95.85.232.83-102
-  - 🇺🇸 США SS-95.215.201.18-103
-  - 🇸🇬 Сингапур SS-149.88.106.73-104
-  - 🇩🇪 Германия SS-57.129.83.85-105
-  - 🇬🇧 Великобритания SS-198.244.202.215-106
-  - 🇩🇪 Германия SS-57.129.76.233-107
-  - 🇫🇷 Франция SS-23.162.152.22-108
-  - 🇦🇹 Австрия SS-152.53.1.57-109
-  - 🇩🇪 Германия SS-185.176.204.18-110
-  - 🇺🇸 США VLESS-5.78.51.198-111
-  - 🇫🇷 Франция SS-38.109.228.110-112
+  - 🇭🇰 Гонконг SS-213.176.92.148-061
+  - 🇹🇼 Тайвань VLESS-free.fugui.lol-062
+  - 🇫🇷 Франция SS-79.137.99.183-063
+  - 🇦🇪 ОАЭ SS-151.241.19.36-064
+  - 🇩🇪 Германия SS-193.108.117.111-065
+  - 🇫🇷 Франция SS-167.17.64.27-066
+  - 🇳🇱 Нидерланды SS-77.221.132.206-067
+  - 🇬🇧 Великобритания SS-198.244.201.129-068
+  - 🇨🇦 Канада SS-51.222.12.127-069
+  - 🇩🇪 Германия SS-193.108.118.247-070
+  - 🇨🇿 Чехия VLESS-guide.blog-forme.ru-071
+  - 🇸🇬 Сингапур SS-15.235.164.133-072
+  - 🇮🇹 Италия SS-202.50.253.54-073
+  - 🇩🇪 Германия SS-193.108.119.2-074
+  - 🇺🇸 США SS-162.251.62.31-075
+  - 🇺🇸 США SS-216.172.144.199-076
+  - 🇮🇹 Италия SS-202.50.253.72-077
+  - 🇩🇪 Германия SS-57.129.76.233-078
+  - 🇬🇧 Великобритания SS-198.244.202.215-079
+  - 🇫🇷 Франция SS-38.109.228.110-080
+  - 🇺🇸 США SS-193.151.160.9-081
+  - 🇦🇹 Австрия SS-152.53.1.57-082
+  - 🇨🇦 Канада SS-51.222.200.165-083
+  - 🇺🇸 США SS-138.197.89.234-084
+  - 🇮🇹 Италия SS-202.50.253.99-085
+  - 🇸🇬 Сингапур SS-149.88.106.73-086
+  - 🇬🇧 Великобритания SS-82.110.60.9-087
+  - 🇺🇸 США SS-38.121.43.225-088
+  - 🇺🇸 США VLESS-durov.sky-vault.top-089
+  - 🇨🇿 Чехия VLESS-95.85.232.83-090
+  - 🇮🇹 Италия SS-202.50.253.90-091
+  - 🇹🇼 Тайвань VLESS-free.fugui.lol-092
+  - 🇩🇪 Германия SS-57.129.83.85-093
+  - 🇮🇹 Италия SS-202.50.253.63-094
+  - 🇦🇪 ОАЭ SS-151.241.19.29-095
+  - 🇫🇷 Франция SS-167.17.64.22-096
+  - 🇩🇪 Германия SS-193.108.117.84-097
+  - 🇸🇪 Швеция SS-138.199.55.243-098
+  - 🇺🇸 США SS-38.22.17.219-099
+  - 🇳🇴 Норвегия SS-185.213.23.63-100
+  - 🇺🇸 США SS-167.88.63.39-101
+  - 🇩🇪 Германия SS-156.67.120.205-102
+  - 🇺🇸 США SS-38.91.107.188-103
+  - 🇺🇸 США SS-172.111.36.123-104
+  - 🇺🇸 США SS-149.40.57.135-105
+  - 🇸🇬 Сингапур SS-51.79.228.131-106
+  - 🇩🇪 Германия SS-185.176.204.18-107
+  - 🇺🇸 США SS-15.204.246.132-108
+  - 🇩🇪 Германия SS-23.157.88.43-109
 rule-providers:
   ru-rules:
     type: http
