@@ -223,13 +223,13 @@ python proxy_checker.py                # генерирует файлы whiteli
 
 # 📜 Поддержать автора
 
-GRAM: UQDcw39JKVk4jufK_ASTLUhHT7Pi-13UVd8YLNG7GInYv9vB
+GRAM: UQDqE26tfZV4qes9G7pCRZ8xSHJDw_fxqxj3yd9rTA4HEnCj
 
-USDT (TRC20): TYKB6JzwikHWhQteNhHjUtzirYC9pft5WW
+USDT (TRC20): TJGGZSd8pzwGaCNFt2UdDyKXN7EyYLMz6x
 
-ETH: 0x415cA0538BFfE359eb9c8D4aEe50E88eA48a5712
+ETH: 0x91FB5B028ac58f47903d9398A513934a2289565B
 
-BTC: bc1qdp6swj406eg9jlx6j9hsj6g3er7cm2tr8efhgj
+BTC: bc1qmljmyh720tkgy23ensuuydkfgquwpqw2vaw48m
 
 ---
 
